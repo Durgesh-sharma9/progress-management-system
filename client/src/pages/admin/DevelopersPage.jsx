@@ -1,0 +1,360 @@
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
+import { useToast } from '../../context/ToastContext';
+import ProgressBar from '../../components/common/ProgressBar';
+import Modal from '../../components/common/Modal';
+import ConfirmModal from '../../components/common/ConfirmModal';
+import EmptyState from '../../components/common/EmptyState';
+import {
+  Users,
+  Search,
+  Plus,
+  Trash2,
+  Clock,
+  Loader2,
+  Mail,
+  Lock,
+  User,
+} from 'lucide-react';
+
+const DevelopersPage = () => {
+  const [developers, setDevelopers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Add Developer Modal state
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Delete Developer Modal state
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [devToDelete, setDevToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { success, error } = useToast();
+
+  useEffect(() => {
+    fetchDevelopers();
+  }, []);
+
+  const fetchDevelopers = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get('/users/developers');
+      if (res.data.success) {
+        setDevelopers(res.data.data);
+      }
+    } catch (err) {
+      error('Failed to load developers list');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddDeveloper = async (e) => {
+    e.preventDefault();
+    if (!formData.name.trim() || !formData.email.trim() || !formData.password) {
+      error('Name, email, and password are required');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      error('Password must be at least 6 characters');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const res = await api.post('/users/developers', formData);
+      if (res.data.success) {
+        success('Developer created successfully');
+        setIsAddOpen(false);
+        setFormData({ name: '', email: '', password: '' });
+        fetchDevelopers();
+      }
+    } catch (err) {
+      error(err.response?.data?.message || 'Failed to create developer');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const confirmDelete = (dev) => {
+    setDevToDelete(dev);
+    setIsDeleteOpen(true);
+  };
+
+  const handleDeleteDeveloper = async () => {
+    if (!devToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const res = await api.delete(`/users/developers/${devToDelete._id}`);
+      if (res.data.success) {
+        success('Developer removed successfully');
+        setIsDeleteOpen(false);
+        setDevToDelete(null);
+        fetchDevelopers();
+      }
+    } catch (err) {
+      error(err.response?.data?.message || 'Failed to delete developer');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const filteredDevelopers = developers.filter((dev) =>
+    dev.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    dev.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+            Developer Directory
+          </h2>
+          <p className="text-sm text-slate-500 mt-1">
+            View all registered developers, add new developers, and monitor completion rates.
+          </p>
+        </div>
+        <button
+          onClick={() => setIsAddOpen(true)}
+          className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-600/20 hover:bg-brand-500 transition-all active:scale-95 shrink-0"
+        >
+          <Plus className="h-4 w-4" />
+          Add Developer
+        </button>
+      </div>
+
+      {/* Search Filter */}
+      <div className="relative max-w-md">
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+        <input
+          type="text"
+          placeholder="Search by name or email..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 shadow-sm"
+        />
+      </div>
+
+      {/* Developers Roster Grid */}
+      {loading ? (
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
+        </div>
+      ) : filteredDevelopers.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title="No developers found"
+          description={
+            searchQuery
+              ? 'No developers match your search query.'
+              : 'Add your first developer or have developers register themselves.'
+          }
+          actionText={searchQuery ? undefined : 'Add Developer'}
+          onAction={searchQuery ? undefined : () => setIsAddOpen(true)}
+        />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredDevelopers.map((dev) => (
+            <div
+              key={dev._id}
+              className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+            >
+              <div>
+                {/* Developer Profile Header */}
+                <div className="flex items-start justify-between gap-3 mb-5">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-base font-bold text-white shadow-md shrink-0">
+                      {dev.name.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-slate-900 text-base truncate">
+                        {dev.name}
+                      </h3>
+                      <p className="text-xs text-slate-500 truncate flex items-center gap-1 mt-0.5">
+                        <Mail className="h-3 w-3 text-slate-400 shrink-0" />
+                        {dev.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => confirmDelete(dev)}
+                    title="Delete Developer"
+                    className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Statistics Box */}
+                <div className="grid grid-cols-3 gap-2 p-3.5 rounded-xl bg-slate-50 border border-slate-200 mb-5 text-center">
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-slate-500">
+                      Projects
+                    </p>
+                    <p className="text-base font-extrabold text-slate-800 mt-0.5">
+                      {dev.assignedProjectsCount}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-slate-500">
+                      Tasks
+                    </p>
+                    <p className="text-base font-extrabold text-slate-800 mt-0.5">
+                      {dev.totalTasks}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-emerald-600">
+                      Done
+                    </p>
+                    <p className="text-base font-extrabold text-emerald-600 mt-0.5">
+                      {dev.completedTasks}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Overall Task Completion */}
+                <div>
+                  <ProgressBar
+                    progress={dev.progress}
+                    label="Overall Task Completion"
+                    size="md"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 mt-5 flex items-center justify-between text-xs text-slate-500">
+                <span className="flex items-center gap-1 font-medium text-slate-700">
+                  <Clock className="h-3.5 w-3.5 text-amber-600" />
+                  {dev.pendingTasks} Pending Tasks
+                </span>
+                <span className="text-[11px] text-slate-400">
+                  Joined {new Date(dev.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add Developer Modal */}
+      <Modal
+        isOpen={isAddOpen}
+        onClose={() => setIsAddOpen(false)}
+        title="Add New Developer"
+        subtitle="Create an account for a team developer."
+        maxWidth="md"
+      >
+        <form onSubmit={handleAddDeveloper} className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Full Name *
+            </label>
+            <div className="relative rounded-xl shadow-sm">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <User className="h-4 w-4" />
+              </div>
+              <input
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="e.g. Rahul Sharma"
+                className="block w-full rounded-xl border border-slate-300 bg-slate-50/50 py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Email Address *
+            </label>
+            <div className="relative rounded-xl shadow-sm">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <Mail className="h-4 w-4" />
+              </div>
+              <input
+                type="email"
+                required
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="developer@company.com"
+                className="block w-full rounded-xl border border-slate-300 bg-slate-50/50 py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Initial Password *
+            </label>
+            <div className="relative rounded-xl shadow-sm">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                <Lock className="h-4 w-4" />
+              </div>
+              <input
+                type="password"
+                required
+                minLength={6}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder="At least 6 characters"
+                className="block w-full rounded-xl border border-slate-300 bg-slate-50/50 py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsAddOpen(false)}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-brand-600/20 hover:bg-brand-500 transition-all disabled:opacity-50"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create Developer'
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Delete Developer Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        onConfirm={handleDeleteDeveloper}
+        title="Delete Developer"
+        message={`Are you sure you want to delete ${devToDelete?.name}? They will be removed from all projects, and their tasks and phases will also be removed.`}
+        confirmText="Delete Developer"
+        confirmVariant="danger"
+        isLoading={isDeleting}
+      />
+    </div>
+  );
+};
+
+export default DevelopersPage;
