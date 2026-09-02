@@ -15,6 +15,11 @@ import {
   Mail,
   Lock,
   User,
+  X,
+  Sparkles,
+  ShieldCheck,
+  FolderGit2,
+  CheckCircle2,
 } from 'lucide-react';
 
 const DevelopersPage = () => {
@@ -114,23 +119,28 @@ const DevelopersPage = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-            Developer Directory
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Developer Directory
+            </h2>
+            <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+              {developers.length} Registered
+            </span>
+          </div>
           <p className="text-sm text-slate-500 mt-1">
-            View all registered developers, add new developers, and monitor completion rates.
+            Manage engineering talent, project assignments, and velocity completion metrics.
           </p>
         </div>
         <button
           onClick={() => setIsAddOpen(true)}
-          className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-600/20 hover:bg-brand-500 transition-all active:scale-95 shrink-0"
+          className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-soft-md shadow-brand-500/25 hover:from-brand-500 hover:to-indigo-500 transition-all duration-200 active:scale-95 shrink-0"
         >
           <Plus className="h-4 w-4" />
-          Add Developer
+          Add Engineer
         </button>
       </div>
 
@@ -139,17 +149,28 @@ const DevelopersPage = () => {
         <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
         <input
           type="text"
-          placeholder="Search by name or email..."
+          placeholder="Search by engineer name or email..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 shadow-sm"
+          className="w-full rounded-2xl border border-slate-200/90 bg-white/80 py-2.5 pl-10 pr-10 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 shadow-soft-xs"
         />
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Developers Roster Grid */}
       {loading ? (
         <div className="flex h-64 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
+            <p className="text-xs font-semibold text-slate-400">Loading developers roster...</p>
+          </div>
         </div>
       ) : filteredDevelopers.length === 0 ? (
         <EmptyState
@@ -160,7 +181,7 @@ const DevelopersPage = () => {
               ? 'No developers match your search query.'
               : 'Add your first developer or have developers register themselves.'
           }
-          actionText={searchQuery ? undefined : 'Add Developer'}
+          actionText={searchQuery ? undefined : 'Add Engineer'}
           onAction={searchQuery ? undefined : () => setIsAddOpen(true)}
         />
       ) : (
@@ -168,21 +189,21 @@ const DevelopersPage = () => {
           {filteredDevelopers.map((dev) => (
             <div
               key={dev._id}
-              className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+              className="glass-card glass-card-hover rounded-3xl p-6 flex flex-col justify-between"
             >
               <div>
                 {/* Developer Profile Header */}
                 <div className="flex items-start justify-between gap-3 mb-5">
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-base font-bold text-white shadow-md shrink-0">
-                      {dev.name.charAt(0)}
+                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-base font-bold text-white shadow-soft-xs shrink-0">
+                      {dev.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-bold text-slate-900 text-base truncate">
                         {dev.name}
                       </h3>
-                      <p className="text-xs text-slate-500 truncate flex items-center gap-1 mt-0.5">
-                        <Mail className="h-3 w-3 text-slate-400 shrink-0" />
+                      <p className="text-xs text-slate-500 truncate flex items-center gap-1.5 mt-0.5">
+                        <Mail className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                         {dev.email}
                       </p>
                     </div>
@@ -191,27 +212,27 @@ const DevelopersPage = () => {
                   <button
                     onClick={() => confirmDelete(dev)}
                     title="Delete Developer"
-                    className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                    className="rounded-xl p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 border border-transparent transition-all shrink-0"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
 
                 {/* Statistics Box */}
-                <div className="grid grid-cols-3 gap-2 p-3.5 rounded-xl bg-slate-50 border border-slate-200 mb-5 text-center">
+                <div className="grid grid-cols-3 gap-2 p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/80 mb-5 text-center">
                   <div>
                     <p className="text-[10px] uppercase font-bold text-slate-500">
                       Projects
                     </p>
-                    <p className="text-base font-extrabold text-slate-800 mt-0.5">
+                    <p className="text-base font-extrabold text-slate-800 mt-0.5 font-mono">
                       {dev.assignedProjectsCount}
                     </p>
                   </div>
                   <div>
                     <p className="text-[10px] uppercase font-bold text-slate-500">
-                      Tasks
+                      Phases
                     </p>
-                    <p className="text-base font-extrabold text-slate-800 mt-0.5">
+                    <p className="text-base font-extrabold text-slate-800 mt-0.5 font-mono">
                       {dev.totalTasks}
                     </p>
                   </div>
@@ -219,7 +240,7 @@ const DevelopersPage = () => {
                     <p className="text-[10px] uppercase font-bold text-emerald-600">
                       Done
                     </p>
-                    <p className="text-base font-extrabold text-emerald-600 mt-0.5">
+                    <p className="text-base font-extrabold text-emerald-600 mt-0.5 font-mono">
                       {dev.completedTasks}
                     </p>
                   </div>
@@ -229,18 +250,18 @@ const DevelopersPage = () => {
                 <div>
                   <ProgressBar
                     progress={dev.progress}
-                    label="Overall Task Completion"
+                    label="Overall Delivery Rate"
                     size="md"
                   />
                 </div>
               </div>
 
               <div className="pt-4 border-t border-slate-100 mt-5 flex items-center justify-between text-xs text-slate-500">
-                <span className="flex items-center gap-1 font-medium text-slate-700">
+                <span className="flex items-center gap-1.5 font-semibold text-slate-700">
                   <Clock className="h-3.5 w-3.5 text-amber-600" />
-                  {dev.pendingTasks} Pending Tasks
+                  {dev.pendingTasks} Pending Deliverables
                 </span>
-                <span className="text-[11px] text-slate-400">
+                <span className="text-[11px] text-slate-400 font-mono">
                   Joined {new Date(dev.createdAt).toLocaleDateString()}
                 </span>
               </div>
@@ -253,8 +274,8 @@ const DevelopersPage = () => {
       <Modal
         isOpen={isAddOpen}
         onClose={() => setIsAddOpen(false)}
-        title="Add New Developer"
-        subtitle="Create an account for a team developer."
+        title="Add New Engineer"
+        subtitle="Create an active developer account in the organization."
         maxWidth="md"
       >
         <form onSubmit={handleAddDeveloper} className="space-y-4">
@@ -262,7 +283,7 @@ const DevelopersPage = () => {
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
               Full Name *
             </label>
-            <div className="relative rounded-xl shadow-sm">
+            <div className="relative rounded-xl shadow-soft-xs">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
                 <User className="h-4 w-4" />
               </div>
@@ -272,7 +293,7 @@ const DevelopersPage = () => {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g. Rahul Sharma"
-                className="block w-full rounded-xl border border-slate-300 bg-slate-50/50 py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="block w-full rounded-xl border border-slate-300/80 bg-white/70 py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
               />
             </div>
           </div>
@@ -281,7 +302,7 @@ const DevelopersPage = () => {
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
               Email Address *
             </label>
-            <div className="relative rounded-xl shadow-sm">
+            <div className="relative rounded-xl shadow-soft-xs">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
                 <Mail className="h-4 w-4" />
               </div>
@@ -291,7 +312,7 @@ const DevelopersPage = () => {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="developer@company.com"
-                className="block w-full rounded-xl border border-slate-300 bg-slate-50/50 py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="block w-full rounded-xl border border-slate-300/80 bg-white/70 py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
               />
             </div>
           </div>
@@ -300,7 +321,7 @@ const DevelopersPage = () => {
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
               Initial Password *
             </label>
-            <div className="relative rounded-xl shadow-sm">
+            <div className="relative rounded-xl shadow-soft-xs">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
                 <Lock className="h-4 w-4" />
               </div>
@@ -311,23 +332,23 @@ const DevelopersPage = () => {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="At least 6 characters"
-                className="block w-full rounded-xl border border-slate-300 bg-slate-50/50 py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500"
+                className="block w-full rounded-xl border border-slate-300/80 bg-white/70 py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
               />
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
             <button
               type="button"
               onClick={() => setIsAddOpen(false)}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+              className="rounded-xl border border-slate-300/80 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-soft-xs"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-brand-600/20 hover:bg-brand-500 transition-all disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-soft-md shadow-brand-500/25 hover:from-brand-500 hover:to-indigo-500 transition-all disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>
@@ -335,7 +356,7 @@ const DevelopersPage = () => {
                   Creating...
                 </>
               ) : (
-                'Create Developer'
+                'Create Engineer'
               )}
             </button>
           </div>
@@ -358,3 +379,4 @@ const DevelopersPage = () => {
 };
 
 export default DevelopersPage;
+

@@ -12,6 +12,8 @@ import {
   Loader2,
   Calendar,
   CheckCircle2,
+  X,
+  Layers,
 } from 'lucide-react';
 
 const MyProjectsPage = () => {
@@ -49,14 +51,19 @@ const MyProjectsPage = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-          My Assigned Projects
-        </h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            My Assigned Projects
+          </h2>
+          <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200">
+            {projects.length} Assigned
+          </span>
+        </div>
         <p className="text-sm text-slate-500 mt-1">
-          Open a workspace to organize your phases and check off completed tasks.
+          Open a workspace to organize your phases, sync checklist tasks, and visualize live project flows.
         </p>
       </div>
 
@@ -69,20 +76,28 @@ const MyProjectsPage = () => {
             placeholder="Search assigned projects..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 shadow-sm"
+            className="w-full rounded-2xl border border-slate-200/90 bg-white/80 py-2.5 pl-10 pr-10 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 shadow-soft-xs"
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         {/* Status Filter Buttons */}
-        <div className="flex items-center gap-1.5 p-1 rounded-xl border border-slate-200 bg-white shadow-sm w-full sm:w-auto overflow-x-auto">
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl border border-slate-200/80 bg-white shadow-soft-xs w-full sm:w-auto overflow-x-auto">
           {['All', 'Planning', 'In Progress', 'Completed'].map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 ${
                 statusFilter === status
-                  ? 'bg-brand-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
               }`}
             >
               {status}
@@ -94,7 +109,10 @@ const MyProjectsPage = () => {
       {/* Projects Grid */}
       {loading ? (
         <div className="flex h-64 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
+            <p className="text-xs font-semibold text-slate-400">Loading assigned projects...</p>
+          </div>
         </div>
       ) : filteredProjects.length === 0 ? (
         <EmptyState
@@ -111,33 +129,33 @@ const MyProjectsPage = () => {
           {filteredProjects.map((project) => (
             <div
               key={project._id}
-              className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-brand-300 transition-all flex flex-col justify-between"
+              className="glass-card glass-card-hover rounded-3xl p-6 flex flex-col justify-between"
             >
               <div>
-                <div className="flex items-start justify-between gap-3 mb-2.5">
+                <div className="flex items-start justify-between gap-3 mb-3">
                   <h3 className="font-bold text-slate-900 text-base leading-snug line-clamp-1">
                     {project.name}
                   </h3>
                   <StatusBadge status={project.status} />
                 </div>
 
-                <p className="text-xs text-slate-500 line-clamp-2 mb-4 leading-relaxed min-h-[32px]">
+                <p className="text-xs text-slate-500 line-clamp-2 mb-5 leading-relaxed min-h-[32px] font-normal">
                   {project.description || 'No description provided.'}
                 </p>
 
                 {/* Personal Progress */}
-                <div className="mb-4 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                <div className="mb-4 p-4 rounded-2xl bg-gradient-to-r from-slate-50/90 to-brand-50/40 border border-slate-200/70 shadow-soft-xs">
                   <ProgressBar
                     progress={project.myProgress || 0}
-                    label="My Personal Progress"
+                    label="My Deliverable Velocity"
                     size="md"
                   />
-                  <div className="flex items-center justify-between text-[11px] text-slate-600 mt-2 font-medium">
-                    <span className="flex items-center gap-1">
-                      <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                      {project.myCompletedTasks || 0} / {project.myTotalTasks || 0} tasks done
+                  <div className="flex items-center justify-between text-[11px] text-slate-600 mt-2.5 font-medium">
+                    <span className="flex items-center gap-1.5 font-semibold">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                      {project.myCompletedTasks || 0} / {project.myTotalTasks || 0} phases done
                     </span>
-                    <span className="font-bold text-amber-600">
+                    <span className="font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-full font-mono">
                       {project.myPendingTasks || 0} pending
                     </span>
                   </div>
@@ -147,7 +165,7 @@ const MyProjectsPage = () => {
                 <div className="mb-5">
                   <ProgressBar
                     progress={project.overallProgress || 0}
-                    label="Team Overall Progress"
+                    label="Team Overall Velocity"
                     size="sm"
                   />
                 </div>
@@ -155,7 +173,7 @@ const MyProjectsPage = () => {
 
               <Link
                 to={`/developer/workspace/${project._id}`}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-brand-600/20 hover:bg-brand-500 transition-all active:scale-[0.99]"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-soft-md shadow-brand-500/25 hover:from-brand-500 hover:to-indigo-500 transition-all duration-200 active:scale-[0.99]"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
                 Open Workspace
@@ -169,3 +187,4 @@ const MyProjectsPage = () => {
 };
 
 export default MyProjectsPage;
+

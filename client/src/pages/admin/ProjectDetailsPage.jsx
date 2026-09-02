@@ -24,6 +24,8 @@ import {
   Square,
   GitBranch,
   BarChart3,
+  Layers,
+  Sparkles,
 } from 'lucide-react';
 
 const ProjectDetailsPage = () => {
@@ -135,13 +137,16 @@ const ProjectDetailsPage = () => {
   if (loading || !project) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
+          <p className="text-xs font-semibold text-slate-400">Loading project details...</p>
+        </div>
       </div>
     );
   }
 
   // Calculate unassigned developers for the assign dropdown
-  const assignedDevIds = project.developers.map((d) => d._id);
+  const assignedDevIds = (project.developers || []).map((d) => d._id || d);
   const unassignedDevelopers = allDevelopers.filter(
     (d) => !assignedDevIds.includes(d._id)
   );
@@ -150,16 +155,22 @@ const ProjectDetailsPage = () => {
     <div className="space-y-8">
       {/* Navigation Breadcrumb & Back */}
       <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3.5">
           <Link
             to="/admin/projects"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm"
+            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200/90 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-soft-xs"
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div>
-            <span className="text-xs font-semibold text-slate-400">Project Overview</span>
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                Project Overview
+              </span>
+              <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+              <StatusBadge status={project.status} size="sm" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-0.5">
               {project.name}
             </h2>
           </div>
@@ -167,45 +178,42 @@ const ProjectDetailsPage = () => {
 
         <button
           onClick={() => setIsAssignOpen(true)}
-          className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-brand-600/20 hover:bg-brand-500 transition-all active:scale-95"
+          className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-soft-md shadow-brand-500/25 hover:from-brand-500 hover:to-indigo-500 transition-all duration-200 active:scale-95 shrink-0"
         >
           <UserPlus className="h-4 w-4" />
-          Assign Developer
+          Assign Engineer
         </button>
       </div>
 
       {/* Project Information Card */}
-      <div className="bg-white rounded-2xl p-6 lg:p-8 border border-slate-200 shadow-sm space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-6">
-          <div className="space-y-1 max-w-3xl">
-            <div className="flex items-center gap-3">
-              <h3 className="text-xl font-bold text-slate-900">{project.name}</h3>
-              <StatusBadge status={project.status} />
-            </div>
-            <p className="text-sm text-slate-600 leading-relaxed pt-1">
-              {project.description || 'No detailed description provided.'}
+      <div className="glass-card rounded-3xl p-6 lg:p-8 shadow-soft space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+          <div className="space-y-1.5 max-w-3xl">
+            <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">{project.name}</h3>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+              {project.description || 'No detailed project description specified.'}
             </p>
           </div>
         </div>
 
         {/* Large Overall Progress Banner */}
-        <div className="rounded-2xl bg-gradient-to-r from-brand-50 via-slate-50 to-indigo-50 border border-brand-200/80 p-6 shadow-sm">
+        <div className="rounded-2xl bg-gradient-to-r from-brand-50/70 via-indigo-50/50 to-purple-50/70 border border-brand-200/80 p-6 shadow-soft-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-brand-600">
-                Live Completion Status
+              <p className="text-[11px] font-bold uppercase tracking-wider text-brand-700">
+                Live Velocity Tracker
               </p>
               <h4 className="text-lg font-bold text-slate-900">
-                Overall Project Progress
+                Overall Delivery Completion
               </h4>
             </div>
             <div className="flex items-center gap-4 text-xs text-slate-600">
-              <span className="flex items-center gap-1.5 font-medium">
+              <span className="flex items-center gap-1.5 font-semibold bg-white/80 border border-slate-200 px-3 py-1 rounded-full shadow-soft-xs">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                <strong className="text-slate-900 font-bold">{project.completedPhases || project.completedTasks || 0}</strong> Completed
+                <strong className="text-slate-900 font-bold">{project.completedPhases || project.completedTasks || 0}</strong> Done
               </span>
-              <span className="flex items-center gap-1.5 font-medium">
-                <ListTodo className="h-4 w-4 text-slate-500" />
+              <span className="flex items-center gap-1.5 font-semibold bg-white/80 border border-slate-200 px-3 py-1 rounded-full shadow-soft-xs">
+                <ListTodo className="h-4 w-4 text-brand-600" />
                 <strong className="text-slate-900 font-bold">{project.totalPhases || project.totalTasks || 0}</strong> Total Phases
               </span>
             </div>
@@ -221,42 +229,42 @@ const ProjectDetailsPage = () => {
       </div>
 
       {/* View Switcher: Tree Graph vs Team Roster vs Analytics */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto">
-        <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl border border-slate-200 shadow-inner">
+      <div className="flex items-center gap-2 border-b border-slate-200/80 pb-3 overflow-x-auto">
+        <div className="flex items-center gap-2 p-1.5 bg-white rounded-2xl border border-slate-200/80 shadow-soft-xs">
           <button
             onClick={() => setViewMode('tree')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
               viewMode === 'tree'
-                ? 'bg-white text-brand-700 shadow-md border border-slate-200/80'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
             }`}
           >
-            <GitBranch className="h-4 w-4 text-brand-600" />
-            Tree Graph Flow
+            <GitBranch className="h-4 w-4" />
+            Tree Flow Diagram
           </button>
 
           <button
             onClick={() => setViewMode('team')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
               viewMode === 'team'
-                ? 'bg-white text-brand-700 shadow-md border border-slate-200/80'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
             }`}
           >
-            <Users className="h-4 w-4 text-indigo-600" />
-            Team Members ({project.developerStats.length})
+            <Users className="h-4 w-4" />
+            Assigned Engineers ({project.developerStats?.length || 0})
           </button>
 
           <button
             onClick={() => setViewMode('analytics')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
               viewMode === 'analytics'
-                ? 'bg-white text-brand-700 shadow-md border border-slate-200/80'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
             }`}
           >
-            <BarChart3 className="h-4 w-4 text-emerald-600" />
-            Visual Analytics
+            <BarChart3 className="h-4 w-4" />
+            Velocity Analytics
           </button>
         </div>
       </div>
@@ -277,30 +285,30 @@ const ProjectDetailsPage = () => {
 
       {/* VIEW 3: TEAM MEMBERS ROSTER */}
       {viewMode === 'team' && (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-bold text-slate-900">Assigned Team Members</h3>
+              <h3 className="text-lg font-bold text-slate-900 tracking-tight">Assigned Engineering Team</h3>
               <p className="text-xs text-slate-500">
-                Developers and their individual milestone completion metrics
+                Engineers and their individual milestone completion metrics
               </p>
             </div>
 
             <button
               onClick={() => setIsAssignOpen(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-brand-600/20 hover:bg-brand-500 transition-all active:scale-95"
+              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-soft-xs hover:from-brand-500 hover:to-indigo-500 transition-all active:scale-95"
             >
               <UserPlus className="h-3.5 w-3.5" />
-              Assign Developer
+              Assign Engineer
             </button>
           </div>
 
-          {project.developerStats.length === 0 ? (
+          {!project.developerStats || project.developerStats.length === 0 ? (
             <EmptyState
               icon={Users}
-              title="No developers assigned"
-              description="Assign developers to this project so they can create phases and begin tracking tasks."
-              actionText="Assign Developer"
+              title="No engineers assigned"
+              description="Assign engineers to this project so they can create phases and start tracking deliverables."
+              actionText="Assign Engineer"
               onAction={() => setIsAssignOpen(true)}
             />
           ) : (
@@ -316,18 +324,18 @@ const ProjectDetailsPage = () => {
                 return (
                   <div
                     key={dev._id}
-                    className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                    className="glass-card glass-card-hover rounded-3xl p-6 flex flex-col justify-between"
                   >
                     <div>
                       {/* Dev Header */}
                       <div className="flex items-start justify-between gap-3 mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="h-11 w-11 rounded-xl bg-brand-100 text-brand-700 border border-brand-200 flex items-center justify-center font-bold text-sm">
-                            {dev.name.charAt(0)}
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-soft-xs shrink-0">
+                            {dev.name.charAt(0).toUpperCase()}
                           </div>
-                          <div>
-                            <h4 className="font-bold text-slate-900 text-sm">{dev.name}</h4>
-                            <p className="text-xs text-slate-500">{dev.email}</p>
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-slate-900 text-sm truncate">{dev.name}</h4>
+                            <p className="text-xs text-slate-500 truncate">{dev.email}</p>
                           </div>
                         </div>
 
@@ -337,29 +345,29 @@ const ProjectDetailsPage = () => {
                             setIsRemoveOpen(true);
                           }}
                           title="Remove Developer from Project"
-                          className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                          className="rounded-xl p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 border border-transparent transition-all shrink-0"
                         >
                           <UserMinus className="h-4 w-4" />
                         </button>
                       </div>
 
                       {/* Developer Metrics */}
-                      <div className="grid grid-cols-3 gap-2 p-3 rounded-xl bg-slate-50 border border-slate-200 mb-4 text-center">
+                      <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-slate-50/80 border border-slate-200/80 mb-4 text-center">
                         <div>
                           <p className="text-[10px] uppercase font-bold text-slate-500">Phases</p>
-                          <p className="text-base font-extrabold text-slate-800 mt-0.5">
+                          <p className="text-base font-extrabold text-slate-800 mt-0.5 font-mono">
                             {stat.phasesCount || stat.totalPhases || 0}
                           </p>
                         </div>
                         <div>
                           <p className="text-[10px] uppercase font-bold text-slate-500">Total</p>
-                          <p className="text-base font-extrabold text-slate-800 mt-0.5">
+                          <p className="text-base font-extrabold text-slate-800 mt-0.5 font-mono">
                             {stat.totalPhases || stat.totalTasks || 0}
                           </p>
                         </div>
                         <div>
                           <p className="text-[10px] uppercase font-bold text-emerald-600">Done</p>
-                          <p className="text-base font-extrabold text-emerald-600 mt-0.5">
+                          <p className="text-base font-extrabold text-emerald-600 mt-0.5 font-mono">
                             {stat.completedPhases || stat.completedTasks || 0}
                           </p>
                         </div>
@@ -369,7 +377,7 @@ const ProjectDetailsPage = () => {
                       <div className="mb-4">
                         <ProgressBar
                           progress={stat.progress}
-                          label="Personal Progress"
+                          label="Engineer Velocity"
                           size="md"
                         />
                       </div>
@@ -385,7 +393,7 @@ const ProjectDetailsPage = () => {
                       >
                         <span className="flex items-center gap-1.5">
                           <Eye className="h-3.5 w-3.5" />
-                          {isExpanded ? 'Hide Phases' : 'View Phases'}
+                          {isExpanded ? 'Hide Deliverables' : 'View Deliverables'}
                         </span>
                         {isExpanded ? (
                           <ChevronUp className="h-4 w-4" />
@@ -396,23 +404,23 @@ const ProjectDetailsPage = () => {
 
                       {/* Expanded Phases */}
                       {isExpanded && (
-                        <div className="mt-3 space-y-2.5 pt-3 border-t border-slate-100 max-h-64 overflow-y-auto pr-1">
+                        <div className="mt-3 space-y-2 pt-3 border-t border-slate-100 max-h-64 overflow-y-auto pr-1">
                           {devPhases.length === 0 ? (
-                            <p className="text-xs text-slate-500 italic text-center py-2">
-                              Developer has not created any phases yet.
+                            <p className="text-xs text-slate-400 italic text-center py-3">
+                              Engineer has not created any phases yet.
                             </p>
                           ) : (
                             devPhases.map((phase) => (
                               <div
                                 key={phase._id}
-                                className={`rounded-xl border p-3 flex items-start gap-2.5 ${
+                                className={`rounded-xl border p-3 flex items-start gap-2.5 transition-all ${
                                   phase.completed
-                                    ? 'bg-slate-50 border-slate-200 text-slate-500'
-                                    : 'bg-white border-slate-200 text-slate-800 shadow-sm'
+                                    ? 'bg-emerald-50/50 border-emerald-200/80 text-emerald-950'
+                                    : 'bg-white border-slate-200 text-slate-800 shadow-soft-xs'
                                 }`}
                               >
                                 {phase.completed ? (
-                                  <CheckSquare className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                                  <CheckSquare className="h-4 w-4 text-emerald-600 fill-emerald-100 shrink-0 mt-0.5" />
                                 ) : (
                                   <Square className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
                                 )}
@@ -450,26 +458,26 @@ const ProjectDetailsPage = () => {
       <Modal
         isOpen={isAssignOpen}
         onClose={() => setIsAssignOpen(false)}
-        title="Assign Developer to Project"
-        subtitle={`Add a new team member to "${project.name}"`}
+        title="Assign Engineer to Project"
+        subtitle={`Add an active developer to "${project.name}"`}
         maxWidth="md"
       >
         <form onSubmit={handleAssignDeveloper} className="space-y-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-              Select Developer
+              Select Engineer
             </label>
             {unassignedDevelopers.length === 0 ? (
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500">
-                All registered developers are already assigned to this project.
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center text-xs text-slate-500 font-medium">
+                All registered engineers are already assigned to this project.
               </div>
             ) : (
               <select
                 value={selectedDevToAssign}
                 onChange={(e) => setSelectedDevToAssign(e.target.value)}
-                className="block w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 shadow-sm"
+                className="block w-full rounded-2xl border border-slate-300/80 bg-white px-3.5 py-3 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 shadow-soft-xs"
               >
-                <option value="">-- Select a developer --</option>
+                <option value="">-- Select an engineer --</option>
                 {unassignedDevelopers.map((dev) => (
                   <option key={dev._id} value={dev._id}>
                     {dev.name} ({dev.email})
@@ -479,18 +487,18 @@ const ProjectDetailsPage = () => {
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
             <button
               type="button"
               onClick={() => setIsAssignOpen(false)}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
+              className="rounded-xl border border-slate-300/80 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-soft-xs"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isAssigning || unassignedDevelopers.length === 0}
-              className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-brand-600/20 hover:bg-brand-500 transition-all disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-soft-md shadow-brand-500/25 hover:from-brand-500 hover:to-indigo-500 transition-all disabled:opacity-50"
             >
               {isAssigning ? (
                 <>
@@ -498,7 +506,7 @@ const ProjectDetailsPage = () => {
                   Assigning...
                 </>
               ) : (
-                'Assign Member'
+                'Assign Engineer'
               )}
             </button>
           </div>
@@ -521,3 +529,4 @@ const ProjectDetailsPage = () => {
 };
 
 export default ProjectDetailsPage;
+

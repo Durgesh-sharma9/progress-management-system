@@ -2,29 +2,39 @@ import React from 'react';
 
 const colorStyles = {
   blue: {
-    bg: 'from-blue-50/70 to-indigo-50/30 border-blue-200/70 hover:border-blue-300',
-    iconBg: 'bg-blue-100 text-blue-600 border-blue-200',
-    glow: 'group-hover:shadow-[0_6px_16px_rgba(59,130,246,0.08)]',
+    bg: 'from-blue-500/10 via-indigo-500/5 to-white',
+    border: 'border-blue-200/70 hover:border-blue-400/80',
+    iconBg: 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-blue-500/25',
+    accentText: 'text-blue-600',
+    glow: 'hover:shadow-[0_8px_25px_-5px_rgba(59,130,246,0.15)]',
   },
   amber: {
-    bg: 'from-amber-50/70 to-orange-50/30 border-amber-200/70 hover:border-amber-300',
-    iconBg: 'bg-amber-100 text-amber-600 border-amber-200',
-    glow: 'group-hover:shadow-[0_6px_16px_rgba(245,158,11,0.08)]',
+    bg: 'from-amber-500/10 via-orange-500/5 to-white',
+    border: 'border-amber-200/70 hover:border-amber-400/80',
+    iconBg: 'bg-gradient-to-tr from-amber-500 to-orange-500 text-white shadow-amber-500/25',
+    accentText: 'text-amber-600',
+    glow: 'hover:shadow-[0_8px_25px_-5px_rgba(245,158,11,0.15)]',
   },
   emerald: {
-    bg: 'from-emerald-50/70 to-teal-50/30 border-emerald-200/70 hover:border-emerald-300',
-    iconBg: 'bg-emerald-100 text-emerald-600 border-emerald-200',
-    glow: 'group-hover:shadow-[0_6px_16px_rgba(16,185,129,0.08)]',
+    bg: 'from-emerald-500/10 via-teal-500/5 to-white',
+    border: 'border-emerald-200/70 hover:border-emerald-400/80',
+    iconBg: 'bg-gradient-to-tr from-emerald-600 to-teal-600 text-white shadow-emerald-500/25',
+    accentText: 'text-emerald-600',
+    glow: 'hover:shadow-[0_8px_25px_-5px_rgba(16,185,129,0.15)]',
   },
   purple: {
-    bg: 'from-purple-50/70 to-fuchsia-50/30 border-purple-200/70 hover:border-purple-300',
-    iconBg: 'bg-purple-100 text-purple-600 border-purple-200',
-    glow: 'group-hover:shadow-[0_6px_16px_rgba(168,85,247,0.08)]',
+    bg: 'from-purple-500/10 via-fuchsia-500/5 to-white',
+    border: 'border-purple-200/70 hover:border-purple-400/80',
+    iconBg: 'bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-purple-500/25',
+    accentText: 'text-purple-600',
+    glow: 'hover:shadow-[0_8px_25px_-5px_rgba(168,85,247,0.15)]',
   },
   rose: {
-    bg: 'from-rose-50/70 to-pink-50/30 border-rose-200/70 hover:border-rose-300',
-    iconBg: 'bg-rose-100 text-rose-600 border-rose-200',
-    glow: 'group-hover:shadow-[0_6px_16px_rgba(244,63,94,0.08)]',
+    bg: 'from-rose-500/10 via-pink-500/5 to-white',
+    border: 'border-rose-200/70 hover:border-rose-400/80',
+    iconBg: 'bg-gradient-to-tr from-rose-600 to-pink-600 text-white shadow-rose-500/25',
+    accentText: 'text-rose-600',
+    glow: 'hover:shadow-[0_8px_25px_-5px_rgba(244,63,94,0.15)]',
   },
 };
 
@@ -41,33 +51,33 @@ const StatCard = ({
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-xl border bg-gradient-to-b p-4 backdrop-blur-md transition-all duration-200 shadow-sm ${style.bg} ${style.glow} ${className}`}
+      className={`group relative overflow-hidden rounded-2xl border bg-gradient-to-b p-5 backdrop-blur-md transition-all duration-300 shadow-soft ${style.bg} ${style.border} ${style.glow} hover:-translate-y-1 ${className}`}
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
             {title}
           </p>
-          <h3 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 font-mono">
+          <h3 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900 font-mono">
             {value}
           </h3>
           {subtitle && (
-            <p className="mt-0.5 text-[11px] text-slate-500 flex items-center gap-1 font-medium line-clamp-1">
+            <p className="mt-1 text-xs text-slate-500 flex items-center gap-1 font-medium line-clamp-1">
               {subtitle}
             </p>
           )}
         </div>
         {Icon && (
           <div
-            className={`flex h-9 w-9 items-center justify-center rounded-lg border shadow-sm ${style.iconBg} shrink-0 transition-transform group-hover:scale-105`}
+            className={`flex h-11 w-11 items-center justify-center rounded-xl shadow-md ${style.iconBg} shrink-0 transition-transform duration-300 group-hover:scale-110`}
           >
-            <Icon className="h-4 w-4" />
+            <Icon className="h-5 w-5" />
           </div>
         )}
       </div>
 
       {trend && (
-        <div className="mt-2.5 flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
+        <div className="mt-3.5 flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50/80 border border-emerald-200/80 px-2.5 py-1 rounded-full w-fit">
           <span>{trend}</span>
         </div>
       )}
@@ -76,3 +86,4 @@ const StatCard = ({
 };
 
 export default StatCard;
+

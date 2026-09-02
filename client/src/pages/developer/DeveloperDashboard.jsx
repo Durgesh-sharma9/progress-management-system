@@ -15,6 +15,8 @@ import {
   Loader2,
   ExternalLink,
   Sparkles,
+  Code2,
+  CheckSquare,
 } from 'lucide-react';
 
 const DeveloperDashboard = () => {
@@ -43,7 +45,10 @@ const DeveloperDashboard = () => {
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
+          <p className="text-xs font-semibold text-slate-400">Loading your workspace...</p>
+        </div>
       </div>
     );
   }
@@ -51,18 +56,30 @@ const DeveloperDashboard = () => {
   return (
     <div className="space-y-8">
       {/* Top Welcome Banner */}
-      <div className="rounded-2xl bg-gradient-to-r from-brand-50 via-white to-indigo-50 border border-brand-200 p-6 lg:p-8 relative overflow-hidden shadow-sm">
-        <div className="max-w-2xl relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-100 border border-brand-200 text-brand-800 text-xs font-bold mb-3 shadow-sm">
-            <Sparkles className="h-3.5 w-3.5 text-brand-600" />
-            Developer Workspace Active
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-brand-950 p-6 sm:p-8 text-white shadow-soft-xl border border-slate-800">
+        <div className="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" />
+        <div className="absolute right-1/3 -bottom-10 h-48 w-48 rounded-full bg-brand-500/20 blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[11px] font-semibold text-emerald-300 mb-3">
+              <Code2 className="h-3.5 w-3.5" />
+              Developer Workspace Active
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-sans">
+              Welcome back, {user?.name}!
+            </h2>
+            <p className="text-sm text-slate-300 mt-1.5 leading-relaxed font-normal">
+              Manage your deliverable phases, check off sprint milestones in real-time, and monitor team velocity across your active projects.
+            </p>
           </div>
-          <h2 className="text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Welcome back, {user?.name}!
-          </h2>
-          <p className="text-sm text-slate-600 mt-2 leading-relaxed font-medium">
-            Manage your project phases, check off completed milestones with checkboxes, and watch project progress sync automatically across your team.
-          </p>
+          <Link
+            to="/developer/phases"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-3 text-sm font-bold text-white shadow-soft-md shadow-emerald-500/30 hover:from-emerald-400 hover:to-teal-500 transition-all duration-200 active:scale-95 shrink-0"
+          >
+            <CheckSquare className="h-4 w-4" />
+            My Phases
+          </Link>
         </div>
       </div>
 
@@ -74,44 +91,48 @@ const DeveloperDashboard = () => {
           icon={FolderGit2}
           color="blue"
           subtitle="Active project workspaces"
+          trend="In Progress"
         />
         <StatCard
-          title="Total My Phases"
+          title="My Phases"
           value={stats?.totalPhases || stats?.totalTasks || 0}
           icon={Layers}
           color="purple"
           subtitle="Created across projects"
+          trend="Total Deliverables"
         />
         <StatCard
-          title="Completed Phases"
+          title="Delivered"
           value={stats?.completedPhases || stats?.completedTasks || 0}
           icon={CheckCircle2}
           color="emerald"
           subtitle="Checked off & verified"
+          trend="Completed Milestones"
         />
         <StatCard
-          title="Pending Phases"
+          title="Pending"
           value={stats?.pendingPhases || stats?.pendingTasks || 0}
           icon={Clock}
           color="amber"
           subtitle="Awaiting completion"
+          trend="Action Required"
         />
       </div>
 
       {/* My Projects Section */}
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-bold text-slate-900">My Projects</h3>
-            <p className="text-xs text-slate-500">
-              Assigned project workspaces with live progress tracking
+            <h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">My Active Workspaces</h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Assigned project workspaces with real-time interactive checklist & flowchart synchronization
             </p>
           </div>
           <Link
             to="/developer/projects"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100/80 border border-brand-200/80 px-3.5 py-1.5 rounded-full transition-all duration-200"
           >
-            View All My Projects
+            View All Workspaces
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -120,40 +141,40 @@ const DeveloperDashboard = () => {
           <EmptyState
             icon={FolderGit2}
             title="No assigned projects yet"
-            description="You have not been assigned to any projects by the admin yet. Once assigned, your project workspaces will appear here."
+            description="You have not been assigned to any projects by the administrator yet. Once assigned, your project workspaces will automatically appear here."
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {stats.myProjects.map((project) => (
               <div
                 key={project._id}
-                className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-brand-300 transition-all flex flex-col justify-between"
+                className="glass-card glass-card-hover rounded-3xl p-6 flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex items-start justify-between gap-3 mb-2.5">
+                  <div className="flex items-start justify-between gap-3 mb-3">
                     <h4 className="font-bold text-slate-900 text-base leading-snug line-clamp-1">
                       {project.name}
                     </h4>
                     <StatusBadge status={project.status} />
                   </div>
 
-                  <p className="text-xs text-slate-500 line-clamp-2 mb-5 leading-relaxed min-h-[32px]">
-                    {project.description || 'No description provided.'}
+                  <p className="text-xs text-slate-500 line-clamp-2 mb-5 leading-relaxed min-h-[32px] font-normal">
+                    {project.description || 'No project description specified.'}
                   </p>
 
                   {/* My Personal Progress Bar */}
-                  <div className="mb-4 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                  <div className="mb-4 p-4 rounded-2xl bg-gradient-to-r from-slate-50/90 to-brand-50/40 border border-slate-200/70 shadow-soft-xs">
                     <ProgressBar
                       progress={project.myProgress || 0}
-                      label="My Personal Progress"
+                      label="My Phase Velocity"
                       size="md"
                     />
-                    <div className="flex items-center justify-between text-[11px] text-slate-600 mt-2 font-medium">
+                    <div className="flex items-center justify-between text-[11px] text-slate-600 mt-2.5 font-medium">
                       <span>
                         {project.myCompletedPhases || project.myCompletedTasks || 0} of{' '}
-                        {project.myTotalPhases || project.myTotalTasks || 0} phases done
+                        {project.myTotalPhases || project.myTotalTasks || 0} delivered
                       </span>
-                      <span className="font-bold text-emerald-600">
+                      <span className="font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-full font-mono">
                         {project.myPendingTasks || 0} pending
                       </span>
                     </div>
@@ -163,7 +184,7 @@ const DeveloperDashboard = () => {
                   <div className="mb-4">
                     <ProgressBar
                       progress={project.overallProgress || 0}
-                      label="Team Overall Progress"
+                      label="Team Overall Velocity"
                       size="sm"
                     />
                   </div>
@@ -172,10 +193,10 @@ const DeveloperDashboard = () => {
                 <div className="pt-4 border-t border-slate-100">
                   <Link
                     to={`/developer/workspace/${project._id}`}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-brand-600/20 hover:bg-brand-500 transition-all active:scale-[0.99]"
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-soft-md shadow-brand-500/25 hover:from-brand-500 hover:to-indigo-500 transition-all duration-200 active:scale-[0.99]"
                   >
                     <ExternalLink className="h-3.5 w-3.5" />
-                    Open Workspace
+                    Open Project Workspace
                   </Link>
                 </div>
               </div>
@@ -188,3 +209,4 @@ const DeveloperDashboard = () => {
 };
 
 export default DeveloperDashboard;
+
