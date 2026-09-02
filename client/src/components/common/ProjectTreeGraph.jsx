@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ProjectTypeBadge from './ProjectTypeBadge';
 import {
   FolderGit2,
   CheckCircle2,
@@ -88,10 +89,18 @@ const ProjectTreeGraph = ({
                 <FolderGit2 className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-brand-100 block">
-                  Root Node
-                </span>
-                <h4 className="font-bold text-sm truncate text-white">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-brand-100 block">
+                    Root Node
+                  </span>
+                  <ProjectTypeBadge
+                    projectType={project?.projectType}
+                    memberCount={developers.length}
+                    showCount={true}
+                    size="xs"
+                  />
+                </div>
+                <h4 className="font-bold text-sm truncate text-white mt-0.5">
                   {project?.name || 'Project'}
                 </h4>
                 <div className="flex items-center justify-between mt-1 text-[11px] text-brand-100 font-medium">
@@ -226,7 +235,7 @@ const ProjectTreeGraph = ({
                                     )}
                                   </button>
 
-                                  <div className="min-w-0">
+                                  <div className="min-w-0 flex items-center gap-1.5">
                                     <p
                                       className={`text-xs font-semibold truncate ${
                                         phase.completed
@@ -236,6 +245,14 @@ const ProjectTreeGraph = ({
                                     >
                                       {phase.title}
                                     </p>
+                                    {phase.notes && (
+                                      <span
+                                        title={phase.notes}
+                                        className="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-300 font-bold shrink-0"
+                                      >
+                                        📝
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
 

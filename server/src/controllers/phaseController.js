@@ -94,7 +94,7 @@ exports.getPhasesByProject = async (req, res, next) => {
 // @access  Private (Developer only)
 exports.createPhase = async (req, res, next) => {
   try {
-    const { title, description, projectId } = req.body;
+    const { title, description, notes, projectId } = req.body;
 
     if (!title || !projectId) {
       return res.status(400).json({
@@ -122,6 +122,7 @@ exports.createPhase = async (req, res, next) => {
     const phase = await Phase.create({
       title: title.trim(),
       description: description ? description.trim() : '',
+      notes: notes ? notes.trim() : '',
       projectId,
       developerId: req.user._id,
       completed: false,
@@ -138,6 +139,83 @@ exports.createPhase = async (req, res, next) => {
       message: 'Phase created successfully',
       data: populated,
       metrics,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update phase title, description, & notes
+// @route   PUT /api/phases/:id
+// @access  Private (Developer only - Owner)
+exports.updatePhase = async (req, res, next) => {
+  try {
+    const { title, description, notes } = req.body;
+    let phase = await Phase.findById(req.params.id);
+
+    if (!phase) {
+      return res.status(404).json({ success: false, message: 'Phase not found' });
+    }
+
+    // Ensure only the owning developer can update
+    if (phase.developerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to edit another developer\'s phase',
+      });
+    }
+
+    if (title) phase.title = title.trim();
+    if (description !== undefined) phase.description = description.trim();
+    if (notes !== undefined) phase.notes = notes.trim();
+    await phase.save();
+
+    const populated = await Phase.findById(phase._id).populate(
+      'developerId',
+      'name email role'
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Phase updated successfully',
+      data: populated,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update developer notes / work logs on phase
+// @route   PATCH /api/phases/:id/notes
+// @access  Private (Developer only - Owner)
+exports.updatePhaseNotes = async (req, res, next) => {
+  try {
+    const { notes } = req.body;
+    let phase = await Phase.findById(req.params.id);
+
+    if (!phase) {
+      return res.status(404).json({ success: false, message: 'Phase not found' });
+    }
+
+    if (phase.developerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to update notes on another developer\'s phase',
+      });
+    }
+
+    phase.notes = notes !== undefined ? notes.trim() : '';
+    await phase.save();
+
+    const populated = await Phase.findById(phase._id).populate(
+      'developerId',
+      'name email role'
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Developer notes saved successfully',
+      data: populated,
     });
   } catch (error) {
     next(error);
@@ -264,3 +342,76 @@ exports.deletePhase = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Bulk create phases (Paster / Quick Import)
+// @route   POST /api/phases/bulk
+// @access  Private (Developer only)
+exports.bulkCreatePhases = async (req, res, next) => {
+  try {
+    const { projectId, phases } = req.body;
+
+    if (!projectId || !Array.isArray(phases) || phases.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Project ID and a non-empty phases list are required',
+      });
+    }
+
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ success: false, message: 'Project not found' });
+    }
+
+    const isAssigned = project.developers.some(
+      (id) => id.toString() === req.user._id.toString()
+    );
+    if (!isAssigned) {
+      return res.status(403).json({
+        success: false,
+        message: 'You are not assigned to this project',
+      });
+    }
+
+    const validPhases = phases
+      .map((p) => {
+        if (typeof p === 'string') {
+          return { title: p.trim(), description: '' };
+        }
+        return {
+          title: (p.title || '').trim(),
+          description: (p.description || '').trim(),
+        };
+      })
+      .filter((p) => p.title.length > 0);
+
+    if (validPhases.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No valid phase titles found to import',
+      });
+    }
+
+    const createdDocs = await Phase.insertMany(
+      validPhases.map((p) => ({
+        title: p.title,
+        description: p.description,
+        projectId,
+        developerId: req.user._id,
+        completed: false,
+      }))
+    );
+
+    const metrics = await calculateMetrics(projectId, req.user._id);
+
+    res.status(201).json({
+      success: true,
+      message: `Successfully created ${createdDocs.length} deliverable phases`,
+      count: createdDocs.length,
+      data: createdDocs,
+      metrics,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

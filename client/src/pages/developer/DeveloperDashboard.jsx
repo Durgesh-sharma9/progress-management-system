@@ -4,7 +4,7 @@ import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import StatCard from '../../components/common/StatCard';
 import ProgressBar from '../../components/common/ProgressBar';
-import StatusBadge from '../../components/common/StatusBadge';
+import ProjectTypeBadge from '../../components/common/ProjectTypeBadge';
 import EmptyState from '../../components/common/EmptyState';
 import {
   FolderGit2,
@@ -151,12 +151,18 @@ const DeveloperDashboard = () => {
                 className="glass-card glass-card-hover rounded-3xl p-6 flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <h4 className="font-bold text-slate-900 text-base leading-snug line-clamp-1">
-                      {project.name}
-                    </h4>
-                    <StatusBadge status={project.status} />
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <ProjectTypeBadge
+                      projectType={project.projectType}
+                      memberCount={project.developerCount || 0}
+                      showCount={project.projectType === 'Group' || (project.developers && project.developers.length > 1)}
+                      size="xs"
+                    />
                   </div>
+
+                  <h4 className="font-bold text-slate-900 text-base leading-snug line-clamp-1 mb-1">
+                    {project.name}
+                  </h4>
 
                   <p className="text-xs text-slate-500 line-clamp-2 mb-5 leading-relaxed min-h-[32px] font-normal">
                     {project.description || 'No project description specified.'}

@@ -3,19 +3,17 @@ import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import StatCard from '../../components/common/StatCard';
 import ProgressBar from '../../components/common/ProgressBar';
-import StatusBadge from '../../components/common/StatusBadge';
+import ProjectTypeBadge from '../../components/common/ProjectTypeBadge';
 import EmptyState from '../../components/common/EmptyState';
 import {
   FolderGit2,
-  Clock,
-  CheckCircle2,
   Users,
+  User,
   Plus,
   ArrowRight,
   Loader2,
-  Calendar,
   Sparkles,
-  Zap,
+  Layers,
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -88,30 +86,30 @@ const AdminDashboard = () => {
           value={stats?.totalProjects || 0}
           icon={FolderGit2}
           color="blue"
-          subtitle="All active & archived projects"
-          trend="+100% active visibility"
+          subtitle="All active workspaces"
+          trend="Overview"
         />
         <StatCard
-          title="Active Projects"
-          value={stats?.activeProjects || 0}
-          icon={Clock}
+          title="Standalone Projects"
+          value={stats?.standaloneProjects || 0}
+          icon={User}
           color="amber"
-          subtitle="Currently in progress"
-          trend="In Development"
+          subtitle="Solo engineer deliverables"
+          trend="Individual Focus"
         />
         <StatCard
-          title="Delivered"
-          value={stats?.completedProjects || 0}
-          icon={CheckCircle2}
-          color="emerald"
-          subtitle="Successfully delivered"
-          trend="100% Milestones Met"
-        />
-        <StatCard
-          title="Engineers"
-          value={stats?.totalDevelopers || 0}
+          title="Group Projects"
+          value={stats?.groupProjects || 0}
           icon={Users}
           color="purple"
+          subtitle="Multi-developer teams"
+          trend="Team Collaboration"
+        />
+        <StatCard
+          title="Total Engineers"
+          value={stats?.totalDevelopers || 0}
+          icon={Layers}
+          color="emerald"
           subtitle="Registered team members"
           trend="Active Contributors"
         />
@@ -123,7 +121,7 @@ const AdminDashboard = () => {
           <div>
             <h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">Recent Projects</h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Live progress, phase delivery rates, and active team assignments
+              Live progress, Standalone vs Group classification, and active team assignments
             </p>
           </div>
           <Link
@@ -144,54 +142,83 @@ const AdminDashboard = () => {
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {stats.recentProjects.map((project) => (
-              <div
-                key={project._id}
-                className="glass-card glass-card-hover rounded-3xl p-6 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <h4 className="font-bold text-slate-900 text-base leading-snug line-clamp-1">
+            {stats.recentProjects.map((project) => {
+              const currentType =
+                project.projectType ||
+                (project.developers && project.developers.length > 1 ? 'Group' : 'Standalone');
+              const isGroup = currentType === 'Group';
+
+              return (
+                <div
+                  key={project._id}
+                  className="glass-card glass-card-hover rounded-3xl p-6 flex flex-col justify-between"
+                >
+                  <div>
+                    {/* Top Badge (Type) */}
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <ProjectTypeBadge
+                        projectType={currentType}
+                        memberCount={project.developerCount || 0}
+                        showCount={isGroup}
+                        size="xs"
+                      />
+                    </div>
+
+                    <h4 className="font-bold text-slate-900 text-base leading-snug line-clamp-1 mb-1">
                       {project.name}
                     </h4>
-                    <StatusBadge status={project.status} />
-                  </div>
 
-                  <p className="text-xs text-slate-500 line-clamp-2 mb-5 leading-relaxed font-normal">
-                    {project.description || 'No project description provided.'}
-                  </p>
+                    <p className="text-xs text-slate-500 line-clamp-2 mb-5 leading-relaxed font-normal">
+                      {project.description || 'No project description provided.'}
+                    </p>
 
-                  {/* Progress Bar */}
-                  <div className="mb-5 bg-slate-50/80 p-3 rounded-2xl border border-slate-200/60">
-                    <ProgressBar
-                      progress={project.overallProgress}
-                      label="Milestones Delivered"
-                      size="md"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1 rounded-lg bg-brand-50 text-brand-600 border border-brand-200">
-                      <Users className="h-3.5 w-3.5" />
+                    {/* Progress Bar */}
+                    <div className="mb-5 bg-slate-50/80 p-3 rounded-2xl border border-slate-200/60">
+                      <ProgressBar
+                        progress={project.overallProgress}
+                        label="Milestones Delivered"
+                        size="md"
+                      />
                     </div>
-                    <span className="font-bold text-slate-700">
-                      {project.developerCount}{' '}
-                      {project.developerCount === 1 ? 'Engineer' : 'Engineers'}
-                    </span>
                   </div>
 
-                  <Link
-                    to={`/admin/projects/${project._id}`}
-                    className="inline-flex items-center gap-1 font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-xl transition-colors"
-                  >
-                    Details
-                    <ArrowRight className="h-3 w-3" />
-                  </Link>
+                  <div className="pt-3.5 border-t border-slate-100 flex flex-col gap-2.5">
+                    {project.developers && project.developers.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5 max-h-16 overflow-y-auto">
+                        {project.developers.map((d, i) => (
+                          <div
+                            key={d._id || i}
+                            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 text-[11px]"
+                          >
+                            <div className="h-4 w-4 rounded bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center text-[8px] font-bold">
+                              {(d.name || 'D').charAt(0).toUpperCase()}
+                            </div>
+                            <span className="font-semibold text-slate-800 truncate max-w-[110px]">
+                              {d.name}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-slate-400 italic">No engineers assigned</span>
+                    )}
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-50">
+                      <span className="text-[11px] text-slate-400 font-medium">
+                        {isGroup ? `${project.developerCount || 0} Engineers` : 'Solo Engineer'}
+                      </span>
+                      <Link
+                        to={`/admin/projects/${project._id}`}
+                        className="inline-flex items-center gap-1 font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-xl transition-colors text-xs"
+                      >
+                        Details
+                        <ArrowRight className="h-3 w-3" />
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -200,4 +227,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-

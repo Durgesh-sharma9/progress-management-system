@@ -23,6 +23,9 @@ const enrichProjectsWithProgress = async (projects, userId = null, userRole = 'a
       projObj.completedTasks = completedPhases;
       projObj.overallProgress = overallProgress;
       projObj.developerCount = project.developers ? project.developers.length : 0;
+      projObj.projectType =
+        project.projectType ||
+        (project.developers && project.developers.length > 1 ? 'Group' : 'Standalone');
 
       // If requested by a developer, attach their personal progress
       if (userRole === 'developer' && userId) {
@@ -126,6 +129,9 @@ exports.getProjectById = async (req, res, next) => {
     projObj.totalTasks = totalPhases;
     projObj.completedTasks = completedPhases;
     projObj.overallProgress = overallProgress;
+    projObj.projectType =
+      project.projectType ||
+      (project.developers && project.developers.length > 1 ? 'Group' : 'Standalone');
 
     // Developer breakdown stats
     const developerStats = await Promise.all(
@@ -192,13 +198,18 @@ exports.getProjectById = async (req, res, next) => {
 // @access  Private (Admin only)
 exports.createProject = async (req, res, next) => {
   try {
-    const { name, description, status, developers } = req.body;
+    const { name, description, status, projectType, developers } = req.body;
+
+    const devs = Array.isArray(developers) ? developers : [];
+    const determinedType =
+      projectType || (devs.length > 1 ? 'Group' : 'Standalone');
 
     const project = await Project.create({
       name,
       description,
       status: status || 'Planning',
-      developers: developers || [],
+      projectType: determinedType,
+      developers: devs,
       createdBy: req.user._id,
     });
 
@@ -221,7 +232,7 @@ exports.createProject = async (req, res, next) => {
 // @access  Private (Admin only)
 exports.updateProject = async (req, res, next) => {
   try {
-    const { name, description, status, developers } = req.body;
+    const { name, description, status, projectType, developers } = req.body;
 
     let project = await Project.findById(req.params.id);
     if (!project) {
@@ -231,7 +242,13 @@ exports.updateProject = async (req, res, next) => {
     if (name) project.name = name;
     if (description !== undefined) project.description = description;
     if (status) project.status = status;
-    if (developers !== undefined) project.developers = developers;
+    if (projectType) project.projectType = projectType;
+    if (developers !== undefined) {
+      project.developers = developers;
+      if (!projectType && developers.length > 1) {
+        project.projectType = 'Group';
+      }
+    }
 
     await project.save();
 
@@ -300,6 +317,9 @@ exports.assignDeveloper = async (req, res, next) => {
     }
 
     project.developers.push(developerId);
+    if (project.developers.length > 1 && project.projectType !== 'Group') {
+      project.projectType = 'Group';
+    }
     await project.save();
 
     const updated = await Project.findById(project._id)
@@ -358,10 +378,24 @@ exports.getAdminDashboardStats = async (req, res, next) => {
     const completedProjects = await Project.countDocuments({ status: 'Completed' });
     const totalDevelopers = await User.countDocuments({ role: 'developer' });
 
+    const allProjectsForStats = await Project.find({}, 'projectType developers');
+    let standaloneProjects = 0;
+    let groupProjects = 0;
+    allProjectsForStats.forEach((p) => {
+      const type =
+        p.projectType ||
+        (p.developers && p.developers.length > 1 ? 'Group' : 'Standalone');
+      if (type === 'Group') {
+        groupProjects++;
+      } else {
+        standaloneProjects++;
+      }
+    });
+
     const recentProjects = await Project.find()
       .populate('developers', 'name email')
       .sort({ createdAt: -1 })
-      .limit(5);
+      .limit(6);
 
     const enrichedRecent = await enrichProjectsWithProgress(recentProjects);
 
@@ -372,6 +406,8 @@ exports.getAdminDashboardStats = async (req, res, next) => {
         activeProjects,
         planningProjects,
         completedProjects,
+        standaloneProjects,
+        groupProjects,
         totalDevelopers,
         recentProjects: enrichedRecent,
       },

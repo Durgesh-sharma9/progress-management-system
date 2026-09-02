@@ -4,8 +4,6 @@ const morgan = require('morgan');
 const dotenv = require('dotenv');
 const { connectDB } = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
-const User = require('./models/User');
-const seedData = require('./utils/seed');
 
 // Load environment variables
 dotenv.config();
@@ -49,13 +47,6 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     await connectDB();
-
-    // Auto-seed if user count is 0
-    const userCount = await User.countDocuments();
-    if (userCount === 0) {
-      console.log('Database is empty. Automatically initializing demo seed data...');
-      await seedData();
-    }
 
     const server = app.listen(PORT, () => {
       console.log(`🚀 DevTrack API Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);

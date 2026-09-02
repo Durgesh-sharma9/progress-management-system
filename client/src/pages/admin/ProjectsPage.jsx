@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import ProgressBar from '../../components/common/ProgressBar';
-import StatusBadge from '../../components/common/StatusBadge';
+import ProjectTypeBadge from '../../components/common/ProjectTypeBadge';
 import Modal from '../../components/common/Modal';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import EmptyState from '../../components/common/EmptyState';
@@ -12,6 +12,7 @@ import {
   Plus,
   Search,
   Users,
+  User,
   Calendar,
   Edit2,
   Trash2,
@@ -20,6 +21,7 @@ import {
   Check,
   Sparkles,
   X,
+  Layers,
 } from 'lucide-react';
 
 const ProjectsPage = () => {
@@ -27,7 +29,7 @@ const ProjectsPage = () => {
   const [developersList, setDevelopersList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [typeFilter, setTypeFilter] = useState('All'); // 'All' | 'Standalone' | 'Group'
 
   // Create / Edit Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,7 +38,7 @@ const ProjectsPage = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    status: 'Planning',
+    projectType: 'Standalone', // 'Standalone' | 'Group'
     developers: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -84,7 +86,7 @@ const ProjectsPage = () => {
     setFormData({
       name: '',
       description: '',
-      status: 'Planning',
+      projectType: 'Standalone',
       developers: [],
     });
     setIsModalOpen(true);
@@ -93,22 +95,48 @@ const ProjectsPage = () => {
   const openEditModal = (project) => {
     setModalMode('edit');
     setSelectedProjectId(project._id);
+    const assignedDevIds = project.developers ? project.developers.map((d) => d._id || d) : [];
+    const inferredType =
+      project.projectType || (assignedDevIds.length > 1 ? 'Group' : 'Standalone');
+
     setFormData({
       name: project.name,
       description: project.description || '',
-      status: project.status || 'Planning',
-      developers: project.developers ? project.developers.map((d) => d._id || d) : [],
+      projectType: inferredType,
+      developers: assignedDevIds,
     });
     setIsModalOpen(true);
   };
 
+  const handleTypeChange = (newType) => {
+    setFormData((prev) => {
+      let updatedDevs = [...prev.developers];
+      if (newType === 'Standalone' && updatedDevs.length > 1) {
+        updatedDevs = [updatedDevs[0]];
+      }
+      return {
+        ...prev,
+        projectType: newType,
+        developers: updatedDevs,
+      };
+    });
+  };
+
   const toggleDeveloperSelection = (devId) => {
     setFormData((prev) => {
-      const exists = prev.developers.includes(devId);
-      if (exists) {
-        return { ...prev, developers: prev.developers.filter((id) => id !== devId) };
+      if (prev.projectType === 'Standalone') {
+        const isSelected = prev.developers.includes(devId);
+        return {
+          ...prev,
+          developers: isSelected ? [] : [devId],
+        };
       } else {
-        return { ...prev, developers: [...prev.developers, devId] };
+        const exists = prev.developers.includes(devId);
+        if (exists) {
+          return { ...prev, developers: prev.developers.filter((id) => id !== devId) };
+        } else {
+          return { ...prev, developers: [...prev.developers, devId] };
+        }
       }
     });
   };
@@ -155,7 +183,7 @@ const ProjectsPage = () => {
     try {
       const res = await api.delete(`/projects/${projectToDelete._id}`);
       if (res.data.success) {
-        success('Project and associated phases/tasks deleted');
+        success('Project and associated phases deleted');
         setIsDeleteOpen(false);
         setProjectToDelete(null);
         fetchProjects();
@@ -167,14 +195,29 @@ const ProjectsPage = () => {
     }
   };
 
+  // Compute Standalone vs Group counts
+  const standaloneCount = projects.filter((p) => {
+    const type = p.projectType || (p.developers?.length > 1 ? 'Group' : 'Standalone');
+    return type === 'Standalone';
+  }).length;
+
+  const groupCount = projects.filter((p) => {
+    const type = p.projectType || (p.developers?.length > 1 ? 'Group' : 'Standalone');
+    return type === 'Group';
+  }).length;
+
   // Filter projects
   const filteredProjects = projects.filter((project) => {
     const matchesSearch =
       project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       project.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus =
-      statusFilter === 'All' || project.status === statusFilter;
-    return matchesSearch && matchesStatus;
+
+    const pType =
+      project.projectType || (project.developers?.length > 1 ? 'Group' : 'Standalone');
+    const matchesType =
+      typeFilter === 'All' || pType.toLowerCase() === typeFilter.toLowerCase();
+
+    return matchesSearch && matchesType;
   });
 
   return (
@@ -182,12 +225,18 @@ const ProjectsPage = () => {
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               Projects
             </h2>
             <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200">
               {projects.length} Total
+            </span>
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200">
+              👤 {standaloneCount} Standalone
+            </span>
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+              👥 {groupCount} Group
             </span>
           </div>
           <p className="text-sm text-slate-500 mt-1">
@@ -204,8 +253,8 @@ const ProjectsPage = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center gap-3">
-        <div className="relative flex-1 w-full">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
             type="text"
@@ -224,19 +273,26 @@ const ProjectsPage = () => {
           )}
         </div>
 
-        {/* Status Filter Buttons */}
-        <div className="flex items-center gap-1.5 p-1 rounded-2xl border border-slate-200/80 bg-white shadow-soft-xs w-full sm:w-auto overflow-x-auto">
-          {['All', 'Planning', 'In Progress', 'Completed'].map((status) => (
+        {/* Project Type Filter Buttons */}
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl border border-slate-200/80 bg-white shadow-soft-xs overflow-x-auto">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 pl-2 pr-1 hidden sm:inline">
+            Type:
+          </span>
+          {[
+            { id: 'All', label: 'All' },
+            { id: 'Standalone', label: '👤 Standalone' },
+            { id: 'Group', label: '👥 Group' },
+          ].map((type) => (
             <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 ${
-                statusFilter === status
-                  ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
+              key={type.id}
+              onClick={() => setTypeFilter(type.id)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 ${
+                typeFilter === type.id
+                  ? 'bg-slate-900 text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
               }`}
             >
-              {status}
+              {type.label}
             </button>
           ))}
         </div>
@@ -252,10 +308,10 @@ const ProjectsPage = () => {
         </div>
       ) : filteredProjects.length === 0 ? (
         <EmptyState
-          title={searchQuery ? 'No matching projects' : 'No projects found'}
+          title={searchQuery || typeFilter !== 'All' ? 'No matching projects' : 'No projects found'}
           description={
-            searchQuery
-              ? 'Try adjusting your search criteria or status filter.'
+            searchQuery || typeFilter !== 'All'
+              ? 'Try adjusting your search query or project type filter.'
               : 'Create a new project to start tracking developer phases and progress.'
           }
           actionText={searchQuery ? undefined : 'Create First Project'}
@@ -263,93 +319,131 @@ const ProjectsPage = () => {
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProjects.map((project) => (
-            <div
-              key={project._id}
-              className="glass-card glass-card-hover rounded-3xl p-6 flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <h3 className="font-bold text-slate-900 text-base leading-snug line-clamp-1">
-                    {project.name}
-                  </h3>
-                  <StatusBadge status={project.status} />
-                </div>
+          {filteredProjects.map((project) => {
+            const currentType =
+              project.projectType ||
+              (project.developers && project.developers.length > 1 ? 'Group' : 'Standalone');
+            const isGroup = currentType === 'Group';
 
-                <p className="text-xs text-slate-500 line-clamp-2 mb-5 leading-relaxed min-h-[32px] font-normal">
-                  {project.description || 'No description provided.'}
-                </p>
-
-                {/* Progress Bar */}
-                <div className="mb-5 bg-slate-50/80 p-3 rounded-2xl border border-slate-200/60">
-                  <ProgressBar
-                    progress={project.overallProgress}
-                    label="Delivery Velocity"
-                    size="md"
-                  />
-                </div>
-
-                {/* Assigned Developers Avatar Stack */}
-                <div className="flex items-center justify-between text-xs text-slate-500 pt-3 border-t border-slate-100 mb-4 font-medium">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1 rounded-lg bg-brand-50 text-brand-600 border border-brand-200">
-                      <Users className="h-3.5 w-3.5" />
-                    </div>
-                    <span className="font-bold text-slate-700">
-                      {project.developerCount || 0}{' '}
-                      {project.developerCount === 1 ? 'Engineer' : 'Engineers'}
-                    </span>
+            return (
+              <div
+                key={project._id}
+                className="glass-card glass-card-hover rounded-3xl p-6 flex flex-col justify-between"
+              >
+                <div>
+                  {/* Top Badge (Project Type) */}
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <ProjectTypeBadge
+                      projectType={currentType}
+                      memberCount={project.developerCount || 0}
+                      showCount={isGroup}
+                      size="sm"
+                    />
                   </div>
 
-                  {project.developers && project.developers.length > 0 && (
-                    <div className="flex -space-x-1.5 overflow-hidden">
-                      {project.developers.slice(0, 3).map((d, i) => (
-                        <div
-                          key={d._id || i}
-                          title={d.name}
-                          className="h-6 w-6 rounded-full bg-gradient-to-tr from-brand-600 to-indigo-600 border-2 border-white flex items-center justify-center text-[9px] font-bold text-white shadow-soft-xs"
-                        >
-                          {(d.name || 'D').charAt(0)}
-                        </div>
-                      ))}
-                      {project.developers.length > 3 && (
-                        <div className="h-6 w-6 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[8px] font-bold text-slate-700">
-                          +{project.developers.length - 3}
-                        </div>
-                      )}
+                  <h3 className="font-bold text-slate-900 text-base leading-snug line-clamp-1 mb-1.5">
+                    {project.name}
+                  </h3>
+
+                  <p className="text-xs text-slate-500 line-clamp-2 mb-5 leading-relaxed min-h-[32px] font-normal">
+                    {project.description || 'No description provided.'}
+                  </p>
+
+                  {/* Progress Bar */}
+                  <div className="mb-5 bg-slate-50/80 p-3 rounded-2xl border border-slate-200/60">
+                    <ProgressBar
+                      progress={project.overallProgress}
+                      label="Delivery Velocity"
+                      size="md"
+                    />
+                  </div>
+
+                  {/* Assigned Developers Section */}
+                  <div className="mb-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 p-3.5 shadow-soft-xs">
+                    <div className="flex items-center justify-between mb-2.5">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                        {isGroup ? (
+                          <>
+                            <Users className="h-3.5 w-3.5 text-purple-600" />
+                            <span>Assigned Team ({project.developers?.length || 0})</span>
+                          </>
+                        ) : (
+                          <>
+                            <User className="h-3.5 w-3.5 text-sky-600" />
+                            <span>Assigned Engineer</span>
+                          </>
+                        )}
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400 font-mono">
+                        {isGroup ? 'Team Project' : 'Solo'}
+                      </span>
                     </div>
-                  )}
+
+                    {project.developers && project.developers.length > 0 ? (
+                      <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                        {project.developers.map((d, i) => (
+                          <div
+                            key={d._id || i}
+                            className="flex items-center justify-between gap-2 p-2 rounded-xl bg-white border border-slate-200/90 shadow-soft-xs hover:border-slate-300 transition-colors"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-xs font-bold text-white shadow-soft-xs shrink-0">
+                                {(d.name || 'D').charAt(0).toUpperCase()}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-xs font-bold text-slate-900 truncate leading-tight">
+                                  {d.name}
+                                </p>
+                                {d.email && (
+                                  <p className="text-[10px] text-slate-500 truncate leading-tight mt-0.5">
+                                    {d.email}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-brand-50 text-brand-700 border border-brand-200 shrink-0">
+                              Dev
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-2 text-center text-xs text-slate-400 italic">
+                        No engineers assigned yet
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                  <Link
+                    to={`/admin/projects/${project._id}`}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 border border-brand-200/80 px-3 py-2 text-xs font-bold text-brand-700 transition-colors shadow-soft-xs"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    View Details
+                  </Link>
+
+                  <button
+                    onClick={() => openEditModal(project)}
+                    title="Edit Project"
+                    className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors shadow-soft-xs"
+                  >
+                    <Edit2 className="h-3.5 w-3.5" />
+                  </button>
+
+                  <button
+                    onClick={() => confirmDelete(project)}
+                    title="Delete Project"
+                    className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-colors shadow-soft-xs"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               </div>
-
-              {/* Action Buttons */}
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                <Link
-                  to={`/admin/projects/${project._id}`}
-                  className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 border border-brand-200/80 px-3 py-2 text-xs font-bold text-brand-700 transition-colors shadow-soft-xs"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  View Details
-                </Link>
-
-                <button
-                  onClick={() => openEditModal(project)}
-                  title="Edit Project"
-                  className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors shadow-soft-xs"
-                >
-                  <Edit2 className="h-3.5 w-3.5" />
-                </button>
-
-                <button
-                  onClick={() => confirmDelete(project)}
-                  title="Delete Project"
-                  className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-colors shadow-soft-xs"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -358,10 +452,100 @@ const ProjectsPage = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={modalMode === 'create' ? 'Create New Project' : 'Edit Project'}
-        subtitle="Manage project specifications and assign team members."
+        subtitle="Specify project type, title, description, and developer assignments."
         maxWidth="lg"
       >
         <form onSubmit={handleFormSubmit} className="space-y-4">
+          {/* Project Type Selection (Standalone vs Group) */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+              Project Structure / Mode *
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Standalone Card */}
+              <div
+                onClick={() => handleTypeChange('Standalone')}
+                className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between ${
+                  formData.projectType === 'Standalone'
+                    ? 'border-sky-500 bg-sky-50/70 shadow-soft-xs'
+                    : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`p-1.5 rounded-xl ${
+                        formData.projectType === 'Standalone'
+                          ? 'bg-sky-500 text-white'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      <User className="h-4 w-4" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-900">
+                      Standalone Project
+                    </span>
+                  </div>
+                  <div
+                    className={`h-4 w-4 rounded-full border flex items-center justify-center ${
+                      formData.projectType === 'Standalone'
+                        ? 'border-sky-600 bg-sky-600 text-white'
+                        : 'border-slate-300'
+                    }`}
+                  >
+                    {formData.projectType === 'Standalone' && (
+                      <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                    )}
+                  </div>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-tight">
+                  Single developer assignment. Focused individual deliverable workflow.
+                </p>
+              </div>
+
+              {/* Group Card */}
+              <div
+                onClick={() => handleTypeChange('Group')}
+                className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between ${
+                  formData.projectType === 'Group'
+                    ? 'border-purple-500 bg-purple-50/70 shadow-soft-xs'
+                    : 'border-slate-200 bg-white hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`p-1.5 rounded-xl ${
+                        formData.projectType === 'Group'
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      <Users className="h-4 w-4" />
+                    </div>
+                    <span className="text-xs font-bold text-slate-900">
+                      Group Project
+                    </span>
+                  </div>
+                  <div
+                    className={`h-4 w-4 rounded-full border flex items-center justify-center ${
+                      formData.projectType === 'Group'
+                        ? 'border-purple-600 bg-purple-600 text-white'
+                        : 'border-slate-300'
+                    }`}
+                  >
+                    {formData.projectType === 'Group' && (
+                      <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                    )}
+                  </div>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-tight">
+                  Multi-developer team collaboration with cross-phase sprint planning.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
               Project Name *
@@ -391,26 +575,23 @@ const ProjectsPage = () => {
             />
           </div>
 
+          {/* Assigned Developers Multi-Selection / Single selection */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-              Status
-            </label>
-            <select
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              className="block w-full rounded-xl border border-slate-300/80 bg-white/70 px-3.5 py-2.5 text-sm text-slate-900 transition-all focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-            >
-              <option value="Planning">Planning</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-            </select>
-          </div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                {formData.projectType === 'Standalone'
+                  ? 'Assign Solo Engineer (Optional / 1 max)'
+                  : `Assign Team Engineers (${formData.developers.length} selected)`}
+              </label>
+              <span className="text-[11px] text-slate-500">
+                {formData.projectType === 'Standalone'
+                  ? formData.developers.length > 0
+                    ? '1 Developer Assigned'
+                    : 'None Selected (Can assign later)'
+                  : `${formData.developers.length} Assigned`}
+              </span>
+            </div>
 
-          {/* Assigned Developers Multi-Selection */}
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-              Assign Engineers ({formData.developers.length} selected)
-            </label>
             <div className="max-h-44 overflow-y-auto space-y-2 pr-1 rounded-2xl border border-slate-200/90 bg-slate-50/70 p-2.5">
               {developersList.length === 0 ? (
                 <p className="text-xs text-slate-500 text-center py-3">
@@ -425,12 +606,20 @@ const ProjectsPage = () => {
                       onClick={() => toggleDeveloperSelection(dev._id)}
                       className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all duration-200 ${
                         isSelected
-                          ? 'bg-brand-50 border border-brand-300 text-brand-900 shadow-soft-xs'
+                          ? formData.projectType === 'Standalone'
+                            ? 'bg-sky-50 border border-sky-300 text-sky-900 shadow-soft-xs'
+                            : 'bg-brand-50 border border-brand-300 text-brand-900 shadow-soft-xs'
                           : 'bg-white border border-slate-200/80 text-slate-700 hover:border-slate-300 shadow-soft-xs'
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                        <div
+                          className={`h-8 w-8 rounded-lg text-white flex items-center justify-center text-xs font-bold shrink-0 ${
+                            formData.projectType === 'Standalone' && isSelected
+                              ? 'bg-gradient-to-tr from-sky-600 to-blue-600'
+                              : 'bg-gradient-to-tr from-brand-600 to-indigo-600'
+                          }`}
+                        >
                           {dev.name.charAt(0)}
                         </div>
                         <div className="min-w-0">
@@ -441,7 +630,9 @@ const ProjectsPage = () => {
                       <div
                         className={`h-5 w-5 rounded-md border flex items-center justify-center transition-all ${
                           isSelected
-                            ? 'bg-brand-600 border-brand-600 text-white'
+                            ? formData.projectType === 'Standalone'
+                              ? 'bg-sky-600 border-sky-600 text-white'
+                              : 'bg-brand-600 border-brand-600 text-white'
                             : 'border-slate-300 bg-white'
                         }`}
                       >
@@ -498,4 +689,3 @@ const ProjectsPage = () => {
 };
 
 export default ProjectsPage;
-

@@ -9,12 +9,12 @@ const connectDB = async () => {
     // First attempt to connect to standard MONGODB_URI
     try {
       const conn = await mongoose.connect(connStr, {
-        serverSelectionTimeoutMS: 2000,
+        serverSelectionTimeoutMS: 10000,
       });
-      console.log(`✅ MongoDB Connected to external/local instance: ${conn.connection.host}`);
+      console.log(`✅ MongoDB Connected to database: ${conn.connection.host}`);
       return conn;
     } catch (localErr) {
-      console.log('⚠️ Local MongoDB not found on default port. Initializing in-memory MongoDB fallback...');
+      console.log(`⚠️ Could not connect to primary MongoDB URI (${localErr.message}). Initializing fallback...`);
       
       // Fallback to MongoMemoryServer for instant zero-config experience
       const { MongoMemoryServer } = require('mongodb-memory-server');

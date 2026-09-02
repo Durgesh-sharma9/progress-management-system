@@ -9,9 +9,7 @@ import {
   ArrowRight,
   Loader2,
   ShieldCheck,
-  Code2,
   CheckCircle2,
-  Sparkles,
 } from 'lucide-react';
 
 const LoginPage = () => {
@@ -45,47 +43,32 @@ const LoginPage = () => {
     }
   };
 
-  const handleQuickDemo = async (demoEmail, demoPass) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setLoading(true);
-    const res = await login(demoEmail, demoPass);
-    setLoading(false);
-
-    if (res.success) {
-      success(`Logged in as ${res.user.name} (${res.user.role})`);
-      const targetPath =
-        res.user.role === 'admin' ? '/admin/dashboard' : '/developer/dashboard';
-      navigate(targetPath, { replace: true });
-    } else {
-      error(res.message);
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50 relative overflow-hidden">
       {/* Background Decorative Mesh Orbs */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-brand-300/25 via-indigo-200/20 to-transparent blur-3xl pointer-events-none -z-10" />
       <div className="absolute bottom-10 right-10 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl pointer-events-none -z-10" />
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-center">
-        <div className="inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-brand-700 shadow-xl shadow-brand-500/25 text-white mb-5 animate-float">
-          <Layers className="h-8 w-8" />
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="flex justify-center">
+          <div className="h-14 w-14 rounded-3xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white shadow-soft-lg shadow-brand-500/30">
+            <Layers className="h-7 w-7" />
+          </div>
         </div>
-        <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-sans">
-          Sign in to <span className="text-brand-600">DevTrack</span>
+        <h2 className="mt-5 text-center text-3xl font-extrabold tracking-tight text-slate-900 font-sans">
+          DevTrack
         </h2>
-        <p className="mt-2.5 text-sm text-slate-600 font-medium">
-          Modern Project Progress & Developer Workflow Management
+        <p className="mt-1 text-center text-sm text-slate-500 font-medium">
+          Sign in to access your project dashboard and workspaces
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <div className="glass-card rounded-3xl p-7 sm:p-9 shadow-soft-xl border border-slate-200/90 backdrop-blur-2xl">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="glass-card py-8 px-6 sm:px-10 rounded-3xl shadow-soft-xl border border-white/60">
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-                Email Address
+                Work Email Address
               </label>
               <div className="relative rounded-xl shadow-soft-xs">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
@@ -140,57 +123,6 @@ const LoginPage = () => {
             </button>
           </form>
 
-          {/* Quick Demo Login Fast-Track */}
-          <div className="mt-7 pt-6 border-t border-slate-200/80">
-            <div className="flex items-center justify-between mb-3.5">
-              <div className="flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-brand-600" />
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                  1-Click Demo Accounts
-                </span>
-              </div>
-              <span className="text-[10px] text-brand-700 font-bold bg-brand-50 border border-brand-200 px-2 py-0.5 rounded-full">
-                Instant Access
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => handleQuickDemo('admin@devtrack.io', 'Admin@123')}
-                disabled={loading}
-                className="flex items-center gap-2.5 p-3 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-white to-slate-50/60 hover:border-brand-400 hover:shadow-soft text-left transition-all duration-200 group"
-              >
-                <div className="h-8 w-8 rounded-xl bg-brand-50 text-brand-600 border border-brand-200 flex items-center justify-center shrink-0 group-hover:bg-brand-600 group-hover:text-white transition-colors">
-                  <ShieldCheck className="h-4 w-4" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 group-hover:text-brand-600 truncate transition-colors">
-                    Admin
-                  </p>
-                  <p className="text-[10px] text-slate-500 truncate">Alex Vance</p>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickDemo('rahul@devtrack.io', 'Dev@123')}
-                disabled={loading}
-                className="flex items-center gap-2.5 p-3 rounded-2xl border border-slate-200/80 bg-gradient-to-b from-white to-slate-50/60 hover:border-emerald-400 hover:shadow-soft text-left transition-all duration-200 group"
-              >
-                <div className="h-8 w-8 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                  <Code2 className="h-4 w-4" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 group-hover:text-emerald-600 truncate transition-colors">
-                    Developer
-                  </p>
-                  <p className="text-[10px] text-slate-500 truncate">Rahul Sharma</p>
-                </div>
-              </button>
-            </div>
-          </div>
-
           <div className="mt-6 text-center text-xs text-slate-500">
             Don't have an account yet?{' '}
             <Link
@@ -207,4 +139,3 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
-

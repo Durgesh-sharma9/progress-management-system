@@ -4,9 +4,11 @@ import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import ProgressBar from '../../components/common/ProgressBar';
-import StatusBadge from '../../components/common/StatusBadge';
+import ProjectTypeBadge from '../../components/common/ProjectTypeBadge';
 import Modal from '../../components/common/Modal';
 import ConfirmModal from '../../components/common/ConfirmModal';
+import BulkPhaseModal from '../../components/common/BulkPhaseModal';
+import PhaseNotesModal from '../../components/common/PhaseNotesModal';
 import EmptyState from '../../components/common/EmptyState';
 import ProjectTreeGraph from '../../components/common/ProjectTreeGraph';
 import ProjectAnalytics from '../../components/common/ProjectAnalytics';
@@ -27,6 +29,9 @@ import {
   BarChart3,
   ListTodo,
   Sparkles,
+  ClipboardPaste,
+  FileText,
+  MessageSquare,
 } from 'lucide-react';
 
 const ProjectWorkspacePage = () => {
@@ -48,12 +53,20 @@ const ProjectWorkspacePage = () => {
   const [selectedPhase, setSelectedPhase] = useState(null);
   const [phaseTitle, setPhaseTitle] = useState('');
   const [phaseDescription, setPhaseDescription] = useState('');
+  const [phaseNotes, setPhaseNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Delete Modal State
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [phaseToDelete, setPhaseToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Bulk Phase Paster Modal State
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+
+  // Phase Notes Modal State
+  const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
+  const [selectedPhaseForNotes, setSelectedPhaseForNotes] = useState(null);
 
   const fetchWorkspaceData = useCallback(async (isSilent = false) => {
     try {
@@ -95,93 +108,67 @@ const ProjectWorkspacePage = () => {
     return () => clearInterval(interval);
   }, [fetchWorkspaceData]);
 
-  // ----------------------------------------------------
-  // Interactive Checkbox Toggle (Optimistic with Instant Metric Recalculation)
-  // ----------------------------------------------------
-  const handleTogglePhase = async (phaseId) => {
-    const target = phases.find((p) => p._id === phaseId);
-    if (!target) return;
-
-    // 1. Optimistic UI update
-    const previousPhases = JSON.parse(JSON.stringify(phases));
-    const previousProject = JSON.parse(JSON.stringify(project));
-
-    const updatedPhases = phases.map((p) => {
-      if (p._id !== phaseId) return p;
-      const newCompleted = !p.completed;
-      return {
-        ...p,
-        completed: newCompleted,
-        completedAt: newCompleted ? new Date().toISOString() : null,
-      };
-    });
-
-    // Recalculate local stats
-    const totalAll = updatedPhases.length;
-    const completedAll = updatedPhases.filter((p) => p.completed).length;
-    const overallProgress =
-      totalAll > 0 ? Math.round((completedAll / totalAll) * 100) : 0;
-
-    const myPhasesList = updatedPhases.filter(
-      (p) => (p.developerId?._id || p.developerId) === user?._id
-    );
-    const myTotal = myPhasesList.length;
-    const myDone = myPhasesList.filter((p) => p.completed).length;
-    const myProgress = myTotal > 0 ? Math.round((myDone / myTotal) * 100) : 0;
-
-    setPhases(updatedPhases);
-    setProject((prev) => ({
-      ...prev,
-      overallProgress,
-      totalPhases: totalAll,
-      completedPhases: completedAll,
-      myProgress,
-      myTotalPhases: myTotal,
-      myCompletedPhases: myDone,
-      myPendingTasks: myTotal - myDone,
-    }));
-
-    // 2. Server API Call
+  // Bulk Import Handler
+  const handleBulkPhasesCreated = async (parsedList) => {
     try {
-      const res = await api.patch(`/phases/${phaseId}/toggle`);
-      if (res.data.success && res.data.metrics) {
-        setProject((prev) => ({
-          ...prev,
-          overallProgress: res.data.metrics.project.progress,
-          myProgress: res.data.metrics.developer.progress,
-        }));
+      const res = await api.post('/phases/bulk', {
+        projectId,
+        phases: parsedList,
+      });
+      if (res.data.success) {
+        success(res.data.message || `Created ${parsedList.length} deliverable phases!`);
+        fetchWorkspaceData(true);
       }
     } catch (err) {
-      // Rollback on error
-      setPhases(previousPhases);
-      setProject(previousProject);
-      error(err.response?.data?.message || 'Failed to update phase');
+      error(err.response?.data?.message || 'Failed to bulk import phases');
+      throw err;
     }
   };
 
-  // ----------------------------------------------------
-  // Phase Management (Create / Edit / Delete)
-  // ----------------------------------------------------
+  // Phase Notes Save Handler
+  const handleSaveNotes = async (phaseId, notesText) => {
+    try {
+      const res = await api.patch(`/phases/${phaseId}/notes`, { notes: notesText });
+      if (res.data.success) {
+        success('Work notes saved successfully');
+        fetchWorkspaceData(true);
+      }
+    } catch (err) {
+      error(err.response?.data?.message || 'Failed to save notes');
+      throw err;
+    }
+  };
+
+  const openNotesModal = (phase) => {
+    setSelectedPhaseForNotes(phase);
+    setIsNotesModalOpen(true);
+  };
+
+  // Open Create Phase Modal
   const openCreateModal = () => {
     setModalMode('create');
     setSelectedPhase(null);
     setPhaseTitle('');
     setPhaseDescription('');
+    setPhaseNotes('');
     setIsModalOpen(true);
   };
 
+  // Open Edit Phase Modal
   const openEditModal = (phase) => {
     setModalMode('edit');
     setSelectedPhase(phase);
     setPhaseTitle(phase.title);
     setPhaseDescription(phase.description || '');
+    setPhaseNotes(phase.notes || '');
     setIsModalOpen(true);
   };
 
+  // Handle Create or Edit Phase submission
   const handleModalSubmit = async (e) => {
     e.preventDefault();
     if (!phaseTitle.trim()) {
-      error('Please enter a phase title');
+      error('Phase title is required');
       return;
     }
 
@@ -189,45 +176,70 @@ const ProjectWorkspacePage = () => {
     try {
       if (modalMode === 'create') {
         const res = await api.post('/phases', {
-          title: phaseTitle.trim(),
-          description: phaseDescription.trim(),
+          title: phaseTitle,
+          description: phaseDescription,
+          notes: phaseNotes,
           projectId,
         });
         if (res.data.success) {
-          success('Phase added to project');
+          success('Deliverable phase added successfully');
           setIsModalOpen(false);
           fetchWorkspaceData(true);
         }
       } else {
         const res = await api.put(`/phases/${selectedPhase._id}`, {
-          title: phaseTitle.trim(),
-          description: phaseDescription.trim(),
+          title: phaseTitle,
+          description: phaseDescription,
+          notes: phaseNotes,
         });
         if (res.data.success) {
-          success('Phase updated successfully');
+          success('Deliverable updated successfully');
           setIsModalOpen(false);
           fetchWorkspaceData(true);
         }
       }
     } catch (err) {
-      error(err.response?.data?.message || 'Operation failed');
+      error(err.response?.data?.message || 'Failed to save deliverable');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Toggle Phase Completion status
+  const handleTogglePhase = async (phaseId) => {
+    // Optimistic UI update
+    setPhases((prevPhases) =>
+      prevPhases.map((p) =>
+        p._id === phaseId ? { ...p, completed: !p.completed } : p
+      )
+    );
+
+    try {
+      const res = await api.patch(`/phases/${phaseId}/toggle`);
+      if (res.data.success) {
+        success(res.data.message);
+        fetchWorkspaceData(true);
+      }
+    } catch (err) {
+      error('Failed to update phase status');
+      fetchWorkspaceData(true); // Revert on failure
+    }
+  };
+
+  // Confirm Delete
   const confirmDelete = (phase) => {
     setPhaseToDelete(phase);
     setIsDeleteOpen(true);
   };
 
+  // Handle Delete Phase
   const handleDeletePhase = async () => {
     if (!phaseToDelete) return;
     setIsDeleting(true);
     try {
       const res = await api.delete(`/phases/${phaseToDelete._id}`);
       if (res.data.success) {
-        success('Phase removed');
+        success('Deliverable deleted');
         setIsDeleteOpen(false);
         setPhaseToDelete(null);
         fetchWorkspaceData(true);
@@ -239,33 +251,33 @@ const ProjectWorkspacePage = () => {
     }
   };
 
-  if (loading || !project) {
+  if (loading) {
     return (
-      <div className="flex h-72 items-center justify-center">
+      <div className="flex h-96 items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
-          <p className="text-xs font-semibold text-slate-400">Loading project workspace...</p>
+          <p className="text-xs font-semibold text-slate-400">Loading workspace...</p>
         </div>
       </div>
     );
   }
 
-  // Calculate stats
+  if (!project) return null;
+
+  // Calculate my stats vs team stats
   const myPhases = phases.filter(
     (p) => (p.developerId?._id || p.developerId) === user?._id
   );
-  const myTotal = myPhases.length;
-  const myDone = myPhases.filter((p) => p.completed).length;
-  const myProgressCalc = myTotal > 0 ? Math.round((myDone / myTotal) * 100) : 0;
+  const myCompleted = myPhases.filter((p) => p.completed).length;
+  const myProgressCalc =
+    myPhases.length > 0 ? Math.round((myCompleted / myPhases.length) * 100) : 0;
 
-  const totalTeamPhases = phases.length;
-  const totalTeamDone = phases.filter((p) => p.completed).length;
+  const teamTotal = phases.length;
+  const teamCompleted = phases.filter((p) => p.completed).length;
   const teamProgressCalc =
-    totalTeamPhases > 0
-      ? Math.round((totalTeamDone / totalTeamPhases) * 100)
-      : 0;
+    teamTotal > 0 ? Math.round((teamCompleted / teamTotal) * 100) : 0;
 
-  // Filtered phases list
+  // Filter checklist phases
   const filteredPhases = phases.filter((p) => {
     const isMine = (p.developerId?._id || p.developerId) === user?._id;
     if (filterMode === 'my') return isMine;
@@ -286,10 +298,15 @@ const ProjectWorkspacePage = () => {
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Workspace</span>
               <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-              <StatusBadge status={project.status} size="sm" />
+              <ProjectTypeBadge
+                projectType={project.projectType}
+                memberCount={project.developers?.length || 0}
+                showCount={project.projectType === 'Group' || (project.developers && project.developers.length > 1)}
+                size="xs"
+              />
             </div>
             <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight mt-0.5">
               {project.name}
@@ -297,7 +314,7 @@ const ProjectWorkspacePage = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
           {/* Live Sync Status */}
           <button
             onClick={() => fetchWorkspaceData(true)}
@@ -313,6 +330,16 @@ const ProjectWorkspacePage = () => {
             <span className="hidden sm:inline text-xs font-medium">
               {isSyncing ? 'Syncing...' : 'Live Sync'}
             </span>
+          </button>
+
+          {/* Quick Bulk Paste Button */}
+          <button
+            onClick={() => setIsBulkModalOpen(true)}
+            className="inline-flex items-center gap-2 rounded-2xl border border-brand-200 bg-brand-50/90 hover:bg-brand-100 text-brand-700 px-4 py-2.5 text-xs font-bold shadow-soft-xs transition-all duration-200 active:scale-95 shrink-0"
+            title="Paste multiple deliverables at once"
+          >
+            <ClipboardPaste className="h-4 w-4" />
+            Bulk Paste Phases
           </button>
 
           <button
@@ -361,49 +388,56 @@ const ProjectWorkspacePage = () => {
             }`}
           >
             <BarChart3 className="h-4 w-4" />
-            Velocity Analytics
+            Progress Analytics
           </button>
         </div>
 
-        <div className="hidden sm:flex items-center gap-3 text-xs text-slate-500 font-medium">
-          <span className="bg-slate-100/80 px-3 py-1 rounded-full border border-slate-200">
-            Team: <strong className="text-slate-900 font-bold font-mono">{teamProgressCalc}%</strong>
-          </span>
-          <span className="bg-brand-50/80 px-3 py-1 rounded-full border border-brand-200/80 text-brand-900">
-            Personal: <strong className="text-brand-700 font-bold font-mono">{myProgressCalc}%</strong>
+        <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-500">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            Live Syncing
           </span>
         </div>
       </div>
 
-      {/* VIEW 1: TREE GRAPH FLOW */}
+      {/* VIEW MODE 1: Interactive Tree Flowchart */}
       {viewMode === 'tree' && (
-        <ProjectTreeGraph
-          project={project}
-          phases={phases}
-          onTogglePhase={handleTogglePhase}
-          currentUserId={user?._id}
-        />
+        <div className="space-y-4">
+          <ProjectTreeGraph
+            project={project}
+            phases={phases}
+            onTogglePhase={handleTogglePhase}
+            onPhaseClick={(phase) => openNotesModal(phase)}
+            currentUserId={user?._id}
+          />
+        </div>
       )}
 
-      {/* VIEW 2: VISUAL ANALYTICS */}
+      {/* VIEW MODE 2: Progress Analytics */}
       {viewMode === 'analytics' && (
         <ProjectAnalytics project={project} phases={phases} />
       )}
 
-      {/* VIEW 3: CHECKLIST VIEW */}
+      {/* VIEW MODE 3: Checklist & Task Manager */}
       {viewMode === 'checklist' && (
-        <div className="space-y-5">
-          {/* Progress Overview Banner */}
-          <div className="glass-card rounded-3xl p-5 shadow-soft">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* My Personal Progress */}
-              <div className="rounded-2xl bg-gradient-to-r from-brand-50/80 to-indigo-50/50 border border-brand-200/80 p-4 shadow-soft-xs">
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-brand-700">
-                    My Phase Velocity
-                  </span>
-                  <span className="text-xs font-bold text-slate-700 bg-white/90 px-2.5 py-0.5 rounded-full border border-brand-200/80 font-mono shadow-soft-xs">
-                    {myDone}/{myTotal} Done
+        <div className="space-y-6">
+          {/* Velocity Overview Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* My Velocity Card */}
+            <div className="glass-card rounded-3xl p-5 border border-slate-200/80 bg-gradient-to-br from-white via-white to-brand-50/30">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-brand-700">
+                  My Velocity & Output
+                </span>
+                <span className="text-xs font-bold font-mono px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200">
+                  {myCompleted} / {myPhases.length} Phases
+                </span>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-slate-600">
+                  <span>Sprint Completion</span>
+                  <span className="font-bold text-brand-700 font-mono text-sm">
+                    {myProgressCalc}%
                   </span>
                 </div>
                 <ProgressBar
@@ -412,15 +446,23 @@ const ProjectWorkspacePage = () => {
                   showLabel={false}
                 />
               </div>
+            </div>
 
-              {/* Combined Team Progress */}
-              <div className="rounded-2xl bg-gradient-to-r from-emerald-50/80 to-teal-50/50 border border-emerald-200/80 p-4 shadow-soft-xs">
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-700">
-                    Team Velocity
-                  </span>
-                  <span className="text-xs font-bold text-slate-700 bg-white/90 px-2.5 py-0.5 rounded-full border border-emerald-200/80 font-mono shadow-soft-xs">
-                    {totalTeamDone}/{totalTeamPhases} Done
+            {/* Team Overall Card */}
+            <div className="glass-card rounded-3xl p-5 border border-slate-200/80 bg-gradient-to-br from-white via-white to-slate-50/50">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Total Project Delivery
+                </span>
+                <span className="text-xs font-bold font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                  {teamCompleted} / {teamTotal} Total
+                </span>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-slate-600">
+                  <span>Total Milestones</span>
+                  <span className="font-bold text-slate-900 font-mono text-sm">
+                    {teamProgressCalc}%
                   </span>
                 </div>
                 <ProgressBar
@@ -474,9 +516,9 @@ const ProjectWorkspacePage = () => {
                     ? 'No deliverables created yet'
                     : 'No deliverables match this filter'
                 }
-                description="Add milestone deliverables to structure and track work on this project."
-                actionText={filterMode === 'all' ? 'Add Deliverable' : undefined}
-                onAction={filterMode === 'all' ? openCreateModal : undefined}
+                description="Add milestone deliverables or paste a full list to structure and track work on this project."
+                actionText={filterMode === 'all' ? 'Bulk Paste Phases' : undefined}
+                onAction={filterMode === 'all' ? () => setIsBulkModalOpen(true) : undefined}
               />
             ) : (
               <div className="space-y-3">
@@ -488,92 +530,131 @@ const ProjectWorkspacePage = () => {
                   return (
                     <div
                       key={phase._id}
-                      className={`group flex items-start justify-between gap-3.5 p-4 rounded-2xl border transition-all duration-200 shadow-soft-xs ${
+                      className={`group flex flex-col p-4 rounded-2xl border transition-all duration-200 shadow-soft-xs ${
                         phase.completed
                           ? 'bg-emerald-50/30 border-emerald-200/70'
                           : 'bg-white border-slate-200/90 hover:border-brand-300 hover:shadow-soft'
                       }`}
                     >
-                      {/* Checkbox and Phase Content */}
-                      <div className="flex items-start gap-3.5 min-w-0 flex-1">
-                        <button
-                          type="button"
-                          onClick={() => handleTogglePhase(phase._id)}
-                          className="mt-0.5 transition-transform active:scale-90 shrink-0 cursor-pointer"
-                          title="Click to toggle completion status"
-                        >
-                          {phase.completed ? (
-                            <CheckSquare className="h-5 w-5 text-emerald-600 fill-emerald-100" />
-                          ) : (
-                            <Square className="h-5 w-5 text-slate-400 hover:text-brand-600" />
-                          )}
-                        </button>
-
-                        <div className="min-w-0 flex-1">
-                          <h4
+                      <div className="flex items-start justify-between gap-3.5">
+                        {/* Checkbox and Phase Content */}
+                        <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                          <button
+                            type="button"
                             onClick={() => handleTogglePhase(phase._id)}
-                            className={`text-sm font-bold transition-colors select-none cursor-pointer ${
-                              phase.completed
-                                ? 'line-through text-slate-400 font-medium'
-                                : 'text-slate-900 hover:text-brand-600'
-                            }`}
+                            className="mt-0.5 transition-transform active:scale-90 shrink-0 cursor-pointer"
+                            title="Click to toggle completion status"
                           >
-                            {phase.title}
-                          </h4>
+                            {phase.completed ? (
+                              <CheckSquare className="h-5 w-5 text-emerald-600 fill-emerald-100" />
+                            ) : (
+                              <Square className="h-5 w-5 text-slate-400 hover:text-brand-600" />
+                            )}
+                          </button>
 
-                          {phase.description && (
-                            <p
-                              className={`text-xs mt-1 leading-relaxed line-clamp-2 font-normal ${
+                          <div className="min-w-0 flex-1">
+                            <h4
+                              onClick={() => handleTogglePhase(phase._id)}
+                              className={`text-sm font-bold transition-colors select-none cursor-pointer ${
                                 phase.completed
-                                  ? 'text-slate-400 line-through'
-                                  : 'text-slate-600'
+                                  ? 'line-through text-slate-400 font-medium'
+                                  : 'text-slate-900 hover:text-brand-600'
                               }`}
                             >
-                              {phase.description}
-                            </p>
-                          )}
+                              {phase.title}
+                            </h4>
 
-                          {/* Metadata Chips */}
-                          <div className="flex flex-wrap items-center gap-2 mt-2.5 text-[11px]">
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100/90 border border-slate-200/80 font-semibold text-slate-700">
-                              <User className="h-3 w-3 text-brand-600" />
-                              <span>
-                                {ownerName} {isOwner && '(You)'}
-                              </span>
-                            </div>
-
-                            {phase.completed ? (
-                              <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full shadow-soft-xs">
-                                <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                                Delivered
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 font-semibold text-amber-700 bg-amber-50 border border-amber-200/80 px-2.5 py-0.5 rounded-full shadow-soft-xs">
-                                <Clock className="h-3 w-3 text-amber-600" />
-                                In Progress
-                              </span>
+                            {phase.description && (
+                              <p
+                                className={`text-xs mt-1 leading-relaxed line-clamp-2 font-normal ${
+                                  phase.completed
+                                    ? 'text-slate-400 line-through'
+                                    : 'text-slate-600'
+                                }`}
+                              >
+                                {phase.description}
+                              </p>
                             )}
+
+                            {/* Metadata Chips */}
+                            <div className="flex flex-wrap items-center gap-2 mt-2.5 text-[11px]">
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100/90 border border-slate-200/80 font-semibold text-slate-700">
+                                <User className="h-3 w-3 text-brand-600" />
+                                <span>
+                                  {ownerName} {isOwner && '(You)'}
+                                </span>
+                              </div>
+
+                              {phase.completed ? (
+                                <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full shadow-soft-xs">
+                                  <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                  Delivered
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 font-semibold text-amber-700 bg-amber-50 border border-amber-200/80 px-2.5 py-0.5 rounded-full shadow-soft-xs">
+                                  <Clock className="h-3 w-3 text-amber-600" />
+                                  In Progress
+                                </span>
+                              )}
+
+                              {/* Work Notes Trigger Button */}
+                              <button
+                                type="button"
+                                onClick={() => openNotesModal(phase)}
+                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold transition-colors border ${
+                                  phase.notes
+                                    ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 shadow-soft-xs'
+                                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                }`}
+                              >
+                                <FileText className="h-3 w-3 text-brand-600" />
+                                {phase.notes ? '📝 View Notes' : '+ Add Note'}
+                              </button>
+                            </div>
                           </div>
                         </div>
+
+                        {/* Actions for Owner */}
+                        {isOwner && (
+                          <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity shrink-0">
+                            <button
+                              onClick={() => openEditModal(phase)}
+                              title="Edit Phase"
+                              className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-800 transition-colors"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => confirmDelete(phase)}
+                              title="Delete Phase"
+                              className="p-2 rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )}
                       </div>
 
-                      {/* Actions for Owner */}
-                      {isOwner && (
-                        <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => openEditModal(phase)}
-                            title="Edit Phase"
-                            className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-800 transition-colors"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => confirmDelete(phase)}
-                            title="Delete Phase"
-                            className="p-2 rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                      {/* Developer Notes In-line Preview (if exists) */}
+                      {phase.notes && (
+                        <div className="mt-3 p-3 rounded-xl bg-amber-50/60 border border-amber-200/70 text-xs text-amber-950 font-mono">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 flex items-center gap-1">
+                              <Sparkles className="h-3 w-3" />
+                              Dev Log / Work Notes:
+                            </span>
+                            {isOwner && (
+                              <button
+                                onClick={() => openNotesModal(phase)}
+                                className="text-[10px] font-semibold text-amber-800 underline hover:text-amber-950"
+                              >
+                                Edit
+                              </button>
+                            )}
+                          </div>
+                          <p className="whitespace-pre-wrap leading-relaxed text-[11px] text-amber-900">
+                            {phase.notes}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -610,14 +691,27 @@ const ProjectWorkspacePage = () => {
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-              Description / Notes (Optional)
+              Description (Optional)
             </label>
             <textarea
-              rows={3}
+              rows={2}
               value={phaseDescription}
               onChange={(e) => setPhaseDescription(e.target.value)}
               placeholder="Key requirements or technical implementation notes..."
-              className="block w-full rounded-2xl border border-slate-300/80 bg-white/70 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 shadow-soft-xs"
+              className="block w-full rounded-2xl border border-slate-300/80 bg-white/70 px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 shadow-soft-xs"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              📝 Work Notes / PR Links / Blockers (Optional)
+            </label>
+            <textarea
+              rows={3}
+              value={phaseNotes}
+              onChange={(e) => setPhaseNotes(e.target.value)}
+              placeholder="Add GitHub PR links, verification notes, or blockers..."
+              className="block w-full rounded-2xl border border-slate-300/80 bg-white/70 px-3.5 py-2 text-xs font-mono text-slate-900 placeholder-slate-400 transition-all focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 shadow-soft-xs leading-relaxed"
             />
           </div>
 
@@ -649,6 +743,29 @@ const ProjectWorkspacePage = () => {
         </form>
       </Modal>
 
+      {/* Bulk Phase Paster Modal */}
+      <BulkPhaseModal
+        isOpen={isBulkModalOpen}
+        onClose={() => setIsBulkModalOpen(false)}
+        projectId={projectId}
+        onPhasesCreated={handleBulkPhasesCreated}
+      />
+
+      {/* Phase Notes Modal */}
+      <PhaseNotesModal
+        isOpen={isNotesModalOpen}
+        onClose={() => {
+          setIsNotesModalOpen(false);
+          setSelectedPhaseForNotes(null);
+        }}
+        phase={selectedPhaseForNotes}
+        isOwner={
+          (selectedPhaseForNotes?.developerId?._id || selectedPhaseForNotes?.developerId) ===
+          user?._id
+        }
+        onSaveNotes={handleSaveNotes}
+      />
+
       {/* Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={isDeleteOpen}
@@ -665,4 +782,3 @@ const ProjectWorkspacePage = () => {
 };
 
 export default ProjectWorkspacePage;
-

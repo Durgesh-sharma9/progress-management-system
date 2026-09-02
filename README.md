@@ -13,20 +13,7 @@ DevTrack is a modern, clean, and fully functional MERN Stack web application des
   - **Phase Progress**: `(Completed Tasks in Phase / Total Tasks in Phase) * 100`
   - **Developer Progress**: `(Completed Tasks by Developer in Project / Total Tasks by Developer in Project) * 100`
   - **Project Progress**: `(Completed Tasks by all Developers in Project / Total Tasks by all Developers in Project) * 100`
-- **1-Click Demo Logins**: Test Admin and Developer workflows immediately from the login screen without manual account registration.
-- **Plug-and-Play Database**: Automatic database seeding and seamless fallback with MongoDB Memory Server if local MongoDB is not running.
 - **Modern UI / UX**: Tailwind CSS, glassmorphism, responsive sidebar, modal dialogs, status badges, animated progress bars, and toast notifications.
-
----
-
-## 🔑 Demo Credentials
-
-| Role | Name | Email | Password |
-| :--- | :--- | :--- | :--- |
-| **Admin** | Alex Vance (Lead Admin) | `admin@devtrack.io` | `Admin@123` |
-| **Developer** | Rahul Sharma | `rahul@devtrack.io` | `Dev@123` |
-| **Developer** | Sarah Jenkins | `sarah@devtrack.io` | `Dev@123` |
-| **Developer** | Marcus Chen | `marcus@devtrack.io` | `Dev@123` |
 
 ---
 
@@ -41,7 +28,7 @@ DevTrack is a modern, clean, and fully functional MERN Stack web application des
 
 ### Backend
 - **Node.js** & **Express.js**
-- **MongoDB** & **Mongoose** (With fallback support & seeder)
+- **MongoDB** & **Mongoose**
 - **JWT (JSON Web Tokens)** for stateless authentication
 - **bcryptjs** for secure password hashing
 - **CORS** & **Morgan** logger

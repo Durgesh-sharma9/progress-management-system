@@ -13,6 +13,11 @@ const PhaseSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    notes: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     completed: {
       type: Boolean,
       default: false,

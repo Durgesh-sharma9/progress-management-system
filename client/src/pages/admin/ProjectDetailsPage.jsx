@@ -3,15 +3,16 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import ProgressBar from '../../components/common/ProgressBar';
-import StatusBadge from '../../components/common/StatusBadge';
 import Modal from '../../components/common/Modal';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import EmptyState from '../../components/common/EmptyState';
 import ProjectTreeGraph from '../../components/common/ProjectTreeGraph';
 import ProjectAnalytics from '../../components/common/ProjectAnalytics';
+import ProjectTypeBadge from '../../components/common/ProjectTypeBadge';
 import {
   ArrowLeft,
   Users,
+  User,
   UserPlus,
   UserMinus,
   CheckCircle2,
@@ -26,6 +27,7 @@ import {
   BarChart3,
   Layers,
   Sparkles,
+  ShieldCheck,
 } from 'lucide-react';
 
 const ProjectDetailsPage = () => {
@@ -154,21 +156,26 @@ const ProjectDetailsPage = () => {
   return (
     <div className="space-y-8">
       {/* Navigation Breadcrumb & Back */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <Link
             to="/admin/projects"
-            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200/90 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-soft-xs"
+            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200/90 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-soft-xs shrink-0"
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 Project Overview
               </span>
               <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-              <StatusBadge status={project.status} size="sm" />
+              <ProjectTypeBadge
+                projectType={project.projectType}
+                memberCount={project.developers?.length || 0}
+                showCount={true}
+                size="sm"
+              />
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-0.5">
               {project.name}
@@ -189,10 +196,41 @@ const ProjectDetailsPage = () => {
       <div className="glass-card rounded-3xl p-6 lg:p-8 shadow-soft space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
           <div className="space-y-1.5 max-w-3xl">
-            <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">{project.name}</h3>
+            <div className="flex items-center gap-2.5">
+              <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">{project.name}</h3>
+              <ProjectTypeBadge
+                projectType={project.projectType}
+                memberCount={project.developers?.length || 0}
+                size="xs"
+              />
+            </div>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
               {project.description || 'No detailed project description specified.'}
             </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className={`p-3 rounded-2xl border ${
+              project.projectType === 'Group' || (project.developers && project.developers.length > 1)
+                ? 'bg-purple-50/80 border-purple-200 text-purple-700'
+                : 'bg-sky-50/80 border-sky-200 text-sky-700'
+            }`}>
+              <div className="flex items-center gap-2 text-xs font-bold">
+                {project.projectType === 'Group' || (project.developers && project.developers.length > 1) ? (
+                  <>
+                    <Users className="h-4 w-4" />
+                    <span>Team Collaboration Mode</span>
+                  </>
+                ) : (
+                  <>
+                    <User className="h-4 w-4" />
+                    <span>Solo / Standalone Delivery</span>
+                  </>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                {project.developers?.length || 0} Assigned {(project.developers?.length === 1) ? 'Engineer' : 'Engineers'}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -438,6 +476,12 @@ const ProjectDetailsPage = () => {
                                     <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
                                       {phase.description}
                                     </p>
+                                  )}
+                                  {phase.notes && (
+                                    <div className="mt-1.5 p-2 rounded-lg bg-amber-50/80 border border-amber-200/60 text-[10px] text-amber-900 font-mono whitespace-pre-wrap">
+                                      <span className="font-bold text-amber-700">Dev Note: </span>
+                                      {phase.notes}
+                                    </div>
                                   )}
                                 </div>
                               </div>

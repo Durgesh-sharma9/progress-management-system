@@ -16,6 +16,11 @@ const projectSchema = new mongoose.Schema({
     enum: ['Planning', 'In Progress', 'Completed'],
     default: 'Planning',
   },
+  projectType: {
+    type: String,
+    enum: ['Standalone', 'Group'],
+    default: 'Standalone',
+  },
   developers: [
     {
       type: mongoose.Schema.Types.ObjectId,
