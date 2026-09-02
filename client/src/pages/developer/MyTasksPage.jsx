@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import EmptyState from '../../components/common/EmptyState';
+import CompletePhaseModal from '../../components/common/CompletePhaseModal';
+import PhaseNotesModal from '../../components/common/PhaseNotesModal';
 import {
   CheckSquare,
   Square,
@@ -15,6 +17,7 @@ import {
   ExternalLink,
   X,
   Sparkles,
+  FileText,
 } from 'lucide-react';
 
 const MyTasksPage = () => {
@@ -24,6 +27,14 @@ const MyTasksPage = () => {
   const [statusFilter, setStatusFilter] = useState('All'); // 'All' | 'Completed' | 'Pending'
   const [projectFilter, setProjectFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Complete Phase Modal State
+  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
+  const [phaseToComplete, setPhaseToComplete] = useState(null);
+
+  // Phase Notes Modal State
+  const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
+  const [selectedPhaseForNotes, setSelectedPhaseForNotes] = useState(null);
 
   const { success, error } = useToast();
 
@@ -52,8 +63,20 @@ const MyTasksPage = () => {
     }
   };
 
-  const handleTogglePhase = async (phaseId) => {
-    // Optimistic toggle
+  const handleTogglePhase = (phaseId, bypassModal = false) => {
+    const target = phases.find((p) => p._id === phaseId);
+    if (!target) return;
+
+    if (!target.completed && !bypassModal) {
+      setPhaseToComplete(target);
+      setIsCompleteModalOpen(true);
+      return;
+    }
+
+    performToggle(phaseId);
+  };
+
+  const performToggle = async (phaseId, notesToAttach = undefined) => {
     const previousPhases = [...phases];
     setPhases((prev) =>
       prev.map((p) =>
@@ -62,19 +85,36 @@ const MyTasksPage = () => {
               ...p,
               completed: !p.completed,
               completedAt: !p.completed ? new Date().toISOString() : null,
+              notes: notesToAttach !== undefined ? notesToAttach : p.notes,
             }
           : p
       )
     );
 
     try {
-      const res = await api.patch(`/phases/${phaseId}/toggle`);
+      const res = await api.patch(`/phases/${phaseId}/toggle`, {
+        notes: notesToAttach,
+      });
       if (res.data.success) {
         success(res.data.message || 'Phase status updated');
+        fetchPhasesAndProjects();
       }
     } catch (err) {
       setPhases(previousPhases);
       error(err.response?.data?.message || 'Failed to update phase');
+    }
+  };
+
+  const handleSaveNotes = async (phaseId, notesText) => {
+    try {
+      const res = await api.patch(`/phases/${phaseId}/notes`, { notes: notesText });
+      if (res.data.success) {
+        success('Work notes saved successfully');
+        fetchPhasesAndProjects();
+      }
+    } catch (err) {
+      error('Failed to save notes');
+      throw err;
     }
   };
 
@@ -216,87 +256,151 @@ const MyTasksPage = () => {
           {filteredPhases.map((phase) => (
             <div
               key={phase._id}
-              className={`flex items-start sm:items-center justify-between gap-4 p-4 lg:p-5 transition-colors duration-200 ${
+              className={`flex flex-col p-4 lg:p-5 transition-colors duration-200 ${
                 phase.completed ? 'bg-emerald-50/25' : 'hover:bg-slate-50/70'
               }`}
             >
-              <div className="flex items-start sm:items-center gap-4 min-w-0 flex-1">
-                {/* Interactive Checkbox */}
-                <button
-                  type="button"
-                  onClick={() => handleTogglePhase(phase._id)}
-                  className="mt-0.5 sm:mt-0 text-slate-400 hover:text-brand-600 transition-transform active:scale-90 shrink-0 cursor-pointer"
-                >
-                  {phase.completed ? (
-                    <CheckSquare className="h-6 w-6 text-emerald-600 fill-emerald-100" />
-                  ) : (
-                    <Square className="h-6 w-6 text-slate-400 hover:text-brand-600" />
-                  )}
-                </button>
-
-                <div className="min-w-0 flex-1">
-                  <p
+              <div className="flex items-start sm:items-center justify-between gap-4">
+                <div className="flex items-start sm:items-center gap-4 min-w-0 flex-1">
+                  {/* Interactive Checkbox */}
+                  <button
+                    type="button"
                     onClick={() => handleTogglePhase(phase._id)}
-                    className={`text-sm font-bold cursor-pointer select-none transition-colors ${
-                      phase.completed
-                        ? 'line-through text-slate-400 font-medium'
-                        : 'text-slate-900'
-                    }`}
+                    className="mt-0.5 sm:mt-0 text-slate-400 hover:text-brand-600 transition-transform active:scale-90 shrink-0 cursor-pointer"
                   >
-                    {phase.title}
-                  </p>
+                    {phase.completed ? (
+                      <CheckSquare className="h-6 w-6 text-emerald-600 fill-emerald-100" />
+                    ) : (
+                      <Square className="h-6 w-6 text-slate-400 hover:text-brand-600" />
+                    )}
+                  </button>
 
-                  {phase.description && (
+                  <div className="min-w-0 flex-1">
                     <p
-                      className={`text-xs mt-1 line-clamp-1 font-normal ${
-                        phase.completed ? 'text-slate-400 line-through' : 'text-slate-500'
+                      onClick={() => handleTogglePhase(phase._id)}
+                      className={`text-sm font-bold cursor-pointer select-none transition-colors ${
+                        phase.completed
+                          ? 'line-through text-slate-400 font-medium'
+                          : 'text-slate-900'
                       }`}
                     >
-                      {phase.description}
+                      {phase.title}
                     </p>
+
+                    {phase.description && (
+                      <p
+                        className={`text-xs mt-1 line-clamp-1 font-normal ${
+                          phase.completed ? 'text-slate-400 line-through' : 'text-slate-500'
+                        }`}
+                      >
+                        {phase.description}
+                      </p>
+                    )}
+
+                    {/* Project & Note Badges */}
+                    <div className="flex flex-wrap items-center gap-2 mt-2 text-[11px] text-slate-500">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-slate-100/90 border border-slate-200/80 font-bold text-slate-700 shadow-soft-xs">
+                        <FolderGit2 className="h-3 w-3 text-brand-600" />
+                        {phase.projectId?.name || 'Project'}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedPhaseForNotes(phase);
+                          setIsNotesModalOpen(true);
+                        }}
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold transition-colors border ${
+                          phase.notes
+                            ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 shadow-soft-xs'
+                            : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        <FileText className="h-3 w-3 text-brand-600" />
+                        {phase.notes ? '📝 View Note' : '+ Add Note'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Link to Workspace */}
+                <div className="flex items-center gap-2.5 shrink-0">
+                  {phase.completed ? (
+                    <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-3 py-1 rounded-full shadow-soft-xs">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Delivered
+                    </span>
+                  ) : (
+                    <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200/80 px-3 py-1 rounded-full shadow-soft-xs">
+                      <Clock className="h-3.5 w-3.5" />
+                      In Progress
+                    </span>
                   )}
 
-                  {/* Project Badge */}
-                  <div className="flex items-center gap-2 mt-2 text-[11px] text-slate-500">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100/90 border border-slate-200/80 font-bold text-slate-700 shadow-soft-xs">
-                      <FolderGit2 className="h-3 w-3 text-brand-600" />
-                      {phase.projectId?.name || 'Project'}
-                    </span>
-                  </div>
+                  {phase.projectId?._id && (
+                    <Link
+                      to={`/developer/workspace/${phase.projectId._id}`}
+                      title="Open in Workspace"
+                      className="p-2.5 rounded-xl text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Link>
+                  )}
                 </div>
               </div>
 
-              {/* Action Link to Workspace */}
-              <div className="flex items-center gap-2.5 shrink-0">
-                {phase.completed ? (
-                  <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-3 py-1 rounded-full shadow-soft-xs">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    Delivered
-                  </span>
-                ) : (
-                  <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200/80 px-3 py-1 rounded-full shadow-soft-xs">
-                    <Clock className="h-3.5 w-3.5" />
-                    In Progress
-                  </span>
-                )}
-
-                {phase.projectId?._id && (
-                  <Link
-                    to={`/developer/workspace/${phase.projectId._id}`}
-                    title="Open in Workspace"
-                    className="p-2.5 rounded-xl text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </Link>
-                )}
-              </div>
+              {/* In-line Notes Preview */}
+              {phase.notes && (
+                <div className="mt-3 ml-10 p-3 rounded-xl bg-amber-50/70 border border-amber-200 text-xs text-amber-950 font-mono">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1">
+                      <Sparkles className="h-3 w-3" />
+                      Work Note / PR Log:
+                    </span>
+                    <button
+                      onClick={() => {
+                        setSelectedPhaseForNotes(phase);
+                        setIsNotesModalOpen(true);
+                      }}
+                      className="text-[10px] font-semibold text-amber-800 underline hover:text-amber-950"
+                    >
+                      Edit Note
+                    </button>
+                  </div>
+                  <p className="whitespace-pre-wrap leading-relaxed text-[11px] text-amber-900">
+                    {phase.notes}
+                  </p>
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
+
+      {/* Complete Phase with Notes Modal */}
+      <CompletePhaseModal
+        isOpen={isCompleteModalOpen}
+        onClose={() => {
+          setIsCompleteModalOpen(false);
+          setPhaseToComplete(null);
+        }}
+        phase={phaseToComplete}
+        onConfirmComplete={(phaseId, noteText) => performToggle(phaseId, noteText)}
+      />
+
+      {/* Phase Notes Modal */}
+      <PhaseNotesModal
+        isOpen={isNotesModalOpen}
+        onClose={() => {
+          setIsNotesModalOpen(false);
+          setSelectedPhaseForNotes(null);
+        }}
+        phase={selectedPhaseForNotes}
+        isOwner={true}
+        onSaveNotes={handleSaveNotes}
+      />
     </div>
   );
 };
 
 export default MyTasksPage;
-

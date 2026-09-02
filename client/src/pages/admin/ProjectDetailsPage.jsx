@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import ProgressBar from '../../components/common/ProgressBar';
 import Modal from '../../components/common/Modal';
 import ConfirmModal from '../../components/common/ConfirmModal';
+import PhaseNotesModal from '../../components/common/PhaseNotesModal';
 import EmptyState from '../../components/common/EmptyState';
 import ProjectTreeGraph from '../../components/common/ProjectTreeGraph';
 import ProjectAnalytics from '../../components/common/ProjectAnalytics';
@@ -53,6 +54,10 @@ const ProjectDetailsPage = () => {
 
   // Collapsible phases viewer state
   const [expandedDevId, setExpandedDevId] = useState(null);
+
+  // Notes Modal state for Admin inspection
+  const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
+  const [selectedPhaseForNotes, setSelectedPhaseForNotes] = useState(null);
 
   useEffect(() => {
     fetchProjectData();
@@ -266,7 +271,7 @@ const ProjectDetailsPage = () => {
         </div>
       </div>
 
-      {/* View Switcher: Tree Graph vs Team Roster vs Analytics */}
+      {/* View Switcher: Tree Graph vs Deliverables & Notes vs Team vs Analytics */}
       <div className="flex items-center gap-2 border-b border-slate-200/80 pb-3 overflow-x-auto">
         <div className="flex items-center gap-2 p-1.5 bg-white rounded-2xl border border-slate-200/80 shadow-soft-xs">
           <button
@@ -279,6 +284,18 @@ const ProjectDetailsPage = () => {
           >
             <GitBranch className="h-4 w-4" />
             Tree Flow Diagram
+          </button>
+
+          <button
+            onClick={() => setViewMode('deliverables')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+              viewMode === 'deliverables'
+                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+            }`}
+          >
+            <ListTodo className="h-4 w-4" />
+            Deliverables & Work Notes ({phases.length})
           </button>
 
           <button
@@ -312,8 +329,121 @@ const ProjectDetailsPage = () => {
         <ProjectTreeGraph
           project={project}
           phases={phases}
+          onPhaseClick={(phase) => {
+            setSelectedPhaseForNotes(phase);
+            setIsNotesModalOpen(true);
+          }}
           currentUserId={null}
         />
+      )}
+
+      {/* VIEW 2: ALL DELIVERABLES & WORK NOTES */}
+      {viewMode === 'deliverables' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-slate-900 tracking-tight">Project Deliverables & Developer Logs</h3>
+              <p className="text-xs text-slate-500">
+                Track all completed deliverables, PR links, and implementation notes from developers
+              </p>
+            </div>
+            <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+              {phases.filter(p => p.completed).length} / {phases.length} Delivered
+            </span>
+          </div>
+
+          {phases.length === 0 ? (
+            <EmptyState
+              icon={ListTodo}
+              title="No deliverables created"
+              description="Assigned engineers have not created any deliverable phases for this project yet."
+            />
+          ) : (
+            <div className="space-y-3">
+              {phases.map((phase) => {
+                const devName = phase.developerId?.name || 'Developer';
+                return (
+                  <div
+                    key={phase._id}
+                    className={`p-4 sm:p-5 rounded-2xl border transition-all duration-200 shadow-soft-xs ${
+                      phase.completed
+                        ? 'bg-emerald-50/30 border-emerald-200/80'
+                        : 'bg-white border-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        <div className="mt-0.5">
+                          {phase.completed ? (
+                            <CheckSquare className="h-5 w-5 text-emerald-600 fill-emerald-100" />
+                          ) : (
+                            <Square className="h-5 w-5 text-slate-400" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-sm font-bold text-slate-900">
+                            {phase.title}
+                          </h4>
+                          {phase.description && (
+                            <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                              {phase.description}
+                            </p>
+                          )}
+                          <div className="flex flex-wrap items-center gap-2 mt-2.5 text-[11px]">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 font-semibold text-slate-700">
+                              <User className="h-3 w-3 text-brand-600" />
+                              {devName}
+                            </span>
+                            {phase.completed ? (
+                              <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                                <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                Completed
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
+                                <Clock className="h-3 w-3 text-amber-600" />
+                                Pending
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setSelectedPhaseForNotes(phase);
+                          setIsNotesModalOpen(true);
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border shadow-soft-xs shrink-0 ${
+                          phase.notes
+                            ? 'bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100'
+                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        📝 {phase.notes ? 'View Notes' : 'No Notes'}
+                      </button>
+                    </div>
+
+                    {/* Prominent Notes Box for Admin */}
+                    {phase.notes && (
+                      <div className="mt-3.5 p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-950 font-mono">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1">
+                            <Sparkles className="h-3 w-3" />
+                            Developer Work Note / Log:
+                          </span>
+                        </div>
+                        <p className="whitespace-pre-wrap leading-relaxed text-xs text-amber-900">
+                          {phase.notes}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       )}
 
       {/* VIEW 2: VISUAL ANALYTICS */}
@@ -567,6 +697,17 @@ const ProjectDetailsPage = () => {
         confirmText="Remove from Project"
         confirmVariant="danger"
         isLoading={isRemoving}
+      />
+
+      {/* Admin Notes Viewer Modal */}
+      <PhaseNotesModal
+        isOpen={isNotesModalOpen}
+        onClose={() => {
+          setIsNotesModalOpen(false);
+          setSelectedPhaseForNotes(null);
+        }}
+        phase={selectedPhaseForNotes}
+        isOwner={false}
       />
     </div>
   );

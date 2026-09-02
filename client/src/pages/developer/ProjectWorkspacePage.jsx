@@ -9,6 +9,7 @@ import Modal from '../../components/common/Modal';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import BulkPhaseModal from '../../components/common/BulkPhaseModal';
 import PhaseNotesModal from '../../components/common/PhaseNotesModal';
+import CompletePhaseModal from '../../components/common/CompletePhaseModal';
 import EmptyState from '../../components/common/EmptyState';
 import ProjectTreeGraph from '../../components/common/ProjectTreeGraph';
 import ProjectAnalytics from '../../components/common/ProjectAnalytics';
@@ -67,6 +68,10 @@ const ProjectWorkspacePage = () => {
   // Phase Notes Modal State
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [selectedPhaseForNotes, setSelectedPhaseForNotes] = useState(null);
+
+  // Complete Phase with Notes Modal State
+  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
+  const [phaseToComplete, setPhaseToComplete] = useState(null);
 
   const fetchWorkspaceData = useCallback(async (isSilent = false) => {
     try {
@@ -205,17 +210,41 @@ const ProjectWorkspacePage = () => {
     }
   };
 
-  // Toggle Phase Completion status
-  const handleTogglePhase = async (phaseId) => {
+  // Toggle Phase Completion status (with note prompt on complete)
+  const handleTogglePhase = (phaseId, bypassModal = false) => {
+    const target = phases.find((p) => p._id === phaseId);
+    if (!target) return;
+
+    // If currently incomplete and not bypassing modal, open Complete & Attach Note modal
+    if (!target.completed && !bypassModal) {
+      setPhaseToComplete(target);
+      setIsCompleteModalOpen(true);
+      return;
+    }
+
+    // Toggle immediately (e.g. unchecking or bypassing)
+    performToggle(phaseId);
+  };
+
+  // Perform Toggle API call
+  const performToggle = async (phaseId, notesToAttach = undefined) => {
     // Optimistic UI update
     setPhases((prevPhases) =>
       prevPhases.map((p) =>
-        p._id === phaseId ? { ...p, completed: !p.completed } : p
+        p._id === phaseId
+          ? {
+              ...p,
+              completed: !p.completed,
+              notes: notesToAttach !== undefined ? notesToAttach : p.notes,
+            }
+          : p
       )
     );
 
     try {
-      const res = await api.patch(`/phases/${phaseId}/toggle`);
+      const res = await api.patch(`/phases/${phaseId}/toggle`, {
+        notes: notesToAttach,
+      });
       if (res.data.success) {
         success(res.data.message);
         fetchWorkspaceData(true);
@@ -764,6 +793,17 @@ const ProjectWorkspacePage = () => {
           user?._id
         }
         onSaveNotes={handleSaveNotes}
+      />
+
+      {/* Complete Phase with Notes Modal */}
+      <CompletePhaseModal
+        isOpen={isCompleteModalOpen}
+        onClose={() => {
+          setIsCompleteModalOpen(false);
+          setPhaseToComplete(null);
+        }}
+        phase={phaseToComplete}
+        onConfirmComplete={(phaseId, noteText) => performToggle(phaseId, noteText)}
       />
 
       {/* Delete Confirmation Modal */}

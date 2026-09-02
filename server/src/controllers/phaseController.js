@@ -250,8 +250,12 @@ exports.togglePhase = async (req, res, next) => {
       });
     }
 
+    const { notes } = req.body;
     phase.completed = !phase.completed;
     phase.completedAt = phase.completed ? new Date() : null;
+    if (notes !== undefined) {
+      phase.notes = notes.trim();
+    }
     await phase.save();
 
     const populated = await Phase.findById(phase._id).populate(
