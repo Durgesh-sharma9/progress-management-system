@@ -17,6 +17,7 @@ import {
   UserPlus,
   UserMinus,
   CheckCircle2,
+  Clock,
   ListTodo,
   ChevronDown,
   ChevronUp,
@@ -159,166 +160,110 @@ const ProjectDetailsPage = () => {
   );
 
   return (
-    <div className="space-y-8">
-      {/* Navigation Breadcrumb & Back */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <Link
-            to="/admin/projects"
-            className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200/90 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-soft-xs shrink-0"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                Project Overview
-              </span>
-              <span className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-              <ProjectTypeBadge
-                projectType={project.projectType}
-                memberCount={project.developers?.length || 0}
-                showCount={true}
-                size="sm"
-              />
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-0.5">
-              {project.name}
-            </h2>
-          </div>
-        </div>
+    <div className="space-y-4">
+      {/* Compact Top Header Card */}
+      <div className="glass-card rounded-2xl p-4 sm:p-5 shadow-soft border border-slate-200/90 bg-white">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-start sm:items-center gap-3 min-w-0">
+            <Link
+              to="/admin/projects"
+              title="Back to Projects"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors shrink-0 shadow-soft-xs mt-0.5 sm:mt-0"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
 
-        <button
-          onClick={() => setIsAssignOpen(true)}
-          className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow-soft-md shadow-brand-500/25 hover:from-brand-500 hover:to-indigo-500 transition-all duration-200 active:scale-95 shrink-0"
-        >
-          <UserPlus className="h-4 w-4" />
-          Assign Engineer
-        </button>
-      </div>
-
-      {/* Project Information Card */}
-      <div className="glass-card rounded-3xl p-6 lg:p-8 shadow-soft space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
-          <div className="space-y-1.5 max-w-3xl">
-            <div className="flex items-center gap-2.5">
-              <h3 className="text-xl font-extrabold text-slate-900 tracking-tight">{project.name}</h3>
-              <ProjectTypeBadge
-                projectType={project.projectType}
-                memberCount={project.developers?.length || 0}
-                size="xs"
-              />
-            </div>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
-              {project.description || 'No detailed project description specified.'}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className={`p-3 rounded-2xl border ${
-              project.projectType === 'Group' || (project.developers && project.developers.length > 1)
-                ? 'bg-purple-50/80 border-purple-200 text-purple-700'
-                : 'bg-sky-50/80 border-sky-200 text-sky-700'
-            }`}>
-              <div className="flex items-center gap-2 text-xs font-bold">
-                {project.projectType === 'Group' || (project.developers && project.developers.length > 1) ? (
-                  <>
-                    <Users className="h-4 w-4" />
-                    <span>Team Collaboration Mode</span>
-                  </>
-                ) : (
-                  <>
-                    <User className="h-4 w-4" />
-                    <span>Solo / Standalone Delivery</span>
-                  </>
-                )}
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight truncate">
+                  {project.name}
+                </h2>
+                <ProjectTypeBadge
+                  projectType={project.projectType}
+                  memberCount={project.developers?.length || 0}
+                  showCount={true}
+                  size="xs"
+                />
               </div>
-              <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-                {project.developers?.length || 0} Assigned {(project.developers?.length === 1) ? 'Engineer' : 'Engineers'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Large Overall Progress Banner */}
-        <div className="rounded-2xl bg-gradient-to-r from-brand-50/70 via-indigo-50/50 to-purple-50/70 border border-brand-200/80 p-6 shadow-soft-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-brand-700">
-                Live Velocity Tracker
-              </p>
-              <h4 className="text-lg font-bold text-slate-900">
-                Overall Delivery Completion
-              </h4>
-            </div>
-            <div className="flex items-center gap-4 text-xs text-slate-600">
-              <span className="flex items-center gap-1.5 font-semibold bg-white/80 border border-slate-200 px-3 py-1 rounded-full shadow-soft-xs">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                <strong className="text-slate-900 font-bold">{project.completedPhases || project.completedTasks || 0}</strong> Done
-              </span>
-              <span className="flex items-center gap-1.5 font-semibold bg-white/80 border border-slate-200 px-3 py-1 rounded-full shadow-soft-xs">
-                <ListTodo className="h-4 w-4 text-brand-600" />
-                <strong className="text-slate-900 font-bold">{project.totalPhases || project.totalTasks || 0}</strong> Total Phases
-              </span>
+              {project.description && (
+                <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
+                  {project.description}
+                </p>
+              )}
             </div>
           </div>
 
-          <ProgressBar
-            progress={project.overallProgress}
-            size="lg"
-            showLabel={true}
-            label={`${project.completedPhases || project.completedTasks || 0} of ${project.totalPhases || project.totalTasks || 0} phases completed across team`}
-          />
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Compact Velocity Chip */}
+            <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700">
+              <span className="text-emerald-600 font-mono">
+                {project.overallProgress}% Done
+              </span>
+              <span className="text-slate-300">|</span>
+              <span className="text-slate-500 font-medium">
+                {project.completedPhases || 0}/{project.totalPhases || 0} Phases
+              </span>
+            </div>
+
+            <button
+              onClick={() => setIsAssignOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 px-3.5 py-2 text-xs font-bold text-white shadow-soft-xs hover:from-brand-500 hover:to-indigo-500 transition-all active:scale-95"
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              Assign Engineer
+            </button>
+          </div>
         </div>
       </div>
 
       {/* View Switcher: Tree Graph vs Deliverables & Notes vs Team vs Analytics */}
-      <div className="flex items-center gap-2 border-b border-slate-200/80 pb-3 overflow-x-auto">
-        <div className="flex items-center gap-2 p-1.5 bg-white rounded-2xl border border-slate-200/80 shadow-soft-xs">
+      <div className="flex items-center gap-2 border-b border-slate-200/80 pb-2.5 overflow-x-auto">
+        <div className="flex items-center gap-1.5 p-1 bg-white rounded-2xl border border-slate-200/80 shadow-soft-xs">
           <button
             onClick={() => setViewMode('tree')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 ${
               viewMode === 'tree'
-                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
+                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
             }`}
           >
-            <GitBranch className="h-4 w-4" />
+            <GitBranch className="h-3.5 w-3.5" />
             Tree Flow Diagram
           </button>
 
           <button
             onClick={() => setViewMode('deliverables')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 ${
               viewMode === 'deliverables'
-                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
+                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
             }`}
           >
-            <ListTodo className="h-4 w-4" />
-            Deliverables & Work Notes ({phases.length})
+            <ListTodo className="h-3.5 w-3.5" />
+            Deliverables & Notes ({phases.length})
           </button>
 
           <button
             onClick={() => setViewMode('team')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 ${
               viewMode === 'team'
-                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
+                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
             }`}
           >
-            <Users className="h-4 w-4" />
+            <Users className="h-3.5 w-3.5" />
             Assigned Engineers ({project.developerStats?.length || 0})
           </button>
 
           <button
             onClick={() => setViewMode('analytics')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 ${
               viewMode === 'analytics'
-                ? 'bg-brand-500 text-white shadow-md shadow-brand-500/25'
+                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
             }`}
           >
-            <BarChart3 className="h-4 w-4" />
+            <BarChart3 className="h-3.5 w-3.5" />
             Velocity Analytics
           </button>
         </div>
