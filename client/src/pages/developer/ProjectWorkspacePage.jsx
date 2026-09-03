@@ -51,6 +51,7 @@ const ProjectWorkspacePage = () => {
   // Modal State (Create / Edit Phase)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('create'); // 'create' | 'edit'
+  const [insertPosition, setInsertPosition] = useState(null); // null or number
   const [selectedPhase, setSelectedPhase] = useState(null);
   const [phaseTitle, setPhaseTitle] = useState('');
   const [phaseDescription, setPhaseDescription] = useState('');
@@ -130,6 +131,18 @@ const ProjectWorkspacePage = () => {
     }
   };
 
+  // Move Phase Up/Down Handler
+  const handleMovePhase = async (phaseId, direction) => {
+    try {
+      const res = await api.patch(`/phases/${phaseId}/move`, { direction });
+      if (res.data.success) {
+        fetchWorkspaceData(true);
+      }
+    } catch (err) {
+      error(err.response?.data?.message || `Failed to move phase ${direction}`);
+    }
+  };
+
   // Phase Notes Save Handler
   const handleSaveNotes = async (phaseId, notesText) => {
     try {
@@ -149,9 +162,21 @@ const ProjectWorkspacePage = () => {
     setIsNotesModalOpen(true);
   };
 
-  // Open Create Phase Modal
+  // Open Create Phase Modal (Appends to end)
   const openCreateModal = () => {
     setModalMode('create');
+    setInsertPosition(null);
+    setSelectedPhase(null);
+    setPhaseTitle('');
+    setPhaseDescription('');
+    setPhaseNotes('');
+    setIsModalOpen(true);
+  };
+
+  // Open Insert Phase Modal (Inserts at specific position)
+  const openInsertModal = (position) => {
+    setModalMode('create');
+    setInsertPosition(typeof position === 'number' ? position : null);
     setSelectedPhase(null);
     setPhaseTitle('');
     setPhaseDescription('');
@@ -162,6 +187,7 @@ const ProjectWorkspacePage = () => {
   // Open Edit Phase Modal
   const openEditModal = (phase) => {
     setModalMode('edit');
+    setInsertPosition(null);
     setSelectedPhase(phase);
     setPhaseTitle(phase.title);
     setPhaseDescription(phase.description || '');
@@ -180,14 +206,23 @@ const ProjectWorkspacePage = () => {
     setIsSubmitting(true);
     try {
       if (modalMode === 'create') {
-        const res = await api.post('/phases', {
+        const payload = {
           title: phaseTitle,
           description: phaseDescription,
           notes: phaseNotes,
           projectId,
-        });
+        };
+        if (typeof insertPosition === 'number') {
+          payload.insertPosition = insertPosition;
+        }
+
+        const res = await api.post('/phases', payload);
         if (res.data.success) {
-          success('Deliverable phase added successfully');
+          success(
+            typeof insertPosition === 'number'
+              ? `Deliverable phase inserted at #${insertPosition + 1} successfully`
+              : 'Deliverable phase added successfully'
+          );
           setIsModalOpen(false);
           fetchWorkspaceData(true);
         }
@@ -446,6 +481,8 @@ const ProjectWorkspacePage = () => {
             phases={phases}
             onTogglePhase={handleTogglePhase}
             onPhaseClick={(phase) => openNotesModal(phase)}
+            onMovePhase={handleMovePhase}
+            onInsertPhase={(devId, pos) => openInsertModal(pos)}
             currentUserId={user?._id}
           />
         </div>
@@ -546,6 +583,18 @@ const ProjectWorkspacePage = () => {
               </div>
             </div>
 
+            {/* In-Between Insert at Top Button */}
+            <div className="flex items-center justify-between pt-1">
+              <button
+                type="button"
+                onClick={() => openInsertModal(0)}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-dashed border-brand-300 transition-all shadow-2xs"
+              >
+                <Plus className="h-3.5 w-3.5 text-brand-600" />
+                <span>+ Insert Phase at Start (#1)</span>
+              </button>
+            </div>
+
             {filteredPhases.length === 0 ? (
               <EmptyState
                 icon={Layers}
@@ -560,156 +609,198 @@ const ProjectWorkspacePage = () => {
               />
             ) : (
               <div className="space-y-3">
-                {filteredPhases.map((phase) => {
+                {filteredPhases.map((phase, idx) => {
                   const isOwner =
                     (phase.developerId?._id || phase.developerId) === user?._id;
                   const ownerName = phase.developerId?.name || 'Developer';
 
                   return (
-                    <div
-                      key={phase._id}
-                      className={`group flex flex-col p-4 rounded-2xl border transition-all duration-200 shadow-soft-xs ${
-                        phase.completed
-                          ? 'bg-emerald-50/30 border-emerald-200/70'
-                          : 'bg-white border-slate-200/90 hover:border-brand-300 hover:shadow-soft'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-3.5">
-                        {/* Checkbox and Phase Content */}
-                        <div className="flex items-start gap-3.5 min-w-0 flex-1">
-                          {isOwner ? (
-                            <button
-                              type="button"
-                              onClick={() => handleTogglePhase(phase._id)}
-                              className="mt-0.5 transition-transform active:scale-90 shrink-0 cursor-pointer"
-                              title="Click to toggle completion status"
-                            >
-                              {phase.completed ? (
-                                <CheckSquare className="h-5 w-5 text-emerald-600 fill-emerald-100" />
-                              ) : (
-                                <Square className="h-5 w-5 text-slate-400 hover:text-brand-600" />
-                              )}
-                            </button>
-                          ) : (
-                            <div
-                              className="mt-0.5 shrink-0 opacity-60 cursor-not-allowed"
-                              title={`Assigned to ${ownerName}. Only ${ownerName} can check off this task.`}
-                            >
-                              {phase.completed ? (
-                                <CheckSquare className="h-5 w-5 text-emerald-600/70" />
-                              ) : (
-                                <Square className="h-5 w-5 text-slate-300" />
-                              )}
-                            </div>
-                          )}
-
-                          <div className="min-w-0 flex-1">
-                            <h4
-                              onClick={() => isOwner && handleTogglePhase(phase._id)}
-                              className={`text-sm font-bold transition-colors select-none ${
-                                isOwner ? 'cursor-pointer' : 'cursor-default'
-                              } ${
-                                phase.completed
-                                  ? 'line-through text-slate-400 font-medium'
-                                  : isOwner
-                                  ? 'text-slate-900 hover:text-brand-600'
-                                  : 'text-slate-800'
-                              }`}
-                            >
-                              {phase.title}
-                            </h4>
-
-                            {phase.description && (
-                              <p
-                                className={`text-xs mt-1 leading-relaxed line-clamp-2 font-normal ${
-                                  phase.completed
-                                    ? 'text-slate-400 line-through'
-                                    : 'text-slate-600'
-                                }`}
-                              >
-                                {phase.description}
-                              </p>
-                            )}
-
-                            {/* Metadata Chips */}
-                            <div className="flex flex-wrap items-center gap-2 mt-2.5 text-[11px]">
-                              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100/90 border border-slate-200/80 font-semibold text-slate-700">
-                                <User className="h-3 w-3 text-brand-600" />
-                                <span>
-                                  {ownerName} {isOwner && '(You)'}
-                                </span>
-                              </div>
-
-                              {phase.completed ? (
-                                <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full shadow-soft-xs">
-                                  <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                                  Delivered
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 font-semibold text-amber-700 bg-amber-50 border border-amber-200/80 px-2.5 py-0.5 rounded-full shadow-soft-xs">
-                                  <Clock className="h-3 w-3 text-amber-600" />
-                                  In Progress
-                                </span>
-                              )}
-
-                              {/* Work Notes Trigger Button */}
+                    <div key={phase._id} className="space-y-2">
+                      <div
+                        className={`group flex flex-col p-4 rounded-2xl border transition-all duration-200 shadow-soft-xs ${
+                          phase.completed
+                            ? 'bg-emerald-50/30 border-emerald-200/70'
+                            : 'bg-white border-slate-200/90 hover:border-brand-300 hover:shadow-soft'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3.5">
+                          {/* Checkbox and Phase Content */}
+                          <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                            {isOwner ? (
                               <button
                                 type="button"
-                                onClick={() => openNotesModal(phase)}
-                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold transition-colors border ${
-                                  phase.notes
-                                    ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 shadow-soft-xs'
-                                    : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                                }`}
+                                onClick={() => handleTogglePhase(phase._id)}
+                                className="mt-0.5 transition-transform active:scale-90 shrink-0 cursor-pointer"
+                                title="Click to toggle completion status"
                               >
-                                <FileText className="h-3 w-3 text-brand-600" />
-                                {phase.notes ? '📝 View Notes' : '+ Add Note'}
+                                {phase.completed ? (
+                                  <CheckSquare className="h-5 w-5 text-emerald-600 fill-emerald-100" />
+                                ) : (
+                                  <Square className="h-5 w-5 text-slate-400 hover:text-brand-600" />
+                                )}
                               </button>
+                            ) : (
+                              <div
+                                className="mt-0.5 shrink-0 opacity-60 cursor-not-allowed"
+                                title={`Assigned to ${ownerName}. Only ${ownerName} can check off this task.`}
+                              >
+                                {phase.completed ? (
+                                  <CheckSquare className="h-5 w-5 text-emerald-600/70" />
+                                ) : (
+                                  <Square className="h-5 w-5 text-slate-300" />
+                                )}
+                              </div>
+                            )}
+
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                                  #{idx + 1}
+                                </span>
+                                <h4
+                                  onClick={() => isOwner && handleTogglePhase(phase._id)}
+                                  className={`text-sm font-bold transition-colors select-none ${
+                                    isOwner ? 'cursor-pointer' : 'cursor-default'
+                                  } ${
+                                    phase.completed
+                                      ? 'line-through text-slate-400 font-medium'
+                                      : isOwner
+                                      ? 'text-slate-900 hover:text-brand-600'
+                                      : 'text-slate-800'
+                                  }`}
+                                >
+                                  {phase.title}
+                                </h4>
+                              </div>
+
+                              {phase.description && (
+                                <p
+                                  className={`text-xs mt-1 leading-relaxed line-clamp-2 font-normal ${
+                                    phase.completed
+                                      ? 'text-slate-400 line-through'
+                                      : 'text-slate-600'
+                                  }`}
+                                >
+                                  {phase.description}
+                                </p>
+                              )}
+
+                              {/* Metadata Chips */}
+                              <div className="flex flex-wrap items-center gap-2 mt-2.5 text-[11px]">
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100/90 border border-slate-200/80 font-semibold text-slate-700">
+                                  <User className="h-3 w-3 text-brand-600" />
+                                  <span>
+                                    {ownerName} {isOwner && '(You)'}
+                                  </span>
+                                </div>
+
+                                {phase.completed ? (
+                                  <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full shadow-soft-xs">
+                                    <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                    Delivered
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 font-semibold text-amber-700 bg-amber-50 border border-amber-200/80 px-2.5 py-0.5 rounded-full shadow-soft-xs">
+                                    <Clock className="h-3 w-3 text-amber-600" />
+                                    In Progress
+                                  </span>
+                                )}
+
+                                {/* Work Notes Trigger Button */}
+                                <button
+                                  type="button"
+                                  onClick={() => openNotesModal(phase)}
+                                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold transition-colors border ${
+                                    phase.notes
+                                      ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 shadow-soft-xs'
+                                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                                  }`}
+                                >
+                                  <FileText className="h-3 w-3 text-brand-600" />
+                                  {phase.notes ? '📝 View Notes' : '+ Add Note'}
+                                </button>
+                              </div>
                             </div>
                           </div>
+
+                          {/* Actions for Owner (Move Up/Down, Edit, Delete) */}
+                          {isOwner && (
+                            <div className="flex items-center gap-1 opacity-90 group-hover:opacity-100 transition-opacity shrink-0">
+                              {/* Reorder Buttons */}
+                              <div className="flex items-center rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+                                <button
+                                  type="button"
+                                  disabled={idx === 0}
+                                  onClick={() => handleMovePhase(phase._id, 'up')}
+                                  title="Move Up (▲)"
+                                  className="p-1 rounded text-slate-500 hover:text-brand-600 hover:bg-white disabled:opacity-25 transition-all cursor-pointer"
+                                >
+                                  ▲
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={idx === filteredPhases.length - 1}
+                                  onClick={() => handleMovePhase(phase._id, 'down')}
+                                  title="Move Down (▼)"
+                                  className="p-1 rounded text-slate-500 hover:text-brand-600 hover:bg-white disabled:opacity-25 transition-all cursor-pointer"
+                                >
+                                  ▼
+                                </button>
+                              </div>
+
+                              <button
+                                onClick={() => openEditModal(phase)}
+                                title="Edit Phase"
+                                className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer"
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => confirmDelete(phase)}
+                                title="Delete Phase"
+                                className="p-2 rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors cursor-pointer"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          )}
                         </div>
 
-                        {/* Actions for Owner */}
-                        {isOwner && (
-                          <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity shrink-0">
-                            <button
-                              onClick={() => openEditModal(phase)}
-                              title="Edit Phase"
-                              className="p-2 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-800 transition-colors"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => confirmDelete(phase)}
-                              title="Delete Phase"
-                              className="p-2 rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                        {/* Developer Notes In-line Preview (if exists) */}
+                        {phase.notes && (
+                          <div className="mt-3 p-3 rounded-xl bg-amber-50/60 border border-amber-200/70 text-xs text-amber-950 font-mono">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 flex items-center gap-1">
+                                <Sparkles className="h-3 w-3" />
+                                Dev Log / Work Notes:
+                              </span>
+                              {isOwner && (
+                                <button
+                                  onClick={() => openNotesModal(phase)}
+                                  className="text-[10px] font-semibold text-amber-800 underline hover:text-amber-950"
+                                >
+                                  Edit
+                                </button>
+                              )}
+                            </div>
+                            <p className="whitespace-pre-wrap leading-relaxed text-[11px] text-amber-900">
+                              {phase.notes}
+                            </p>
                           </div>
                         )}
                       </div>
 
-                      {/* Developer Notes In-line Preview (if exists) */}
-                      {phase.notes && (
-                        <div className="mt-3 p-3 rounded-xl bg-amber-50/60 border border-amber-200/70 text-xs text-amber-950 font-mono">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 flex items-center gap-1">
-                              <Sparkles className="h-3 w-3" />
-                              Dev Log / Work Notes:
-                            </span>
-                            {isOwner && (
-                              <button
-                                onClick={() => openNotesModal(phase)}
-                                className="text-[10px] font-semibold text-amber-800 underline hover:text-amber-950"
-                              >
-                                Edit
-                              </button>
-                            )}
-                          </div>
-                          <p className="whitespace-pre-wrap leading-relaxed text-[11px] text-amber-900">
-                            {phase.notes}
-                          </p>
+                      {/* In-Between Insert Button */}
+                      {isOwner && (
+                        <div className="flex justify-center py-0.5">
+                          <button
+                            type="button"
+                            onClick={() => openInsertModal(idx + 1)}
+                            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-slate-400 hover:text-brand-700 bg-slate-50 hover:bg-brand-50 border border-slate-200 hover:border-brand-300 transition-all shadow-2xs cursor-pointer active:scale-95"
+                          >
+                            <Plus className="h-2.5 w-2.5 text-brand-600" />
+                            <span>+ Insert Phase #{idx + 2} Here</span>
+                          </button>
                         </div>
                       )}
                     </div>
@@ -725,8 +816,18 @@ const ProjectWorkspacePage = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={modalMode === 'create' ? 'Add Milestone Deliverable' : 'Edit Deliverable'}
-        subtitle="Define a milestone phase for this project workspace."
+        title={
+          modalMode === 'create'
+            ? typeof insertPosition === 'number'
+              ? `Insert Phase at Position #${insertPosition + 1}`
+              : 'Add Milestone Deliverable'
+            : 'Edit Deliverable'
+        }
+        subtitle={
+          typeof insertPosition === 'number'
+            ? `This deliverable will be inserted directly at position #${insertPosition + 1} between existing phases.`
+            : 'Define a milestone phase for this project workspace.'
+        }
         maxWidth="md"
       >
         <form onSubmit={handleModalSubmit} className="space-y-4">

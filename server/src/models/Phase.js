@@ -18,6 +18,10 @@ const PhaseSchema = new mongoose.Schema(
       trim: true,
       default: '',
     },
+    order: {
+      type: Number,
+      default: 0,
+    },
     completed: {
       type: Boolean,
       default: false,
@@ -42,7 +46,8 @@ const PhaseSchema = new mongoose.Schema(
   }
 );
 
-// Index for fast query by project & developer
-PhaseSchema.index({ projectId: 1, developerId: 1 });
+// Index for fast query by project, developer & order
+PhaseSchema.index({ projectId: 1, developerId: 1, order: 1 });
+PhaseSchema.index({ projectId: 1, order: 1 });
 
 module.exports = mongoose.model('Phase', PhaseSchema);

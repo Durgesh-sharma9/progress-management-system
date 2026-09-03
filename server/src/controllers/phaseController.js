@@ -43,7 +43,7 @@ exports.getMyPhases = async (req, res, next) => {
     const phases = await Phase.find({ developerId: req.user._id })
       .populate('projectId', 'name status')
       .populate('developerId', 'name email role')
-      .sort({ createdAt: -1 });
+      .sort({ order: 1, createdAt: 1 });
 
     res.status(200).json({
       success: true,
@@ -77,7 +77,7 @@ exports.getPhasesByProject = async (req, res, next) => {
 
     const phases = await Phase.find(query)
       .populate('developerId', 'name email role')
-      .sort({ createdAt: 1 });
+      .sort({ order: 1, createdAt: 1 });
 
     res.status(200).json({
       success: true,
@@ -89,12 +89,12 @@ exports.getPhasesByProject = async (req, res, next) => {
   }
 };
 
-// @desc    Create a new phase
+// @desc    Create a new phase (supports inserting in the middle)
 // @route   POST /api/phases
 // @access  Private (Developer only)
 exports.createPhase = async (req, res, next) => {
   try {
-    const { title, description, notes, projectId } = req.body;
+    const { title, description, notes, projectId, insertPosition } = req.body;
 
     if (!title || !projectId) {
       return res.status(400).json({
@@ -119,12 +119,33 @@ exports.createPhase = async (req, res, next) => {
       });
     }
 
+    const existingPhases = await Phase.find({
+      projectId,
+      developerId: req.user._id,
+    }).sort({ order: 1, createdAt: 1 });
+
+    let targetOrder = existingPhases.length;
+
+    if (
+      typeof insertPosition === 'number' &&
+      insertPosition >= 0 &&
+      insertPosition <= existingPhases.length
+    ) {
+      targetOrder = insertPosition;
+      // Shift subsequent phases up by 1
+      for (let i = insertPosition; i < existingPhases.length; i++) {
+        existingPhases[i].order = i + 1;
+        await existingPhases[i].save();
+      }
+    }
+
     const phase = await Phase.create({
       title: title.trim(),
       description: description ? description.trim() : '',
       notes: notes ? notes.trim() : '',
       projectId,
       developerId: req.user._id,
+      order: targetOrder,
       completed: false,
     });
 
@@ -403,12 +424,18 @@ exports.bulkCreatePhases = async (req, res, next) => {
       });
     }
 
+    const existingCount = await Phase.countDocuments({
+      projectId,
+      developerId: req.user._id,
+    });
+
     const createdDocs = await Phase.insertMany(
-      validPhases.map((p) => ({
+      validPhases.map((p, idx) => ({
         title: p.title,
         description: p.description,
         projectId,
         developerId: req.user._id,
+        order: existingCount + idx,
         completed: false,
       }))
     );
@@ -426,4 +453,115 @@ exports.bulkCreatePhases = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Move a phase up or down in the sequence
+// @route   PATCH /api/phases/:id/move
+// @access  Private (Developer only - Owner)
+exports.movePhase = async (req, res, next) => {
+  try {
+    const { direction } = req.body; // 'up' or 'down'
+    const phase = await Phase.findById(req.params.id);
+
+    if (!phase) {
+      return res.status(404).json({ success: false, message: 'Phase not found' });
+    }
+
+    if (phase.developerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to move another developer's phase",
+      });
+    }
+
+    // Get all phases for this developer in this project sorted in order
+    const phases = await Phase.find({
+      projectId: phase.projectId,
+      developerId: phase.developerId,
+    }).sort({ order: 1, createdAt: 1 });
+
+    // Normalize orders to ensure clean sequence
+    for (let i = 0; i < phases.length; i++) {
+      if (phases[i].order !== i) {
+        phases[i].order = i;
+        await phases[i].save();
+      }
+    }
+
+    const currentIndex = phases.findIndex(
+      (p) => p._id.toString() === phase._id.toString()
+    );
+
+    if (currentIndex === -1) {
+      return res.status(400).json({ success: false, message: 'Phase not in list' });
+    }
+
+    if (direction === 'up' && currentIndex > 0) {
+      const targetIndex = currentIndex - 1;
+      phases[currentIndex].order = targetIndex;
+      phases[targetIndex].order = currentIndex;
+
+      await phases[currentIndex].save();
+      await phases[targetIndex].save();
+    } else if (direction === 'down' && currentIndex < phases.length - 1) {
+      const targetIndex = currentIndex + 1;
+      phases[currentIndex].order = targetIndex;
+      phases[targetIndex].order = currentIndex;
+
+      await phases[currentIndex].save();
+      await phases[targetIndex].save();
+    }
+
+    const updatedPhases = await Phase.find({
+      projectId: phase.projectId,
+      developerId: phase.developerId,
+    })
+      .populate('developerId', 'name email role')
+      .sort({ order: 1, createdAt: 1 });
+
+    res.status(200).json({
+      success: true,
+      message: `Phase moved ${direction} successfully`,
+      data: updatedPhases,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Reorder an array of phases
+// @route   PUT /api/phases/reorder
+// @access  Private (Developer only)
+exports.reorderPhases = async (req, res, next) => {
+  try {
+    const { phaseIds, projectId } = req.body;
+    if (!Array.isArray(phaseIds)) {
+      return res.status(400).json({ success: false, message: 'phaseIds must be an array' });
+    }
+
+    await Promise.all(
+      phaseIds.map(async (id, index) => {
+        await Phase.updateOne(
+          { _id: id, developerId: req.user._id },
+          { $set: { order: index } }
+        );
+      })
+    );
+
+    const updatedPhases = await Phase.find({
+      projectId,
+      developerId: req.user._id,
+    })
+      .populate('developerId', 'name email role')
+      .sort({ order: 1, createdAt: 1 });
+
+    res.status(200).json({
+      success: true,
+      message: 'Phases reordered successfully',
+      data: updatedPhases,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
