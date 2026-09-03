@@ -597,7 +597,7 @@ const ProjectsPage = () => {
                     </div>
 
                     <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${theme.badge} font-mono`}>
-                      {project.developers?.length || 0} {project.developers?.length === 1 ? 'Dev' : 'Devs'}
+                      {project.developers?.length || 0} {project.developers?.length === 1 ? 'Developer' : 'Developers'}
                     </span>
                   </div>
                 </div>
