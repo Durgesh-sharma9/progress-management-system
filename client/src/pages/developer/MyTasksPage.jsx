@@ -143,66 +143,66 @@ const MyTasksPage = () => {
   const totalPending = phases.length - totalCompleted;
 
   return (
-    <div className="space-y-7">
+    <div className="space-y-4 sm:space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight">
               My Deliverables & Phases
             </h2>
-            <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+            <span className="text-[10px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
               {phases.length} Total
             </span>
           </div>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
             View, filter, and check off your development milestones across all assigned projects.
           </p>
         </div>
 
         {/* Quick Stats Pill */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-bold shadow-soft-xs">
-            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-            {totalCompleted} Completed
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[11px] sm:text-xs font-bold shadow-soft-xs">
+            <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-600" />
+            {totalCompleted} Done
           </div>
-          <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 border border-amber-200/80 text-amber-800 text-xs font-bold shadow-soft-xs">
-            <Clock className="h-3.5 w-3.5 text-amber-600" />
+          <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-800 text-[11px] sm:text-xs font-bold shadow-soft-xs">
+            <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-600" />
             {totalPending} Pending
           </div>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col lg:flex-row items-center gap-3">
+      <div className="flex flex-col lg:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
         {/* Search */}
         <div className="relative flex-1 w-full">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search your deliverables..."
+            placeholder="Search deliverables..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-2xl border border-slate-200/90 bg-white/80 py-2.5 pl-10 pr-10 text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 shadow-soft-xs"
+            className="w-full rounded-xl sm:rounded-2xl border border-slate-200/90 bg-white/80 py-2 sm:py-2.5 pl-9 pr-8 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 shadow-soft-xs"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
             >
-              <X className="h-4 w-4" />
+              <X className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full lg:w-auto">
           {/* Status Tabs */}
-          <div className="flex items-center gap-1.5 p-1 rounded-2xl border border-slate-200/80 bg-white shadow-soft-xs w-full sm:w-auto">
+          <div className="flex items-center justify-around gap-1 p-1 rounded-xl sm:rounded-2xl border border-slate-200/80 bg-white shadow-soft-xs w-full sm:w-auto">
             {['All', 'Completed', 'Pending'].map((status) => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-200 ${
+                className={`px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all duration-200 flex-1 sm:flex-initial ${
                   statusFilter === status
                     ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
@@ -214,7 +214,7 @@ const MyTasksPage = () => {
           </div>
 
           {/* Project Dropdown */}
-          <div className="w-full sm:w-auto min-w-[200px]">
+          <div className="w-full sm:w-auto sm:min-w-[160px]">
             <select
               value={projectFilter}
               onChange={(e) => setProjectFilter(e.target.value)}

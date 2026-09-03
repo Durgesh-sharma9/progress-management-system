@@ -41,21 +41,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   const navItems = isAdmin ? adminNavItems : developerNavItems;
 
   return (
-    <>
-      {/* Mobile Backdrop */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-slate-950/50 backdrop-blur-sm transition-opacity lg:hidden"
-          onClick={onClose}
-        />
-      )}
-
-      {/* Sidebar Shell */}
-      <aside
-        className={`fixed top-0 bottom-0 left-0 z-40 flex w-64 sm:w-72 flex-col border-r border-slate-200/90 bg-white/95 backdrop-blur-2xl transition-transform duration-300 ease-in-out lg:translate-x-0 shadow-soft-md ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
+    <aside className="fixed top-0 bottom-0 left-0 z-40 hidden lg:flex w-72 flex-col border-r border-slate-200/90 bg-white/95 backdrop-blur-2xl shadow-soft-md">
         {/* Brand Header */}
         <div className="flex h-16 sm:h-20 items-center justify-between px-6 border-b border-slate-200/80">
           <div className="flex items-center gap-3">
@@ -176,7 +162,6 @@ const Sidebar = ({ isOpen, onClose }) => {
           </div>
         </div>
       </aside>
-    </>
   );
 };
 

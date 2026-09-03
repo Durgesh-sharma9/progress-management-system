@@ -40,15 +40,8 @@ const Header = ({ onMenuClick }) => {
 
   return (
     <header className="sticky top-0 z-30 flex h-14 sm:h-16 lg:h-20 items-center justify-between border-b border-slate-200/80 bg-white/85 px-3 sm:px-6 lg:px-8 backdrop-blur-xl shadow-soft-xs">
-      {/* Left side: Hamburger & Title */}
-      <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
-        <button
-          onClick={onMenuClick}
-          aria-label="Open Navigation Menu"
-          className="rounded-xl border border-slate-200 p-1.5 sm:p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 lg:hidden shadow-soft-xs shrink-0 transition-colors"
-        >
-          <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
-        </button>
+      {/* Left side: Title & Breadcrumbs */}
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
 
         <div className="min-w-0">
           <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-slate-400">
