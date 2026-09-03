@@ -215,6 +215,15 @@ const ProjectWorkspacePage = () => {
     const target = phases.find((p) => p._id === phaseId);
     if (!target) return;
 
+    // Check ownership: developer can only toggle their own phases
+    const isOwner =
+      (target.developerId?._id || target.developerId)?.toString() ===
+      user?._id?.toString();
+    if (!isOwner) {
+      error('You can only check off or complete your own assigned deliverable phases.');
+      return;
+    }
+
     // If currently incomplete and not bypassing modal, open Complete & Attach Note modal
     if (!target.completed && !bypassModal) {
       setPhaseToComplete(target);
@@ -568,26 +577,43 @@ const ProjectWorkspacePage = () => {
                       <div className="flex items-start justify-between gap-3.5">
                         {/* Checkbox and Phase Content */}
                         <div className="flex items-start gap-3.5 min-w-0 flex-1">
-                          <button
-                            type="button"
-                            onClick={() => handleTogglePhase(phase._id)}
-                            className="mt-0.5 transition-transform active:scale-90 shrink-0 cursor-pointer"
-                            title="Click to toggle completion status"
-                          >
-                            {phase.completed ? (
-                              <CheckSquare className="h-5 w-5 text-emerald-600 fill-emerald-100" />
-                            ) : (
-                              <Square className="h-5 w-5 text-slate-400 hover:text-brand-600" />
-                            )}
-                          </button>
+                          {isOwner ? (
+                            <button
+                              type="button"
+                              onClick={() => handleTogglePhase(phase._id)}
+                              className="mt-0.5 transition-transform active:scale-90 shrink-0 cursor-pointer"
+                              title="Click to toggle completion status"
+                            >
+                              {phase.completed ? (
+                                <CheckSquare className="h-5 w-5 text-emerald-600 fill-emerald-100" />
+                              ) : (
+                                <Square className="h-5 w-5 text-slate-400 hover:text-brand-600" />
+                              )}
+                            </button>
+                          ) : (
+                            <div
+                              className="mt-0.5 shrink-0 opacity-60 cursor-not-allowed"
+                              title={`Assigned to ${ownerName}. Only ${ownerName} can check off this task.`}
+                            >
+                              {phase.completed ? (
+                                <CheckSquare className="h-5 w-5 text-emerald-600/70" />
+                              ) : (
+                                <Square className="h-5 w-5 text-slate-300" />
+                              )}
+                            </div>
+                          )}
 
                           <div className="min-w-0 flex-1">
                             <h4
-                              onClick={() => handleTogglePhase(phase._id)}
-                              className={`text-sm font-bold transition-colors select-none cursor-pointer ${
+                              onClick={() => isOwner && handleTogglePhase(phase._id)}
+                              className={`text-sm font-bold transition-colors select-none ${
+                                isOwner ? 'cursor-pointer' : 'cursor-default'
+                              } ${
                                 phase.completed
                                   ? 'line-through text-slate-400 font-medium'
-                                  : 'text-slate-900 hover:text-brand-600'
+                                  : isOwner
+                                  ? 'text-slate-900 hover:text-brand-600'
+                                  : 'text-slate-800'
                               }`}
                             >
                               {phase.title}

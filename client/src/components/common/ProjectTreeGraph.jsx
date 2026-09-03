@@ -194,11 +194,13 @@ const ProjectTreeGraph = ({
 
                             {/* LEAF CARD */}
                             <div
-                              onClick={() =>
-                                onPhaseClick
-                                  ? onPhaseClick(phase)
-                                  : onTogglePhase && onTogglePhase(phase._id)
-                              }
+                              onClick={() => {
+                                if (onPhaseClick) {
+                                  onPhaseClick(phase);
+                                } else if (onTogglePhase && (!currentUserId || isMe)) {
+                                  onTogglePhase(phase._id);
+                                }
+                              }}
                               className={`w-full sm:max-w-lg flex flex-col p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl border-2 transition-all duration-200 cursor-pointer shadow-soft-xs ${
                                 phase.completed
                                   ? 'bg-emerald-50/40 border-emerald-300 hover:border-emerald-400 hover:shadow-soft'
@@ -209,7 +211,7 @@ const ProjectTreeGraph = ({
                                 <div className="flex items-start gap-2 min-w-0 flex-1">
                                   {/* Checkbox / Step Pill */}
                                   <div className="shrink-0 mt-0.5">
-                                    {onTogglePhase ? (
+                                    {onTogglePhase && (!currentUserId || isMe) ? (
                                       <button
                                         type="button"
                                         onClick={(e) => {
@@ -234,8 +236,9 @@ const ProjectTreeGraph = ({
                                         className={`h-5 w-5 sm:h-6 sm:w-6 rounded-md sm:rounded-lg flex items-center justify-center font-bold text-xs ${
                                           phase.completed
                                             ? 'bg-emerald-600 text-white'
-                                            : 'border-2 border-slate-300 bg-white font-mono text-[10px] sm:text-[11px] text-slate-600'
+                                            : 'border-2 border-slate-200 bg-slate-100 font-mono text-[10px] sm:text-[11px] text-slate-500'
                                         }`}
+                                        title={currentUserId && !isMe ? `Assigned to ${dev.name}. Only ${dev.name} can check off this task.` : undefined}
                                       >
                                         {phase.completed ? (
                                           <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 stroke-[3]" />

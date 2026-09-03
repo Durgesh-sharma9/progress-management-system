@@ -250,6 +250,14 @@ exports.togglePhase = async (req, res, next) => {
       });
     }
 
+    // Ensure developer cannot check off another developer's phase
+    if (req.user.role !== 'admin' && phase.developerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized: You can only check off your own deliverable phases.',
+      });
+    }
+
     const { notes } = req.body;
     phase.completed = !phase.completed;
     phase.completedAt = phase.completed ? new Date() : null;
