@@ -32,6 +32,8 @@ const ProjectTreeGraph = ({
   onPhaseClick,
   onMovePhase,
   onInsertPhase,
+  onEditPhase,
+  onDeletePhase,
   currentUserId,
 }) => {
   const [collapsedDevs, setCollapsedDevs] = useState({});
@@ -296,7 +298,7 @@ const ProjectTreeGraph = ({
                                     </div>
                                   </div>
 
-                                  {/* Status Pill & Move Up/Down Controls */}
+                                  {/* Status Pill, Move Up/Down, Edit, & Delete Controls */}
                                   <div className="flex items-center gap-1.5 shrink-0">
                                     {/* Move Up & Move Down Action Controls */}
                                     {onMovePhase && (!currentUserId || isMe) && (
@@ -325,6 +327,38 @@ const ProjectTreeGraph = ({
                                         >
                                           <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 stroke-[2.5]" />
                                         </button>
+                                      </div>
+                                    )}
+
+                                    {/* Edit & Delete Action Buttons */}
+                                    {(!currentUserId || isMe) && (
+                                      <div className="flex items-center gap-0.5">
+                                        {onEditPhase && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              onEditPhase(phase);
+                                            }}
+                                            title="Edit Phase"
+                                            className="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-slate-100 transition-all cursor-pointer active:scale-95"
+                                          >
+                                            <Edit2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                          </button>
+                                        )}
+                                        {onDeletePhase && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              onDeletePhase(phase);
+                                            }}
+                                            title="Delete Phase"
+                                            className="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer active:scale-95"
+                                          >
+                                            <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                          </button>
+                                        )}
                                       </div>
                                     )}
 

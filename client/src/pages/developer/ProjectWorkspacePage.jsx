@@ -483,6 +483,8 @@ const ProjectWorkspacePage = () => {
             onPhaseClick={(phase) => openNotesModal(phase)}
             onMovePhase={handleMovePhase}
             onInsertPhase={(devId, pos) => openInsertModal(pos)}
+            onEditPhase={openEditModal}
+            onDeletePhase={confirmDelete}
             currentUserId={user?._id}
           />
         </div>
