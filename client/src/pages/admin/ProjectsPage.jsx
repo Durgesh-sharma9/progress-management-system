@@ -402,7 +402,7 @@ const ProjectsPage = () => {
               {projects.length} Total
             </span>
             <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 shrink-0 hidden sm:inline-block">
-              👤 {standaloneCount} Solo
+              👤 {standaloneCount} Standalone
             </span>
             <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 shrink-0 hidden sm:inline-block">
               👥 {groupCount} Group

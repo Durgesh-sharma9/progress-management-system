@@ -177,8 +177,8 @@ const MyProjectsPage = () => {
         <div className="flex items-center gap-1 p-1 rounded-xl sm:rounded-2xl border border-slate-200/80 bg-white shadow-soft-xs overflow-x-auto no-scrollbar">
           {[
             { id: 'All', label: 'All' },
-            { id: 'Standalone', label: '👤 Solo' },
-            { id: 'Group', label: '👥 Team' },
+            { id: 'Standalone', label: '👤 Standalone' },
+            { id: 'Group', label: '👥 Group' },
           ].map((type) => (
             <button
               key={type.id}

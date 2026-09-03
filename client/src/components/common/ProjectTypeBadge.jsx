@@ -51,7 +51,7 @@ const ProjectTypeBadge = ({
       <span>Standalone</span>
       {showCount && (
         <span className="ml-0.5 px-1.5 py-0.2 rounded-full bg-sky-200/70 text-sky-800 text-[10px] font-extrabold font-mono">
-          Solo
+          1
         </span>
       )}
     </span>
