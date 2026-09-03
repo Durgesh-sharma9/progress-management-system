@@ -217,56 +217,54 @@ const ProjectDetailsPage = () => {
       </div>
 
       {/* View Switcher: Tree Graph vs Deliverables & Notes vs Team vs Analytics */}
-      <div className="flex items-center gap-2 border-b border-slate-200/80 pb-2.5 overflow-x-auto">
-        <div className="flex items-center gap-1.5 p-1 bg-white rounded-2xl border border-slate-200/80 shadow-soft-xs">
-          <button
-            onClick={() => setViewMode('tree')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 ${
-              viewMode === 'tree'
-                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-            }`}
-          >
-            <GitBranch className="h-3.5 w-3.5" />
-            Tree Flow Diagram
-          </button>
+      <div className="flex items-center gap-1.5 p-1 bg-white rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-soft-xs overflow-x-auto no-scrollbar">
+        <button
+          onClick={() => setViewMode('tree')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all duration-200 ${
+            viewMode === 'tree'
+              ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+          }`}
+        >
+          <GitBranch className="h-3.5 w-3.5" />
+          Tree Flow
+        </button>
 
-          <button
-            onClick={() => setViewMode('deliverables')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 ${
-              viewMode === 'deliverables'
-                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-            }`}
-          >
-            <ListTodo className="h-3.5 w-3.5" />
-            Deliverables & Notes ({phases.length})
-          </button>
+        <button
+          onClick={() => setViewMode('deliverables')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all duration-200 ${
+            viewMode === 'deliverables'
+              ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+          }`}
+        >
+          <ListTodo className="h-3.5 w-3.5" />
+          Deliverables ({phases.length})
+        </button>
 
-          <button
-            onClick={() => setViewMode('team')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 ${
-              viewMode === 'team'
-                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-            }`}
-          >
-            <Users className="h-3.5 w-3.5" />
-            Assigned Engineers ({project.developerStats?.length || 0})
-          </button>
+        <button
+          onClick={() => setViewMode('team')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all duration-200 ${
+            viewMode === 'team'
+              ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+          }`}
+        >
+          <Users className="h-3.5 w-3.5" />
+          Team ({project.developerStats?.length || 0})
+        </button>
 
-          <button
-            onClick={() => setViewMode('analytics')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 ${
-              viewMode === 'analytics'
-                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-            }`}
-          >
-            <BarChart3 className="h-3.5 w-3.5" />
-            Velocity Analytics
-          </button>
-        </div>
+        <button
+          onClick={() => setViewMode('analytics')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all duration-200 ${
+            viewMode === 'analytics'
+              ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+          }`}
+        >
+          <BarChart3 className="h-3.5 w-3.5" />
+          Analytics
+        </button>
       </div>
 
       {/* VIEW 1: TREE GRAPH FLOW */}
@@ -284,16 +282,16 @@ const ProjectDetailsPage = () => {
 
       {/* VIEW 2: ALL DELIVERABLES & WORK NOTES */}
       {viewMode === 'deliverables' && (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-bold text-slate-900 tracking-tight">Project Deliverables & Developer Logs</h3>
-              <p className="text-xs text-slate-500">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Project Deliverables & Developer Logs</h3>
+              <p className="text-[11px] sm:text-xs text-slate-500">
                 Track all completed deliverables, PR links, and implementation notes from developers
               </p>
             </div>
-            <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-              {phases.filter(p => p.completed).length} / {phases.length} Delivered
+            <span className="text-[10px] sm:text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200 shrink-0">
+              {phases.filter(p => p.completed).length}/{phases.length} Done
             </span>
           </div>
 
@@ -304,49 +302,49 @@ const ProjectDetailsPage = () => {
               description="Assigned engineers have not created any deliverable phases for this project yet."
             />
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2.5 sm:space-y-3">
               {phases.map((phase) => {
                 const devName = phase.developerId?.name || 'Developer';
                 return (
                   <div
                     key={phase._id}
-                    className={`p-4 sm:p-5 rounded-2xl border transition-all duration-200 shadow-soft-xs ${
+                    className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl border transition-all duration-200 shadow-soft-xs ${
                       phase.completed
                         ? 'bg-emerald-50/30 border-emerald-200/80'
                         : 'bg-white border-slate-200'
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2.5">
+                      <div className="flex items-start gap-2.5 min-w-0 flex-1">
                         <div className="mt-0.5">
                           {phase.completed ? (
-                            <CheckSquare className="h-5 w-5 text-emerald-600 fill-emerald-100" />
+                            <CheckSquare className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 fill-emerald-100" />
                           ) : (
-                            <Square className="h-5 w-5 text-slate-400" />
+                            <Square className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
                           )}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h4 className="text-sm font-bold text-slate-900">
+                          <h4 className="text-xs sm:text-sm font-bold text-slate-900">
                             {phase.title}
                           </h4>
                           {phase.description && (
-                            <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                            <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
                               {phase.description}
                             </p>
                           )}
-                          <div className="flex flex-wrap items-center gap-2 mt-2.5 text-[11px]">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 font-semibold text-slate-700">
+                          <div className="flex flex-wrap items-center gap-1.5 mt-2 text-[10px] sm:text-[11px]">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 font-semibold text-slate-700">
                               <User className="h-3 w-3 text-brand-600" />
                               {devName}
                             </span>
                             {phase.completed ? (
-                              <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                                <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                                Completed
+                              <span className="inline-flex items-center gap-0.5 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                                <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600" />
+                                Done
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                                <Clock className="h-3 w-3 text-amber-600" />
+                              <span className="inline-flex items-center gap-0.5 font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                                <Clock className="h-2.5 w-2.5 text-amber-600" />
                                 Pending
                               </span>
                             )}
@@ -359,26 +357,26 @@ const ProjectDetailsPage = () => {
                           setSelectedPhaseForNotes(phase);
                           setIsNotesModalOpen(true);
                         }}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border shadow-soft-xs shrink-0 ${
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all border shadow-soft-xs shrink-0 ${
                           phase.notes
                             ? 'bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100'
                             : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
                         }`}
                       >
-                        📝 {phase.notes ? 'View Notes' : 'No Notes'}
+                        📝 {phase.notes ? 'Notes' : 'No Notes'}
                       </button>
                     </div>
 
                     {/* Prominent Notes Box for Admin */}
                     {phase.notes && (
-                      <div className="mt-3.5 p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-950 font-mono">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1">
-                            <Sparkles className="h-3 w-3" />
-                            Developer Work Note / Log:
+                      <div className="mt-2.5 p-2.5 rounded-lg sm:rounded-xl bg-amber-50/80 border border-amber-200 text-[11px] text-amber-950 font-mono">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1">
+                            <Sparkles className="h-2.5 w-2.5" />
+                            Dev Log Note:
                           </span>
                         </div>
-                        <p className="whitespace-pre-wrap leading-relaxed text-xs text-amber-900">
+                        <p className="whitespace-pre-wrap leading-relaxed text-[11px] text-amber-900">
                           {phase.notes}
                         </p>
                       </div>
@@ -398,18 +396,18 @@ const ProjectDetailsPage = () => {
 
       {/* VIEW 3: TEAM MEMBERS ROSTER */}
       {viewMode === 'team' && (
-        <div className="space-y-5">
-          <div className="flex items-center justify-between">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-2">
             <div>
-              <h3 className="text-lg font-bold text-slate-900 tracking-tight">Assigned Engineering Team</h3>
-              <p className="text-xs text-slate-500">
-                Engineers and their individual milestone completion metrics
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Assigned Engineering Team</h3>
+              <p className="text-[11px] sm:text-xs text-slate-500">
+                Engineers and individual milestone progress
               </p>
             </div>
 
             <button
               onClick={() => setIsAssignOpen(true)}
-              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-soft-xs hover:from-brand-500 hover:to-indigo-500 transition-all active:scale-95"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-bold text-white shadow-soft-xs hover:from-brand-500 hover:to-indigo-500 transition-all active:scale-95 shrink-0"
             >
               <UserPlus className="h-3.5 w-3.5" />
               Assign Engineer
@@ -425,7 +423,7 @@ const ProjectDetailsPage = () => {
               onAction={() => setIsAssignOpen(true)}
             />
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
               {project.developerStats.map((stat) => {
                 const dev = stat.developer;
                 const isExpanded = expandedDevId === dev._id;
@@ -437,17 +435,17 @@ const ProjectDetailsPage = () => {
                 return (
                   <div
                     key={dev._id}
-                    className="glass-card glass-card-hover rounded-3xl p-6 flex flex-col justify-between"
+                    className="glass-card glass-card-hover rounded-xl sm:rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between transition-all"
                   >
                     <div>
                       {/* Dev Header */}
-                      <div className="flex items-start justify-between gap-3 mb-4">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-soft-xs shrink-0">
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-soft-xs shrink-0">
                             {dev.name.charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <h4 className="font-bold text-slate-900 text-sm truncate">{dev.name}</h4>
+                            <h4 className="font-bold text-slate-900 text-xs sm:text-sm truncate">{dev.name}</h4>
                             <p className="text-xs text-slate-500 truncate">{dev.email}</p>
                           </div>
                         </div>
