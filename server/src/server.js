@@ -25,6 +25,8 @@ app.use('/api/phases', require('./routes/phaseRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 
+const path = require('path');
+
 // Health Check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({
@@ -34,9 +36,21 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Root route
-app.get('/', (req, res) => {
-  res.send('DevTrack Backend API is active');
+// Serve frontend static assets if available
+const clientDistPath = path.join(__dirname, '../../client/dist');
+app.use(express.static(clientDistPath));
+
+// Root and SPA fallback route
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  const indexPath = path.join(clientDistPath, 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      res.send('DevTrack Backend API is active');
+    }
+  });
 });
 
 // Error handling middleware
