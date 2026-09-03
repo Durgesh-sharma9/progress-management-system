@@ -198,7 +198,7 @@ exports.getProjectById = async (req, res, next) => {
 // @access  Private (Admin only)
 exports.createProject = async (req, res, next) => {
   try {
-    const { name, description, status, projectType, developers } = req.body;
+    const { name, description, status, projectType, category, techStack, developers } = req.body;
 
     const devs = Array.isArray(developers) ? developers : [];
     const determinedType =
@@ -209,6 +209,8 @@ exports.createProject = async (req, res, next) => {
       description,
       status: status || 'Planning',
       projectType: determinedType,
+      category: category || 'Web App',
+      techStack: Array.isArray(techStack) ? techStack : [],
       developers: devs,
       createdBy: req.user._id,
     });
@@ -232,7 +234,7 @@ exports.createProject = async (req, res, next) => {
 // @access  Private (Admin only)
 exports.updateProject = async (req, res, next) => {
   try {
-    const { name, description, status, projectType, developers } = req.body;
+    const { name, description, status, projectType, category, techStack, developers } = req.body;
 
     let project = await Project.findById(req.params.id);
     if (!project) {
@@ -243,6 +245,8 @@ exports.updateProject = async (req, res, next) => {
     if (description !== undefined) project.description = description;
     if (status) project.status = status;
     if (projectType) project.projectType = projectType;
+    if (category) project.category = category;
+    if (techStack !== undefined) project.techStack = Array.isArray(techStack) ? techStack : [];
     if (developers !== undefined) {
       project.developers = developers;
       if (!projectType && developers.length > 1) {

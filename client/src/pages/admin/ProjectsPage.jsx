@@ -4,6 +4,8 @@ import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import ProgressBar from '../../components/common/ProgressBar';
 import ProjectTypeBadge from '../../components/common/ProjectTypeBadge';
+import ProjectCategoryBadge from '../../components/common/ProjectCategoryBadge';
+import TechStackPills from '../../components/common/TechStackPills';
 import Modal from '../../components/common/Modal';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import EmptyState from '../../components/common/EmptyState';
@@ -22,7 +24,42 @@ import {
   Sparkles,
   X,
   Layers,
+  Globe,
+  Smartphone,
+  Layout,
+  Server,
+  Code2,
 } from 'lucide-react';
+
+const categoryTechPresets = {
+  'Web App': [
+    'React', 'Next.js', 'Vue.js', 'Node.js', 'Express.js',
+    'MongoDB', 'PostgreSQL', 'MySQL', 'TypeScript', 'TailwindCSS',
+    'GraphQL', 'Redis', 'Firebase'
+  ],
+  'Android App': [
+    'Flutter', 'React Native', 'Kotlin', 'Java', 'Android SDK',
+    'Jetpack Compose', 'Firebase', 'SQLite', 'Room DB', 'Retrofit'
+  ],
+  'General Website': [
+    'HTML5 / CSS3', 'JavaScript', 'TailwindCSS', 'Bootstrap',
+    'WordPress', 'Shopify', 'PHP', 'Next.js', 'Webflow'
+  ],
+  'Backend API': [
+    'Python', 'FastAPI', 'Django', 'Node.js', 'Express.js',
+    'Go (Golang)', 'Docker', 'PostgreSQL', 'MongoDB', 'Redis'
+  ],
+  'Other': [
+    'JavaScript', 'Python', 'Docker', 'AWS', 'Firebase'
+  ]
+};
+
+const categoryOptions = [
+  { id: 'Web App', label: 'Web App', icon: Globe, desc: 'Fullstack, SaaS, React/Next.js portal' },
+  { id: 'Android App', label: 'Android App', icon: Smartphone, desc: 'Flutter, React Native, Kotlin mobile apps' },
+  { id: 'General Website', label: 'Website', icon: Layout, desc: 'Landing pages, Portfolio, WordPress, Shopify' },
+  { id: 'Backend API', label: 'Backend / API', icon: Server, desc: 'Microservices, Python, Node, Database APIs' },
+];
 
 const projectColorThemes = [
   {
@@ -71,7 +108,7 @@ const projectColorThemes = [
     btn: 'bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-rose-500/20',
   },
   {
-    gradient: 'from-violet-600 via-fuchsia-600 to-indigo-600',
+    gradient: 'from-violet-500 via-fuchsia-500 to-indigo-500',
     border: 'hover:border-fuchsia-300',
     topBar: 'bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500',
     iconBg: 'bg-gradient-to-tr from-violet-600 to-fuchsia-600',
@@ -125,8 +162,11 @@ const ProjectsPage = () => {
     name: '',
     description: '',
     projectType: 'Standalone', // 'Standalone' | 'Group'
+    category: 'Web App',
+    techStack: ['React', 'Node.js', 'MongoDB'],
     developers: [],
   });
+  const [customTechInput, setCustomTechInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Delete modal state
@@ -173,8 +213,11 @@ const ProjectsPage = () => {
       name: '',
       description: '',
       projectType: 'Standalone',
+      category: 'Web App',
+      techStack: ['React', 'Node.js', 'MongoDB'],
       developers: [],
     });
+    setCustomTechInput('');
     setIsModalOpen(true);
   };
 
@@ -189,9 +232,50 @@ const ProjectsPage = () => {
       name: project.name,
       description: project.description || '',
       projectType: inferredType,
+      category: project.category || 'Web App',
+      techStack: project.techStack || [],
       developers: assignedDevIds,
     });
+    setCustomTechInput('');
     setIsModalOpen(true);
+  };
+
+  const handleCategoryChange = (newCat) => {
+    const defaultTech = categoryTechPresets[newCat]?.slice(0, 3) || [];
+    setFormData((prev) => ({
+      ...prev,
+      category: newCat,
+      techStack: defaultTech,
+    }));
+  };
+
+  const toggleTechTag = (tech) => {
+    setFormData((prev) => {
+      const exists = prev.techStack.includes(tech);
+      return {
+        ...prev,
+        techStack: exists
+          ? prev.techStack.filter((t) => t !== tech)
+          : [...prev.techStack, tech],
+      };
+    });
+  };
+
+  const handleAddCustomTech = (e) => {
+    if (e) e.preventDefault();
+    if (!customTechInput.trim()) return;
+    const tag = customTechInput.trim();
+    if (!formData.techStack.includes(tag)) {
+      setFormData((prev) => ({ ...prev, techStack: [...prev.techStack, tag] }));
+    }
+    setCustomTechInput('');
+  };
+
+  const removeTechTag = (tagToRemove) => {
+    setFormData((prev) => ({
+      ...prev,
+      techStack: prev.techStack.filter((t) => t !== tagToRemove),
+    }));
   };
 
   const handleTypeChange = (newType) => {
@@ -428,7 +512,11 @@ const ProjectsPage = () => {
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 mb-0.5">
+                        <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
+                          <ProjectCategoryBadge
+                            category={project.category || 'Web App'}
+                            size="xs"
+                          />
                           <ProjectTypeBadge
                             projectType={currentType}
                             memberCount={project.developerCount || 0}
@@ -463,9 +551,16 @@ const ProjectsPage = () => {
 
                   {/* Description */}
                   {project.description && (
-                    <p className="text-[11px] text-slate-500 line-clamp-1 mb-2 font-normal leading-relaxed">
+                    <p className="text-[11px] text-slate-500 line-clamp-1 mb-1.5 font-normal leading-relaxed">
                       {project.description}
                     </p>
+                  )}
+
+                  {/* Tech Stack Pills */}
+                  {project.techStack && project.techStack.length > 0 && (
+                    <div className="mb-2">
+                      <TechStackPills techStack={project.techStack} max={3} size="xs" />
+                    </div>
                   )}
 
                   {/* Dynamic Colorful Progress Bar Container */}
@@ -529,53 +624,180 @@ const ProjectsPage = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={modalMode === 'create' ? 'Create New Project' : 'Edit Project'}
-        subtitle="Specify project type, title, description, and developer assignments."
+        subtitle="Specify category, tech stack, structure, and team assignments."
         maxWidth="lg"
       >
         <form onSubmit={handleFormSubmit} className="space-y-4">
-          {/* Project Type Selection (Standalone vs Group) */}
+          {/* STEP 1: Application Category / Platform Selector */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-              Project Structure / Mode *
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              1. Project Category / Platform *
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {categoryOptions.map((cat) => {
+                const isSelected = formData.category === cat.id;
+                const Icon = cat.icon;
+                return (
+                  <div
+                    key={cat.id}
+                    onClick={() => handleCategoryChange(cat.id)}
+                    className={`p-2.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
+                      isSelected
+                        ? 'border-brand-500 bg-brand-50/70 shadow-soft-xs'
+                        : 'border-slate-200 bg-white hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div
+                        className={`p-1.5 rounded-lg ${
+                          isSelected ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600'
+                        }`}
+                      >
+                        <Icon className="h-3.5 w-3.5" />
+                      </div>
+                      <div
+                        className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${
+                          isSelected ? 'border-brand-600 bg-brand-600 text-white' : 'border-slate-300'
+                        }`}
+                      >
+                        {isSelected && <div className="h-1 w-1 rounded-full bg-white" />}
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-slate-900 leading-tight">
+                      {cat.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* STEP 2: Dynamic Technology Stack Selector */}
+          <div className="p-3 rounded-2xl bg-slate-50/90 border border-slate-200/90 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                2. Technology Stack ({formData.category})
+              </label>
+              <span className="text-[10px] text-slate-400 font-medium">
+                Click preset or type custom
+              </span>
+            </div>
+
+            {/* Presets based on selected category */}
+            <div className="flex flex-wrap gap-1.5">
+              {(categoryTechPresets[formData.category] || []).map((tech) => {
+                const isSelected = formData.techStack.includes(tech);
+                return (
+                  <button
+                    key={tech}
+                    type="button"
+                    onClick={() => toggleTechTag(tech)}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold font-mono transition-all border ${
+                      isSelected
+                        ? 'bg-brand-600 text-white border-brand-600 shadow-soft-xs scale-102'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    <span>{tech}</span>
+                    {isSelected ? <Check className="h-3 w-3 stroke-[3]" /> : <Plus className="h-2.5 w-2.5 text-slate-400" />}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Custom Technology Input */}
+            <div className="flex items-center gap-2 pt-1 border-t border-slate-200/70">
+              <input
+                type="text"
+                value={customTechInput}
+                onChange={(e) => setCustomTechInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddCustomTech();
+                  }
+                }}
+                placeholder="Add custom technology (e.g. SQLite, Redis, AWS S3)..."
+                className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/20"
+              />
+              <button
+                type="button"
+                onClick={handleAddCustomTech}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shrink-0 active:scale-95"
+              >
+                <Plus className="h-3 w-3" />
+                <span>Add Tag</span>
+              </button>
+            </div>
+
+            {/* Selected Tags list */}
+            {formData.techStack.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mr-1">
+                  Selected:
+                </span>
+                {formData.techStack.map((t) => (
+                  <span
+                    key={t}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-brand-50 text-brand-800 border border-brand-200 shadow-2xs"
+                  >
+                    <span>{t}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeTechTag(t)}
+                      className="text-brand-500 hover:text-brand-800"
+                    >
+                      <X className="h-2.5 w-2.5" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* STEP 3: Project Type Selection (Standalone vs Group) */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              3. Project Team Structure *
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {/* Standalone Card */}
               <div
                 onClick={() => handleTypeChange('Standalone')}
-                className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between ${
+                className={`p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between ${
                   formData.projectType === 'Standalone'
                     ? 'border-sky-500 bg-sky-50/70 shadow-soft-xs'
                     : 'border-slate-200 bg-white hover:border-slate-300'
                 }`}
               >
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-1.5">
                     <div
-                      className={`p-1.5 rounded-xl ${
+                      className={`p-1 rounded-lg ${
                         formData.projectType === 'Standalone'
                           ? 'bg-sky-500 text-white'
                           : 'bg-slate-100 text-slate-600'
                       }`}
                     >
-                      <User className="h-4 w-4" />
+                      <User className="h-3.5 w-3.5" />
                     </div>
                     <span className="text-xs font-bold text-slate-900">
                       Standalone Project
                     </span>
                   </div>
                   <div
-                    className={`h-4 w-4 rounded-full border flex items-center justify-center ${
+                    className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${
                       formData.projectType === 'Standalone'
                         ? 'border-sky-600 bg-sky-600 text-white'
                         : 'border-slate-300'
                     }`}
                   >
                     {formData.projectType === 'Standalone' && (
-                      <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                      <div className="h-1 w-1 rounded-full bg-white" />
                     )}
                   </div>
                 </div>
-                <p className="text-[11px] text-slate-500 leading-tight">
+                <p className="text-[10px] text-slate-500 leading-tight">
                   Single developer assignment. Focused individual deliverable workflow.
                 </p>
               </div>
@@ -583,40 +805,40 @@ const ProjectsPage = () => {
               {/* Group Card */}
               <div
                 onClick={() => handleTypeChange('Group')}
-                className={`p-3.5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between ${
+                className={`p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between ${
                   formData.projectType === 'Group'
                     ? 'border-purple-500 bg-purple-50/70 shadow-soft-xs'
                     : 'border-slate-200 bg-white hover:border-slate-300'
                 }`}
               >
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-1.5">
                     <div
-                      className={`p-1.5 rounded-xl ${
+                      className={`p-1 rounded-lg ${
                         formData.projectType === 'Group'
                           ? 'bg-purple-600 text-white'
                           : 'bg-slate-100 text-slate-600'
                       }`}
                     >
-                      <Users className="h-4 w-4" />
+                      <Users className="h-3.5 w-3.5" />
                     </div>
                     <span className="text-xs font-bold text-slate-900">
                       Group Project
                     </span>
                   </div>
                   <div
-                    className={`h-4 w-4 rounded-full border flex items-center justify-center ${
+                    className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${
                       formData.projectType === 'Group'
                         ? 'border-purple-600 bg-purple-600 text-white'
                         : 'border-slate-300'
                     }`}
                   >
                     {formData.projectType === 'Group' && (
-                      <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                      <div className="h-1 w-1 rounded-full bg-white" />
                     )}
                   </div>
                 </div>
-                <p className="text-[11px] text-slate-500 leading-tight">
+                <p className="text-[10px] text-slate-500 leading-tight">
                   Multi-developer team collaboration with cross-phase sprint planning.
                 </p>
               </div>
@@ -624,7 +846,7 @@ const ProjectsPage = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
               Project Name *
             </label>
             <input
@@ -632,17 +854,17 @@ const ProjectsPage = () => {
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="e.g. Mobile Banking Application"
-              className="block w-full rounded-xl border border-slate-300/80 bg-white/70 px-3.5 py-2.5 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              placeholder="e.g. E-Commerce Mobile App"
+              className="block w-full rounded-xl border border-slate-300/80 bg-white/70 px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
               Description
             </label>
             <textarea
-              rows={3}
+              rows={2}
               value={formData.description}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
@@ -654,13 +876,13 @@ const ProjectsPage = () => {
 
           {/* Assigned Developers Multi-Selection / Single selection */}
           <div>
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-1.5">
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
                 {formData.projectType === 'Standalone'
                   ? 'Assign Solo Engineer (Optional / 1 max)'
                   : `Assign Team Engineers (${formData.developers.length} selected)`}
               </label>
-              <span className="text-[11px] text-slate-500">
+              <span className="text-[10px] text-slate-500">
                 {formData.projectType === 'Standalone'
                   ? formData.developers.length > 0
                     ? '1 Developer Assigned'
@@ -669,9 +891,9 @@ const ProjectsPage = () => {
               </span>
             </div>
 
-            <div className="max-h-44 overflow-y-auto space-y-2 pr-1 rounded-2xl border border-slate-200/90 bg-slate-50/70 p-2.5">
+            <div className="max-h-36 overflow-y-auto space-y-1.5 pr-1 rounded-xl border border-slate-200/90 bg-slate-50/70 p-2">
               {developersList.length === 0 ? (
-                <p className="text-xs text-slate-500 text-center py-3">
+                <p className="text-xs text-slate-500 text-center py-2">
                   No registered developers available.
                 </p>
               ) : (
@@ -681,17 +903,17 @@ const ProjectsPage = () => {
                     <div
                       key={dev._id}
                       onClick={() => toggleDeveloperSelection(dev._id)}
-                      className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all duration-200 ${
+                      className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all duration-150 ${
                         isSelected
                           ? formData.projectType === 'Standalone'
-                            ? 'bg-sky-50 border border-sky-300 text-sky-900 shadow-soft-xs'
-                            : 'bg-brand-50 border border-brand-300 text-brand-900 shadow-soft-xs'
-                          : 'bg-white border border-slate-200/80 text-slate-700 hover:border-slate-300 shadow-soft-xs'
+                            ? 'bg-sky-50 border border-sky-300 text-sky-900 shadow-2xs'
+                            : 'bg-brand-50 border border-brand-300 text-brand-900 shadow-2xs'
+                          : 'bg-white border border-slate-200/80 text-slate-700 hover:border-slate-300 shadow-2xs'
                       }`}
                     >
-                      <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
                         <div
-                          className={`h-8 w-8 rounded-lg text-white flex items-center justify-center text-xs font-bold shrink-0 ${
+                          className={`h-7 w-7 rounded-lg text-white flex items-center justify-center text-xs font-bold shrink-0 ${
                             formData.projectType === 'Standalone' && isSelected
                               ? 'bg-gradient-to-tr from-sky-600 to-blue-600'
                               : 'bg-gradient-to-tr from-brand-600 to-indigo-600'
@@ -705,7 +927,7 @@ const ProjectsPage = () => {
                         </div>
                       </div>
                       <div
-                        className={`h-5 w-5 rounded-md border flex items-center justify-center transition-all ${
+                        className={`h-4 w-4 rounded-md border flex items-center justify-center transition-all ${
                           isSelected
                             ? formData.projectType === 'Standalone'
                               ? 'bg-sky-600 border-sky-600 text-white'
@@ -713,7 +935,7 @@ const ProjectsPage = () => {
                             : 'border-slate-300 bg-white'
                         }`}
                       >
-                        {isSelected && <Check className="h-3.5 w-3.5" />}
+                        {isSelected && <Check className="h-3 w-3" />}
                       </div>
                     </div>
                   );
@@ -722,22 +944,22 @@ const ProjectsPage = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200">
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="rounded-xl border border-slate-300/80 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-soft-xs"
+              className="rounded-xl border border-slate-300/80 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-soft-xs"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-soft-md shadow-brand-500/25 hover:from-brand-500 hover:to-indigo-500 transition-all disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-soft-md shadow-brand-500/25 hover:from-brand-500 hover:to-indigo-500 transition-all disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   Saving...
                 </>
               ) : modalMode === 'create' ? (

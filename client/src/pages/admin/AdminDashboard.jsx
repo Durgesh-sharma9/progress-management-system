@@ -4,6 +4,8 @@ import api from '../../services/api';
 import StatCard from '../../components/common/StatCard';
 import ProgressBar from '../../components/common/ProgressBar';
 import ProjectTypeBadge from '../../components/common/ProjectTypeBadge';
+import ProjectCategoryBadge from '../../components/common/ProjectCategoryBadge';
+import TechStackPills from '../../components/common/TechStackPills';
 import EmptyState from '../../components/common/EmptyState';
 import {
   FolderGit2,
@@ -239,7 +241,11 @@ const AdminDashboard = () => {
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 mb-0.5">
+                        <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
+                          <ProjectCategoryBadge
+                            category={project.category || 'Web App'}
+                            size="xs"
+                          />
                           <ProjectTypeBadge
                             projectType={currentType}
                             memberCount={project.developerCount || 0}
@@ -254,9 +260,16 @@ const AdminDashboard = () => {
                     </div>
 
                     {project.description && (
-                      <p className="text-[11px] text-slate-500 line-clamp-1 mb-2 font-normal leading-relaxed">
+                      <p className="text-[11px] text-slate-500 line-clamp-1 mb-1.5 font-normal leading-relaxed">
                         {project.description}
                       </p>
+                    )}
+
+                    {/* Tech Stack Pills */}
+                    {project.techStack && project.techStack.length > 0 && (
+                      <div className="mb-2">
+                        <TechStackPills techStack={project.techStack} max={3} size="xs" />
+                      </div>
                     )}
 
                     {/* Progress Bar */}

@@ -10,6 +10,8 @@ import EmptyState from '../../components/common/EmptyState';
 import ProjectTreeGraph from '../../components/common/ProjectTreeGraph';
 import ProjectAnalytics from '../../components/common/ProjectAnalytics';
 import ProjectTypeBadge from '../../components/common/ProjectTypeBadge';
+import ProjectCategoryBadge from '../../components/common/ProjectCategoryBadge';
+import TechStackPills from '../../components/common/TechStackPills';
 import {
   ArrowLeft,
   Users,
@@ -179,6 +181,10 @@ const ProjectDetailsPage = () => {
                 <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight truncate">
                   {project.name}
                 </h2>
+                <ProjectCategoryBadge
+                  category={project.category || 'Web App'}
+                  size="xs"
+                />
                 <ProjectTypeBadge
                   projectType={project.projectType}
                   memberCount={project.developers?.length || 0}
@@ -190,6 +196,11 @@ const ProjectDetailsPage = () => {
                 <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
                   {project.description}
                 </p>
+              )}
+              {project.techStack && project.techStack.length > 0 && (
+                <div className="mt-1.5">
+                  <TechStackPills techStack={project.techStack} max={6} size="xs" />
+                </div>
               )}
             </div>
           </div>

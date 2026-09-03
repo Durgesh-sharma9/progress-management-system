@@ -21,6 +21,17 @@ const projectSchema = new mongoose.Schema({
     enum: ['Standalone', 'Group'],
     default: 'Standalone',
   },
+  category: {
+    type: String,
+    enum: ['Web App', 'Android App', 'General Website', 'Backend API', 'Other'],
+    default: 'Web App',
+  },
+  techStack: [
+    {
+      type: String,
+      trim: true,
+    },
+  ],
   developers: [
     {
       type: mongoose.Schema.Types.ObjectId,
