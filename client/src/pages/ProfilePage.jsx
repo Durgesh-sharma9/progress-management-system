@@ -95,51 +95,51 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+        <h2 className="text-base sm:text-xl lg:text-2xl font-extrabold text-slate-900 tracking-tight">
           Account Profile & Security
         </h2>
-        <p className="text-sm text-slate-500 mt-1">
-          Manage your account credentials, security preferences, and personal details.
+        <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+          Manage your credentials, security preferences, and personal details.
         </p>
       </div>
 
       {/* Profile Overview Card */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-brand-950 p-6 sm:p-8 text-white shadow-soft-xl border border-slate-800 flex flex-col sm:flex-row items-center gap-6">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-brand-950 p-4 sm:p-6 text-white shadow-soft-xl border border-slate-800 flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
         <div className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-brand-500/20 blur-3xl pointer-events-none" />
-        <div className="h-20 w-20 rounded-3xl bg-gradient-to-tr from-brand-500 to-indigo-500 flex items-center justify-center text-3xl font-extrabold text-white shadow-soft-md shrink-0 border border-white/20">
+        <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-tr from-brand-500 to-indigo-500 flex items-center justify-center text-xl sm:text-2xl font-extrabold text-white shadow-soft-md shrink-0 border border-white/20">
           {user?.name?.charAt(0)?.toUpperCase()}
         </div>
 
-        <div className="flex-1 text-center sm:text-left space-y-2 relative z-10">
-          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
-            <h3 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">{user?.name}</h3>
+        <div className="flex-1 text-center sm:text-left space-y-1 relative z-10">
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+            <h3 className="text-base sm:text-lg font-extrabold text-white tracking-tight">{user?.name}</h3>
             {isAdmin ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-brand-500/20 text-brand-300 border border-brand-400/30 backdrop-blur-md">
-                <ShieldCheck className="h-3.5 w-3.5" />
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-brand-500/20 text-brand-300 border border-brand-400/30 backdrop-blur-md">
+                <ShieldCheck className="h-3 w-3" />
                 Administrator
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 backdrop-blur-md">
-                <Code2 className="h-3.5 w-3.5" />
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 backdrop-blur-md">
+                <Code2 className="h-3 w-3" />
                 Developer
               </span>
             )}
           </div>
 
-          <p className="text-sm text-slate-300 flex items-center justify-center sm:justify-start gap-2">
-            <Mail className="h-4 w-4 text-slate-400" />
+          <p className="text-xs text-slate-300 flex items-center justify-center sm:justify-start gap-1.5">
+            <Mail className="h-3.5 w-3.5 text-slate-400" />
             {user?.email}
           </p>
 
-          <p className="text-xs text-slate-400 flex items-center justify-center sm:justify-start gap-1.5">
-            <Calendar className="h-3.5 w-3.5" />
+          <p className="text-[10px] sm:text-[11px] text-slate-400 flex items-center justify-center sm:justify-start gap-1">
+            <Calendar className="h-3 w-3" />
             Member since{' '}
             {user?.createdAt
               ? new Date(user.createdAt).toLocaleDateString(undefined, {
-                  month: 'long',
+                  month: 'short',
                   year: 'numeric',
                 })
               : '2026'}
@@ -148,14 +148,14 @@ const ProfilePage = () => {
       </div>
 
       {/* Forms Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6">
         {/* Update Profile Form */}
-        <div className="glass-card rounded-3xl p-6 sm:p-7 space-y-5">
-          <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
-            <div className="p-2 rounded-xl bg-brand-50 text-brand-600 border border-brand-100">
-              <User className="h-4 w-4" />
+        <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-3 sm:space-y-4">
+          <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100">
+            <div className="p-1.5 rounded-lg bg-brand-50 text-brand-600 border border-brand-100">
+              <User className="h-3.5 w-3.5" />
             </div>
-            <h3 className="text-base font-bold text-slate-900">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900">
               Personal Information
             </h3>
           </div>

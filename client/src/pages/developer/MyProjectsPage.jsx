@@ -134,18 +134,20 @@ const MyProjectsPage = () => {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div>
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight">
-            My Assigned Projects
-          </h2>
-          <span className="text-[10px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200">
-            {projects.length} Assigned
-          </span>
+      <div className="flex items-center justify-between gap-2.5">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <h2 className="text-base sm:text-xl lg:text-2xl font-extrabold text-slate-900 tracking-tight truncate">
+              My Assigned Projects
+            </h2>
+            <span className="text-[10px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200 shrink-0">
+              {projects.length} Assigned
+            </span>
+          </div>
+          <p className="text-[11px] sm:text-xs text-slate-500 line-clamp-1 mt-0.5 hidden sm:block">
+            Open a workspace to organize your phases and sync live project flows.
+          </p>
         </div>
-        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-          Open a workspace to organize your phases, sync checklist tasks, and visualize live project flows.
-        </p>
       </div>
 
       {/* Filter and Search Bar */}
