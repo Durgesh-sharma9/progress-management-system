@@ -109,31 +109,31 @@ const DeveloperDashboard = () => {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+    <div className="space-y-3.5 sm:space-y-6">
       {/* Top Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-brand-950 p-4 sm:p-6 lg:p-8 text-white shadow-soft-xl border border-slate-800">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-brand-950 p-3 sm:p-5 text-white shadow-soft-xl border border-slate-800">
         <div className="absolute -right-10 -top-10 h-48 sm:h-64 w-48 sm:w-64 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" />
         <div className="absolute right-1/3 -bottom-10 h-36 sm:h-48 w-36 sm:w-48 rounded-full bg-brand-500/20 blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-5">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[10px] sm:text-[11px] font-semibold text-emerald-300 mb-2 sm:mb-3">
-              <Code2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-              Developer Workspace Active
+        <div className="relative z-10 flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[9px] sm:text-[10px] font-semibold text-emerald-300 mb-0.5 sm:mb-1">
+              <Code2 className="h-2.5 w-2.5" />
+              <span>Developer Workspace</span>
             </div>
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-white font-sans">
+            <h2 className="text-base sm:text-xl lg:text-2xl font-extrabold tracking-tight text-white font-sans">
               Welcome back, {user?.name}!
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300 mt-1 line-clamp-2 sm:line-clamp-none font-normal">
-              Manage your deliverable phases, check off sprint milestones in real-time, and monitor team velocity.
+            <p className="text-[11px] sm:text-xs text-slate-300 mt-0.5 line-clamp-1 hidden sm:block font-normal">
+              Manage your deliverable phases and track live milestone velocity.
             </p>
           </div>
           <Link
             to="/developer/phases"
-            className="inline-flex items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm font-bold text-white shadow-soft-md shadow-emerald-500/30 hover:from-emerald-400 hover:to-teal-500 transition-all duration-200 active:scale-95 shrink-0"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-bold text-white shadow-soft-xs hover:from-emerald-400 hover:to-teal-500 transition-all shrink-0 active:scale-95"
           >
-            <CheckSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            My Phases
+            <CheckSquare className="h-3.5 w-3.5" />
+            <span>My Phases</span>
           </Link>
         </div>
       </div>
