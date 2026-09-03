@@ -8,8 +8,9 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://code-pilot-bw3d.onrender.com',
         changeOrigin: true,
+        secure: false,
       },
     },
   },
