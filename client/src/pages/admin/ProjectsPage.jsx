@@ -55,10 +55,9 @@ const categoryTechPresets = {
 };
 
 const categoryOptions = [
-  { id: 'Web App', label: 'Web App', icon: Globe, desc: 'Fullstack, SaaS, React/Next.js portal' },
-  { id: 'Android App', label: 'Android App', icon: Smartphone, desc: 'Flutter, React Native, Kotlin mobile apps' },
-  { id: 'General Website', label: 'Website', icon: Layout, desc: 'Landing pages, Portfolio, WordPress, Shopify' },
-  { id: 'Backend API', label: 'Backend / API', icon: Server, desc: 'Microservices, Python, Node, Database APIs' },
+  { id: 'Web App', label: 'Web App', icon: Globe, desc: 'Fullstack SaaS, React, Next.js' },
+  { id: 'Android App', label: 'Android App', icon: Smartphone, desc: 'Flutter, Kotlin, React Native' },
+  { id: 'General Website', label: 'Website', icon: Layout, desc: 'Landing pages, Portfolio, WordPress' },
 ];
 
 const projectColorThemes = [
@@ -633,7 +632,7 @@ const ProjectsPage = () => {
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
               1. Project Category / Platform *
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
               {categoryOptions.map((cat) => {
                 const isSelected = formData.category === cat.id;
                 const Icon = cat.icon;
