@@ -11,9 +11,10 @@ exports.getDevelopers = async (req, res, next) => {
 
     const enriched = await Promise.all(
       developers.map(async (dev) => {
-        const assignedProjectsCount = await Project.countDocuments({
+        const assignedProjects = await Project.find({
           developers: dev._id,
-        });
+        }).select('_id name projectType status');
+
         const totalPhases = await Phase.countDocuments({
           developerId: dev._id,
         });
@@ -30,7 +31,8 @@ exports.getDevelopers = async (req, res, next) => {
           email: dev.email,
           role: dev.role,
           createdAt: dev.createdAt,
-          assignedProjectsCount,
+          assignedProjects,
+          assignedProjectsCount: assignedProjects.length,
           totalPhases,
           completedPhases,
           totalTasks: totalPhases,

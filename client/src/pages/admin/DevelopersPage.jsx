@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import ProgressBar from '../../components/common/ProgressBar';
@@ -20,6 +21,7 @@ import {
   ShieldCheck,
   FolderGit2,
   CheckCircle2,
+  ArrowUpRight,
 } from 'lucide-react';
 
 const DevelopersPage = () => {
@@ -249,6 +251,39 @@ const DevelopersPage = () => {
                     label="Overall Delivery Rate"
                     size="sm"
                   />
+                </div>
+
+                {/* Clickable Assigned Projects Chips */}
+                <div className="my-2 pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[9px] uppercase font-bold text-slate-500 flex items-center gap-1">
+                      <FolderGit2 className="h-3 w-3 text-brand-600" />
+                      Assigned Projects
+                    </span>
+                    <span className="text-[9px] font-mono font-bold text-slate-600">
+                      {dev.assignedProjects?.length || 0}
+                    </span>
+                  </div>
+
+                  {dev.assignedProjects && dev.assignedProjects.length > 0 ? (
+                    <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto no-scrollbar">
+                      {dev.assignedProjects.map((proj) => (
+                        <Link
+                          key={proj._id}
+                          to={`/admin/projects/${proj._id}`}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200/80 hover:border-brand-300 transition-all shadow-2xs group/proj active:scale-95"
+                          title={`Open ${proj.name} Details`}
+                        >
+                          <span className="truncate max-w-[120px]">{proj.name}</span>
+                          <ArrowUpRight className="h-2.5 w-2.5 text-brand-500 group-hover/proj:translate-x-0.5 group-hover/proj:-translate-y-0.5 transition-transform" />
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-slate-400 italic py-0.5">
+                      No projects currently assigned
+                    </p>
+                  )}
                 </div>
               </div>
 
