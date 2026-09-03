@@ -58,8 +58,12 @@ const RegisterPage = () => {
       <div className="absolute bottom-10 left-10 w-64 sm:w-96 h-64 sm:h-96 bg-purple-200/20 rounded-full blur-3xl pointer-events-none -z-10" />
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-center">
-        <div className="inline-flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-2xl sm:rounded-3xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-brand-700 shadow-xl shadow-brand-500/25 text-white mb-3 sm:mb-5 animate-float">
-          <Layers className="h-6 w-6 sm:h-8 sm:w-8" />
+        <div className="inline-flex items-center justify-center mb-3 sm:mb-5">
+          <img
+            src="/logo.jpg"
+            alt="CodePilot Logo"
+            className="h-14 w-14 sm:h-18 sm:w-18 rounded-2xl sm:rounded-3xl object-cover shadow-xl shadow-brand-500/25 ring-2 ring-white"
+          />
         </div>
         <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-sans">
           Create <span className="text-brand-600">CodePilot</span> Account

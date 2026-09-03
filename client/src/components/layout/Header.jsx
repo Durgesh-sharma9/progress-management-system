@@ -26,9 +26,11 @@ const Header = () => {
           className="flex items-center gap-2 group"
           title="CodePilot Home"
         >
-          <div className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white font-black text-[11px] sm:text-xs shadow-soft-xs group-hover:scale-105 transition-transform">
-            CP
-          </div>
+          <img
+            src="/logo.jpg"
+            alt="CodePilot"
+            className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg object-cover shadow-soft-xs group-hover:scale-105 transition-transform"
+          />
           <div className="flex items-center gap-1.5">
             <span className="font-extrabold text-xs sm:text-sm text-slate-900 tracking-tight group-hover:text-brand-600 transition-colors">
               CodePilot

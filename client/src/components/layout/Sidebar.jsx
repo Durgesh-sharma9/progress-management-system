@@ -45,9 +45,11 @@ const Sidebar = ({ isOpen, onClose }) => {
         {/* Brand Header */}
         <div className="flex h-16 sm:h-20 items-center justify-between px-6 border-b border-slate-200/80">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-brand-700 shadow-md shadow-brand-500/25 text-white">
-              <Layers className="h-5 w-5" />
-            </div>
+            <img
+              src="/logo.jpg"
+              alt="CodePilot Logo"
+              className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl sm:rounded-2xl object-cover shadow-md shadow-brand-500/25 ring-1 ring-slate-200/80"
+            />
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-lg text-slate-900 tracking-tight font-sans">

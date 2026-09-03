@@ -51,9 +51,11 @@ const LoginPage = () => {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <div className="h-11 w-11 sm:h-14 sm:w-14 rounded-2xl sm:rounded-3xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white shadow-soft-lg shadow-brand-500/30">
-            <Layers className="h-5 w-5 sm:h-7 sm:w-7" />
-          </div>
+          <img
+            src="/logo.jpg"
+            alt="CodePilot Logo"
+            className="h-14 w-14 sm:h-18 sm:w-18 rounded-2xl sm:rounded-3xl object-cover shadow-soft-xl shadow-brand-500/30 ring-2 ring-white"
+          />
         </div>
         <h2 className="mt-3 sm:mt-5 text-center text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 font-sans">
           Code<span className="text-brand-600">Pilot</span>
