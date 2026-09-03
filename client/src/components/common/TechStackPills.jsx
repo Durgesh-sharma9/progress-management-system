@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 const techColorMap = {
   react: 'bg-cyan-50 text-cyan-700 border-cyan-200',
@@ -34,11 +35,14 @@ const getTechStyle = (techName) => {
   );
 };
 
-const TechStackPills = ({ techStack = [], max = 4, size = 'xs', className = '' }) => {
+const TechStackPills = ({ techStack = [], max = 3, size = 'xs', className = '' }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   if (!techStack || techStack.length === 0) return null;
 
-  const displayList = max ? techStack.slice(0, max) : techStack;
-  const remaining = max && techStack.length > max ? techStack.length - max : 0;
+  const hasOverflow = max && techStack.length > max;
+  const displayList = isExpanded || !hasOverflow ? techStack : techStack.slice(0, max);
+  const remaining = hasOverflow ? techStack.length - max : 0;
 
   const sizeClasses = {
     xs: 'px-1.5 py-0.2 text-[9px] rounded-md font-bold',
@@ -46,7 +50,7 @@ const TechStackPills = ({ techStack = [], max = 4, size = 'xs', className = '' }
   };
 
   return (
-    <div className={`flex flex-wrap items-center gap-1 ${className}`}>
+    <div className={`flex flex-wrap items-center gap-1 transition-all ${className}`}>
       {displayList.map((tech, idx) => (
         <span
           key={idx}
@@ -57,10 +61,37 @@ const TechStackPills = ({ techStack = [], max = 4, size = 'xs', className = '' }
           {tech}
         </span>
       ))}
-      {remaining > 0 && (
-        <span className="text-[9px] font-bold text-slate-500 font-mono px-1 py-0.2 rounded bg-slate-100 border border-slate-200">
-          +{remaining}
-        </span>
+
+      {hasOverflow && !isExpanded && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            setIsExpanded(true);
+          }}
+          title={`Click to view all ${techStack.length} technologies`}
+          className="inline-flex items-center gap-0.5 text-[9px] font-bold text-brand-700 font-mono px-1.5 py-0.2 rounded-md bg-brand-50 hover:bg-brand-100 border border-brand-200 hover:border-brand-300 transition-all shadow-2xs active:scale-95 cursor-pointer"
+        >
+          <span>+{remaining}</span>
+          <ChevronDown className="h-2.5 w-2.5 text-brand-600" />
+        </button>
+      )}
+
+      {hasOverflow && isExpanded && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            setIsExpanded(false);
+          }}
+          title="Collapse technologies"
+          className="inline-flex items-center gap-0.5 text-[9px] font-bold text-slate-600 font-mono px-1.5 py-0.2 rounded-md bg-slate-100 hover:bg-slate-200 border border-slate-300 transition-all shadow-2xs active:scale-95 cursor-pointer"
+        >
+          <span>Less</span>
+          <ChevronUp className="h-2.5 w-2.5 text-slate-500" />
+        </button>
       )}
     </div>
   );
