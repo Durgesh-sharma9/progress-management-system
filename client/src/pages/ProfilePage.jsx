@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import api from '../services/api';
@@ -13,11 +14,18 @@ import {
   Save,
   KeyRound,
   Sparkles,
+  LogOut,
 } from 'lucide-react';
 
 const ProfilePage = () => {
-  const { user, updateUser, isAdmin } = useAuth();
+  const { user, updateUser, isAdmin, logout } = useAuth();
   const { success, error } = useToast();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
@@ -270,6 +278,27 @@ const ProfilePage = () => {
               )}
             </button>
           </form>
+        </div>
+
+        {/* Account Actions / Logout Card */}
+        <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-soft border border-rose-100 bg-rose-50/20">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h4 className="text-sm sm:text-base font-bold text-slate-900">
+                Sign Out of DevTrack
+              </h4>
+              <p className="text-xs text-slate-500 mt-0.5">
+                End your current session on this device.
+              </p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-4 py-2.5 shadow-soft-xs active:scale-95 transition-all"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign Out Account
+            </button>
+          </div>
         </div>
       </div>
     </div>
