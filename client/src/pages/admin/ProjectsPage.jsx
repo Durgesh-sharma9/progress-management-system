@@ -315,7 +315,7 @@ const ProjectsPage = () => {
           onAction={searchQuery ? undefined : openCreateModal}
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
           {filteredProjects.map((project) => {
             const currentType =
               project.projectType ||
@@ -325,119 +325,96 @@ const ProjectsPage = () => {
             return (
               <div
                 key={project._id}
-                className="glass-card glass-card-hover rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col justify-between"
+                className="glass-card glass-card-hover rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col justify-between transition-all"
               >
                 <div>
-                  {/* Top Badge (Project Type) */}
-                  <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
+                  {/* Card Header: Type Badge & Quick Actions */}
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
                     <ProjectTypeBadge
                       projectType={currentType}
                       memberCount={project.developerCount || 0}
                       showCount={isGroup}
                       size="xs"
                     />
+
+                    <div className="flex items-center gap-0.5">
+                      <button
+                        onClick={() => openEditModal(project)}
+                        title="Edit Project"
+                        className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => confirmDelete(project)}
+                        title="Delete Project"
+                        className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
 
-                  <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-snug line-clamp-1 mb-1">
+                  {/* Project Name */}
+                  <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-snug line-clamp-1">
                     {project.name}
                   </h3>
 
-                  <p className="text-[11px] sm:text-xs text-slate-500 line-clamp-2 mb-3 sm:mb-5 leading-relaxed font-normal">
-                    {project.description || 'No description provided.'}
-                  </p>
+                  {/* Description */}
+                  {project.description && (
+                    <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5 font-normal">
+                      {project.description}
+                    </p>
+                  )}
 
-                  {/* Progress Bar */}
-                  <div className="mb-5 bg-slate-50/80 p-3 rounded-2xl border border-slate-200/60">
+                  {/* Compact Progress Bar */}
+                  <div className="my-2 bg-slate-50/80 p-2 rounded-xl border border-slate-200/60">
                     <ProgressBar
                       progress={project.overallProgress}
                       label="Delivery Velocity"
-                      size="md"
+                      size="sm"
                     />
                   </div>
 
-                  {/* Assigned Developers Section */}
-                  <div className="mb-5 rounded-2xl bg-slate-50/80 border border-slate-200/80 p-3.5 shadow-soft-xs">
-                    <div className="flex items-center justify-between mb-2.5">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-                        {isGroup ? (
-                          <>
-                            <Users className="h-3.5 w-3.5 text-purple-600" />
-                            <span>Assigned Team ({project.developers?.length || 0})</span>
-                          </>
+                  {/* Compact Assigned Team Row */}
+                  <div className="flex items-center justify-between text-xs text-slate-600 mb-2.5 pt-1.5 border-t border-slate-100">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <div className="flex items-center -space-x-1.5 overflow-hidden py-0.5">
+                        {project.developers && project.developers.length > 0 ? (
+                          project.developers.slice(0, 4).map((d, i) => (
+                            <div
+                              key={d._id || i}
+                              title={d.name || d.email}
+                              className="inline-flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-gradient-to-tr from-brand-600 to-indigo-600 text-white text-[8px] sm:text-[9px] font-bold ring-1.5 sm:ring-2 ring-white shadow-xs"
+                            >
+                              {(d.name || 'D').charAt(0).toUpperCase()}
+                            </div>
+                          ))
                         ) : (
-                          <>
-                            <User className="h-3.5 w-3.5 text-sky-600" />
-                            <span>Assigned Engineer</span>
-                          </>
+                          <span className="text-[10px] text-slate-400 italic">No dev assigned</span>
                         )}
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-400 font-mono">
-                        {isGroup ? 'Team Project' : 'Solo'}
-                      </span>
+                      </div>
+                      {project.developers && project.developers.length > 4 && (
+                        <span className="text-[10px] font-bold text-slate-400">
+                          +{project.developers.length - 4}
+                        </span>
+                      )}
                     </div>
 
-                    {project.developers && project.developers.length > 0 ? (
-                      <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                        {project.developers.map((d, i) => (
-                          <div
-                            key={d._id || i}
-                            className="flex items-center justify-between gap-2 p-2 rounded-xl bg-white border border-slate-200/90 shadow-soft-xs hover:border-slate-300 transition-colors"
-                          >
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-xs font-bold text-white shadow-soft-xs shrink-0">
-                                {(d.name || 'D').charAt(0).toUpperCase()}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-xs font-bold text-slate-900 truncate leading-tight">
-                                  {d.name}
-                                </p>
-                                {d.email && (
-                                  <p className="text-[10px] text-slate-500 truncate leading-tight mt-0.5">
-                                    {d.email}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-brand-50 text-brand-700 border border-brand-200 shrink-0">
-                              Dev
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="py-2 text-center text-xs text-slate-400 italic">
-                        No engineers assigned yet
-                      </div>
-                    )}
+                    <span className="text-[10px] font-bold text-slate-500 font-mono">
+                      {project.developers?.length || 0} {project.developers?.length === 1 ? 'Dev' : 'Devs'}
+                    </span>
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                  <Link
-                    to={`/admin/projects/${project._id}`}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 border border-brand-200/80 px-3 py-2 text-xs font-bold text-brand-700 transition-colors shadow-soft-xs"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    View Details
-                  </Link>
-
-                  <button
-                    onClick={() => openEditModal(project)}
-                    title="Edit Project"
-                    className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-colors shadow-soft-xs"
-                  >
-                    <Edit2 className="h-3.5 w-3.5" />
-                  </button>
-
-                  <button
-                    onClick={() => confirmDelete(project)}
-                    title="Delete Project"
-                    className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition-colors shadow-soft-xs"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
+                {/* View Details Action */}
+                <Link
+                  to={`/admin/projects/${project._id}`}
+                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 border border-brand-200/80 py-1.5 sm:py-2 text-xs font-bold text-brand-700 transition-colors shadow-soft-xs"
+                >
+                  <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                  View Details
+                </Link>
               </div>
             );
           })}

@@ -185,25 +185,25 @@ const DevelopersPage = () => {
           onAction={searchQuery ? undefined : () => setIsAddOpen(true)}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
           {filteredDevelopers.map((dev) => (
             <div
               key={dev._id}
-              className="glass-card glass-card-hover rounded-3xl p-6 flex flex-col justify-between"
+              className="glass-card glass-card-hover rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col justify-between transition-all"
             >
               <div>
                 {/* Developer Profile Header */}
-                <div className="flex items-start justify-between gap-3 mb-5">
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-base font-bold text-white shadow-soft-xs shrink-0">
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-xs sm:text-sm font-bold text-white shadow-soft-xs shrink-0">
                       {dev.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-bold text-slate-900 text-base truncate">
+                      <h3 className="font-bold text-slate-900 text-xs sm:text-sm truncate">
                         {dev.name}
                       </h3>
-                      <p className="text-xs text-slate-500 truncate flex items-center gap-1.5 mt-0.5">
-                        <Mail className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                      <p className="text-[10px] sm:text-[11px] text-slate-500 truncate flex items-center gap-1 mt-0.5">
+                        <Mail className="h-3 w-3 text-slate-400 shrink-0" />
                         {dev.email}
                       </p>
                     </div>
@@ -212,56 +212,56 @@ const DevelopersPage = () => {
                   <button
                     onClick={() => confirmDelete(dev)}
                     title="Delete Developer"
-                    className="rounded-xl p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 border border-transparent transition-all shrink-0"
+                    className="rounded-lg p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600 border border-transparent transition-all shrink-0"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
 
                 {/* Statistics Box */}
-                <div className="grid grid-cols-3 gap-2 p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/80 mb-5 text-center">
+                <div className="grid grid-cols-3 gap-1.5 p-2 rounded-xl bg-slate-50/80 border border-slate-200/80 mb-2.5 text-center">
                   <div>
-                    <p className="text-[10px] uppercase font-bold text-slate-500">
+                    <p className="text-[9px] uppercase font-bold text-slate-500">
                       Projects
                     </p>
-                    <p className="text-base font-extrabold text-slate-800 mt-0.5 font-mono">
+                    <p className="text-xs sm:text-sm font-extrabold text-slate-800 mt-0.5 font-mono">
                       {dev.assignedProjectsCount}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase font-bold text-slate-500">
+                    <p className="text-[9px] uppercase font-bold text-slate-500">
                       Phases
                     </p>
-                    <p className="text-base font-extrabold text-slate-800 mt-0.5 font-mono">
+                    <p className="text-xs sm:text-sm font-extrabold text-slate-800 mt-0.5 font-mono">
                       {dev.totalTasks}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase font-bold text-emerald-600">
+                    <p className="text-[9px] uppercase font-bold text-emerald-600">
                       Done
                     </p>
-                    <p className="text-base font-extrabold text-emerald-600 mt-0.5 font-mono">
+                    <p className="text-xs sm:text-sm font-extrabold text-emerald-600 mt-0.5 font-mono">
                       {dev.completedTasks}
                     </p>
                   </div>
                 </div>
 
                 {/* Overall Task Completion */}
-                <div>
+                <div className="mb-2">
                   <ProgressBar
                     progress={dev.progress}
                     label="Overall Delivery Rate"
-                    size="md"
+                    size="sm"
                   />
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-100 mt-5 flex items-center justify-between text-xs text-slate-500">
-                <span className="flex items-center gap-1.5 font-semibold text-slate-700">
-                  <Clock className="h-3.5 w-3.5 text-amber-600" />
-                  {dev.pendingTasks} Pending Deliverables
+              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500">
+                <span className="flex items-center gap-1 font-semibold text-slate-700">
+                  <Clock className="h-3 w-3 text-amber-600" />
+                  {dev.pendingTasks} Pending
                 </span>
-                <span className="text-[11px] text-slate-400 font-mono">
+                <span className="text-[9px] text-slate-400 font-mono">
                   Joined {new Date(dev.createdAt).toLocaleDateString()}
                 </span>
               </div>

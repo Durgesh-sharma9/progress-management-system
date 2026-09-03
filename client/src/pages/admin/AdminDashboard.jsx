@@ -151,11 +151,11 @@ const AdminDashboard = () => {
               return (
                 <div
                   key={project._id}
-                  className="glass-card glass-card-hover rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col justify-between"
+                  className="glass-card glass-card-hover rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col justify-between transition-all"
                 >
                   <div>
                     {/* Top Badge (Type) */}
-                    <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
                       <ProjectTypeBadge
                         projectType={currentType}
                         memberCount={project.developerCount || 0}
@@ -164,58 +164,63 @@ const AdminDashboard = () => {
                       />
                     </div>
 
-                    <h4 className="font-bold text-slate-900 text-base leading-snug line-clamp-1 mb-1">
+                    <h4 className="font-bold text-slate-900 text-sm sm:text-base leading-snug line-clamp-1">
                       {project.name}
                     </h4>
 
-                    <p className="text-xs text-slate-500 line-clamp-2 mb-5 leading-relaxed font-normal">
-                      {project.description || 'No project description provided.'}
-                    </p>
+                    {project.description && (
+                      <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5 font-normal">
+                        {project.description}
+                      </p>
+                    )}
 
                     {/* Progress Bar */}
-                    <div className="mb-5 bg-slate-50/80 p-3 rounded-2xl border border-slate-200/60">
+                    <div className="my-2 bg-slate-50/80 p-2 rounded-xl border border-slate-200/60">
                       <ProgressBar
                         progress={project.overallProgress}
                         label="Milestones Delivered"
-                        size="md"
+                        size="sm"
                       />
                     </div>
-                  </div>
 
-                  <div className="pt-3.5 border-t border-slate-100 flex flex-col gap-2.5">
-                    {project.developers && project.developers.length > 0 ? (
-                      <div className="flex flex-wrap gap-1.5 max-h-16 overflow-y-auto">
-                        {project.developers.map((d, i) => (
-                          <div
-                            key={d._id || i}
-                            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 text-[11px]"
-                          >
-                            <div className="h-4 w-4 rounded bg-gradient-to-tr from-brand-600 to-indigo-600 text-white flex items-center justify-center text-[8px] font-bold">
-                              {(d.name || 'D').charAt(0).toUpperCase()}
-                            </div>
-                            <span className="font-semibold text-slate-800 truncate max-w-[110px]">
-                              {d.name}
-                            </span>
-                          </div>
-                        ))}
+                    {/* Compact Assigned Team Row */}
+                    <div className="flex items-center justify-between text-xs text-slate-600 mb-2.5 pt-1.5 border-t border-slate-100">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <div className="flex items-center -space-x-1.5 overflow-hidden py-0.5">
+                          {project.developers && project.developers.length > 0 ? (
+                            project.developers.slice(0, 4).map((d, i) => (
+                              <div
+                                key={d._id || i}
+                                title={d.name || d.email}
+                                className="inline-flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-gradient-to-tr from-brand-600 to-indigo-600 text-white text-[8px] sm:text-[9px] font-bold ring-1.5 sm:ring-2 ring-white shadow-xs"
+                              >
+                                {(d.name || 'D').charAt(0).toUpperCase()}
+                              </div>
+                            ))
+                          ) : (
+                            <span className="text-[10px] text-slate-400 italic">No dev assigned</span>
+                          )}
+                        </div>
+                        {project.developers && project.developers.length > 4 && (
+                          <span className="text-[10px] font-bold text-slate-400">
+                            +{project.developers.length - 4}
+                          </span>
+                        )}
                       </div>
-                    ) : (
-                      <span className="text-xs text-slate-400 italic">No engineers assigned</span>
-                    )}
 
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-50">
-                      <span className="text-[11px] text-slate-400 font-medium">
-                        {isGroup ? `${project.developerCount || 0} Engineers` : 'Solo Engineer'}
+                      <span className="text-[10px] font-bold text-slate-500 font-mono">
+                        {project.developers?.length || 0} {project.developers?.length === 1 ? 'Dev' : 'Devs'}
                       </span>
-                      <Link
-                        to={`/admin/projects/${project._id}`}
-                        className="inline-flex items-center gap-1 font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-xl transition-colors text-xs"
-                      >
-                        Details
-                        <ArrowRight className="h-3 w-3" />
-                      </Link>
                     </div>
                   </div>
+
+                  <Link
+                    to={`/admin/projects/${project._id}`}
+                    className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 border border-brand-200/80 py-1.5 sm:py-2 text-xs font-bold text-brand-700 transition-colors shadow-soft-xs"
+                  >
+                    View Details
+                    <ArrowRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                  </Link>
                 </div>
               );
             })}
