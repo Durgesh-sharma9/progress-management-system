@@ -51,7 +51,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-lg text-slate-900 tracking-tight font-sans">
-                  Dev<span className="text-brand-600">Track</span>
+                  Code<span className="text-brand-600">Pilot</span>
                 </span>
                 <span className="flex h-2 w-2 relative">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75" />

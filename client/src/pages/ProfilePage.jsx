@@ -289,7 +289,7 @@ const ProfilePage = () => {
         <div className="flex items-center justify-between gap-3">
           <div>
             <h4 className="text-xs sm:text-sm font-bold text-slate-900">
-              Sign Out of DevTrack
+              Sign Out of CodePilot
             </h4>
             <p className="text-[10px] sm:text-[11px] text-slate-500">
               End your active session on this device.

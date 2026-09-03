@@ -62,7 +62,7 @@ const RegisterPage = () => {
           <Layers className="h-6 w-6 sm:h-8 sm:w-8" />
         </div>
         <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-sans">
-          Create <span className="text-brand-600">DevTrack</span> Account
+          Create <span className="text-brand-600">CodePilot</span> Account
         </h2>
         <p className="mt-1 sm:mt-2.5 text-xs sm:text-sm text-slate-600 font-medium">
           Start collaborating and tracking project deliverables

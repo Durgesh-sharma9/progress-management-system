@@ -172,7 +172,7 @@ const BulkPhaseModal = ({ isOpen, onClose, projectId, onPhasesCreated }) => {
       isOpen={isOpen}
       onClose={onClose}
       title="⚡ Quick Phase Paster & Bulk Importer"
-      subtitle="Paste your whole deliverable list at once. DevTrack will automatically parse and create all phases."
+      subtitle="Paste your whole deliverable list at once. CodePilot will automatically parse and create all phases."
       maxWidth="2xl"
     >
       <form onSubmit={handleSubmit} className="space-y-4">

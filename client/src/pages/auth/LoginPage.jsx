@@ -56,7 +56,7 @@ const LoginPage = () => {
           </div>
         </div>
         <h2 className="mt-3 sm:mt-5 text-center text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 font-sans">
-          DevTrack
+          Code<span className="text-brand-600">Pilot</span>
         </h2>
         <p className="mt-0.5 sm:mt-1 text-center text-xs sm:text-sm text-slate-500 font-medium">
           Sign in to access your project dashboard and workspaces

@@ -27,12 +27,29 @@ app.use('/api/users', require('./routes/userRoutes'));
 
 const path = require('path');
 
+app.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'CodePilot Project Progress Tracker API Server is running smoothly',
+    app: 'CodePilot – Project Progress Tracker API',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      auth: '/api/auth',
+      users: '/api/users',
+      projects: '/api/projects',
+      phases: '/api/phases',
+      health: '/api/health',
+    },
+  });
+});
+
 // Health Check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({
-    status: 'OK',
-    app: 'DevTrack – Project Progress Tracker API',
+    status: 'healthy',
     timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
   });
 });
 
@@ -48,7 +65,7 @@ app.get('*', (req, res, next) => {
   const indexPath = path.join(clientDistPath, 'index.html');
   res.sendFile(indexPath, (err) => {
     if (err) {
-      res.send('DevTrack Backend API is active');
+      res.send('CodePilot Backend API is active');
     }
   });
 });
@@ -63,7 +80,7 @@ const startServer = async () => {
     await connectDB();
 
     const server = app.listen(PORT, () => {
-      console.log(`🚀 DevTrack API Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
+      console.log(`🚀 CodePilot API Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
     });
 
     return server;
