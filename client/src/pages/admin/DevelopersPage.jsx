@@ -121,24 +121,19 @@ const DevelopersPage = () => {
   return (
     <div className="space-y-3.5 sm:space-y-6">
       {/* Compact Header */}
-      <div className="flex items-center justify-between gap-2.5">
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <h2 className="text-base sm:text-xl lg:text-2xl font-extrabold text-slate-900 tracking-tight truncate">
-              Developer Directory
-            </h2>
-            <span className="text-[10px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
-              {developers.length} Registered
-            </span>
-          </div>
-          <p className="text-[11px] sm:text-xs text-slate-500 line-clamp-1 mt-0.5 hidden sm:block">
-            Manage engineering talent, project assignments, and velocity metrics.
-          </p>
+      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <h2 className="text-sm sm:text-xl lg:text-2xl font-extrabold text-slate-900 tracking-tight whitespace-nowrap">
+            Developer Directory
+          </h2>
+          <span className="text-[10px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+            {developers.length} Registered
+          </span>
         </div>
 
         <button
           onClick={() => setIsAddOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-bold text-white shadow-soft-xs hover:from-brand-500 hover:to-indigo-500 transition-all shrink-0 active:scale-95"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-bold text-white shadow-soft-xs hover:from-brand-500 hover:to-indigo-500 transition-all shrink-0 active:scale-95 ml-auto sm:ml-0"
         >
           <Plus className="h-3.5 w-3.5" />
           <span>Add Engineer</span>

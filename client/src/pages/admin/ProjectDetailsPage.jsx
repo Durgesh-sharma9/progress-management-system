@@ -59,6 +59,7 @@ const ProjectDetailsPage = () => {
   // Notes Modal state for Admin inspection
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [selectedPhaseForNotes, setSelectedPhaseForNotes] = useState(null);
+  const [expandedNotePhaseId, setExpandedNotePhaseId] = useState(null);
 
   useEffect(() => {
     fetchProjectData();
@@ -352,29 +353,40 @@ const ProjectDetailsPage = () => {
                         </div>
                       </div>
 
-                      <button
-                        onClick={() => {
-                          setSelectedPhaseForNotes(phase);
-                          setIsNotesModalOpen(true);
-                        }}
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all border shadow-soft-xs shrink-0 ${
-                          phase.notes
-                            ? 'bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100'
-                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                        }`}
-                      >
-                        📝 {phase.notes ? 'Notes' : 'No Notes'}
-                      </button>
+                      {phase.notes ? (
+                        <button
+                          onClick={() => {
+                            setExpandedNotePhaseId((prev) => (prev === phase._id ? null : phase._id));
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all border shadow-soft-xs shrink-0 bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100 active:scale-95"
+                        >
+                          📝 {expandedNotePhaseId === phase._id ? 'Hide Note' : 'View Note'}
+                          <ChevronDown className={`h-3 w-3 transition-transform ${expandedNotePhaseId === phase._id ? 'rotate-180' : ''}`} />
+                        </button>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] sm:text-xs text-slate-400 bg-slate-50 border border-slate-200">
+                          No Notes
+                        </span>
+                      )}
                     </div>
 
-                    {/* Prominent Notes Box for Admin */}
-                    {phase.notes && (
-                      <div className="mt-2.5 p-2.5 rounded-lg sm:rounded-xl bg-amber-50/80 border border-amber-200 text-[11px] text-amber-950 font-mono">
-                        <div className="flex items-center justify-between mb-0.5">
+                    {/* Expandable Notes Box (only 1 open at a time) */}
+                    {phase.notes && expandedNotePhaseId === phase._id && (
+                      <div className="mt-2.5 p-2.5 rounded-lg sm:rounded-xl bg-amber-50/90 border border-amber-300 text-[11px] text-amber-950 font-mono animate-in fade-in duration-150">
+                        <div className="flex items-center justify-between mb-1">
                           <span className="text-[9px] font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1">
                             <Sparkles className="h-2.5 w-2.5" />
-                            Dev Log Note:
+                            Developer Work Log / Note:
                           </span>
+                          <button
+                            onClick={() => {
+                              setSelectedPhaseForNotes(phase);
+                              setIsNotesModalOpen(true);
+                            }}
+                            className="text-[10px] font-bold text-amber-800 underline hover:text-amber-950"
+                          >
+                            Full View ➔
+                          </button>
                         </div>
                         <p className="whitespace-pre-wrap leading-relaxed text-[11px] text-amber-900">
                           {phase.notes}

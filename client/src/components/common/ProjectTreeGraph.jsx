@@ -27,6 +27,7 @@ const ProjectTreeGraph = ({
   currentUserId,
 }) => {
   const [collapsedDevs, setCollapsedDevs] = useState({});
+  const [expandedNotePhaseId, setExpandedNotePhaseId] = useState(null);
 
   const toggleCollapse = (devId) => {
     setCollapsedDevs((prev) => ({
@@ -278,27 +279,55 @@ const ProjectTreeGraph = ({
                                 </div>
                               </div>
 
-                              {/* Prominent Developer Note Container */}
+                              {/* Expandable Developer Note (Click to open, only 1 at a time) */}
                               {phase.notes && (
-                                <div
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (onPhaseClick) onPhaseClick(phase);
-                                  }}
-                                  className="mt-2 p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-amber-50/90 border border-amber-200 text-amber-950 hover:bg-amber-100/80 transition-colors shadow-soft-xs"
-                                >
-                                  <div className="flex items-center justify-between mb-0.5 sm:mb-1">
-                                    <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-amber-800 flex items-center gap-1">
-                                      <Code2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                                      Dev Work Note / Log:
-                                    </span>
-                                    <span className="text-[9px] sm:text-[10px] font-bold text-amber-800 underline hover:text-amber-950">
-                                      View Full ➔
-                                    </span>
-                                  </div>
-                                  <p className="font-mono text-[10px] sm:text-[11px] text-amber-900 whitespace-pre-wrap leading-relaxed break-words">
-                                    {phase.notes}
-                                  </p>
+                                <div className="mt-1.5 sm:mt-2">
+                                  {expandedNotePhaseId === phase._id ? (
+                                    <div
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (onPhaseClick) onPhaseClick(phase);
+                                      }}
+                                      className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-amber-50/95 border border-amber-300 text-amber-950 hover:bg-amber-100/80 transition-all shadow-soft-xs animate-in fade-in duration-150"
+                                    >
+                                      <div className="flex items-center justify-between mb-1">
+                                        <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-amber-800 flex items-center gap-1">
+                                          <Code2 className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                                          Dev Work Note / Log:
+                                        </span>
+                                        <div className="flex items-center gap-1.5">
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setExpandedNotePhaseId(null);
+                                            }}
+                                            className="text-[9px] font-bold text-slate-500 hover:text-slate-800 bg-white/90 px-1.5 py-0.5 rounded border border-slate-200 shadow-soft-xs"
+                                          >
+                                            Hide ▲
+                                          </button>
+                                          <span className="text-[9px] sm:text-[10px] font-bold text-amber-800 underline hover:text-amber-950">
+                                            Full ➔
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <p className="font-mono text-[10px] sm:text-[11px] text-amber-900 whitespace-pre-wrap leading-relaxed break-words">
+                                        {phase.notes}
+                                      </p>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setExpandedNotePhaseId(phase._id);
+                                      }}
+                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md sm:rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200/90 text-amber-900 text-[9px] sm:text-[10px] font-bold transition-colors shadow-soft-xs active:scale-95"
+                                    >
+                                      <span>📝 View Note</span>
+                                      <ChevronDown className="h-2.5 w-2.5 text-amber-700" />
+                                    </button>
+                                  )}
                                 </div>
                               )}
                             </div>

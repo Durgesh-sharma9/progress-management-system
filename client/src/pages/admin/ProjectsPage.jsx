@@ -312,7 +312,7 @@ const ProjectsPage = () => {
       <div className="flex items-center justify-between gap-2.5">
         <div className="min-w-0">
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <h2 className="text-base sm:text-xl lg:text-2xl font-extrabold text-slate-900 tracking-tight truncate">
+            <h2 className="text-sm sm:text-xl lg:text-2xl font-extrabold text-slate-900 tracking-tight whitespace-nowrap">
               Projects
             </h2>
             <span className="text-[10px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200 shrink-0">
