@@ -24,6 +24,92 @@ import {
   Layers,
 } from 'lucide-react';
 
+const projectColorThemes = [
+  {
+    gradient: 'from-indigo-600 via-purple-600 to-pink-500',
+    border: 'hover:border-purple-300',
+    topBar: 'bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500',
+    iconBg: 'bg-gradient-to-tr from-indigo-600 to-purple-600',
+    iconColor: 'text-white',
+    badge: 'bg-purple-50 text-purple-700 border-purple-200',
+    btn: 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-purple-500/20',
+  },
+  {
+    gradient: 'from-blue-600 via-cyan-600 to-teal-500',
+    border: 'hover:border-cyan-300',
+    topBar: 'bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-400',
+    iconBg: 'bg-gradient-to-tr from-blue-600 to-cyan-600',
+    iconColor: 'text-white',
+    badge: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+    btn: 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-cyan-500/20',
+  },
+  {
+    gradient: 'from-emerald-600 via-teal-600 to-cyan-500',
+    border: 'hover:border-emerald-300',
+    topBar: 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400',
+    iconBg: 'bg-gradient-to-tr from-emerald-600 to-teal-600',
+    iconColor: 'text-white',
+    badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    btn: 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-emerald-500/20',
+  },
+  {
+    gradient: 'from-amber-500 via-orange-500 to-rose-500',
+    border: 'hover:border-amber-300',
+    topBar: 'bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500',
+    iconBg: 'bg-gradient-to-tr from-amber-500 to-orange-600',
+    iconColor: 'text-white',
+    badge: 'bg-amber-50 text-amber-800 border-amber-200',
+    btn: 'bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-amber-500/20',
+  },
+  {
+    gradient: 'from-rose-500 via-pink-500 to-purple-500',
+    border: 'hover:border-rose-300',
+    topBar: 'bg-gradient-to-r from-rose-500 via-pink-500 to-purple-500',
+    iconBg: 'bg-gradient-to-tr from-rose-500 to-pink-600',
+    iconColor: 'text-white',
+    badge: 'bg-rose-50 text-rose-700 border-rose-200',
+    btn: 'bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white shadow-rose-500/20',
+  },
+  {
+    gradient: 'from-violet-600 via-fuchsia-600 to-indigo-600',
+    border: 'hover:border-fuchsia-300',
+    topBar: 'bg-gradient-to-r from-violet-500 via-fuchsia-500 to-indigo-500',
+    iconBg: 'bg-gradient-to-tr from-violet-600 to-fuchsia-600',
+    iconColor: 'text-white',
+    badge: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200',
+    btn: 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shadow-fuchsia-500/20',
+  },
+];
+
+const devAvatarGradients = [
+  'from-blue-600 to-indigo-600',
+  'from-emerald-600 to-teal-600',
+  'from-purple-600 to-pink-600',
+  'from-amber-500 to-orange-600',
+  'from-rose-600 to-red-600',
+  'from-cyan-600 to-blue-600',
+];
+
+const getProjectTheme = (idOrName, index = 0) => {
+  let hash = index;
+  if (idOrName) {
+    for (let i = 0; i < idOrName.length; i++) {
+      hash = idOrName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+  }
+  return projectColorThemes[Math.abs(hash) % projectColorThemes.length];
+};
+
+const getDevAvatarGradient = (str) => {
+  let hash = 0;
+  if (str) {
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+  }
+  return devAvatarGradients[Math.abs(hash) % devAvatarGradients.length];
+};
+
 const ProjectsPage = () => {
   const [projects, setProjects] = useState([]);
   const [developersList, setDevelopersList] = useState([]);
@@ -315,29 +401,48 @@ const ProjectsPage = () => {
           onAction={searchQuery ? undefined : openCreateModal}
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
-          {filteredProjects.map((project) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          {filteredProjects.map((project, idx) => {
             const currentType =
               project.projectType ||
               (project.developers && project.developers.length > 1 ? 'Group' : 'Standalone');
             const isGroup = currentType === 'Group';
+            const theme = getProjectTheme(project._id || project.name, idx);
 
             return (
               <div
                 key={project._id}
-                className="glass-card glass-card-hover rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col justify-between transition-all"
+                className={`relative overflow-hidden rounded-2xl bg-white border border-slate-200/90 hover:shadow-soft-lg ${theme.border} flex flex-col justify-between transition-all duration-300 group`}
               >
-                <div>
-                  {/* Card Header: Type Badge & Quick Actions */}
-                  <div className="flex items-center justify-between gap-2 mb-1.5">
-                    <ProjectTypeBadge
-                      projectType={currentType}
-                      memberCount={project.developerCount || 0}
-                      showCount={isGroup}
-                      size="xs"
-                    />
+                {/* Top Accent Gradient Ribbon */}
+                <div className={`h-1.5 w-full ${theme.topBar}`} />
 
-                    <div className="flex items-center gap-0.5">
+                <div className="p-3 sm:p-4">
+                  {/* Card Header: Project Icon + Name + Actions */}
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      {/* Colorful Project Icon */}
+                      <div className={`h-8 w-8 sm:h-9 sm:w-9 rounded-xl ${theme.iconBg} ${theme.iconColor} flex items-center justify-center shrink-0 shadow-soft-xs`}>
+                        <FolderGit2 className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <ProjectTypeBadge
+                            projectType={currentType}
+                            memberCount={project.developerCount || 0}
+                            showCount={isGroup}
+                            size="xs"
+                          />
+                        </div>
+                        <h3 className="font-extrabold text-slate-900 text-sm sm:text-base leading-snug line-clamp-1 group-hover:text-brand-600 transition-colors">
+                          {project.name}
+                        </h3>
+                      </div>
+                    </div>
+
+                    {/* Quick Edit/Delete Actions */}
+                    <div className="flex items-center gap-0.5 shrink-0">
                       <button
                         onClick={() => openEditModal(project)}
                         title="Edit Project"
@@ -355,20 +460,15 @@ const ProjectsPage = () => {
                     </div>
                   </div>
 
-                  {/* Project Name */}
-                  <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-snug line-clamp-1">
-                    {project.name}
-                  </h3>
-
                   {/* Description */}
                   {project.description && (
-                    <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5 font-normal">
+                    <p className="text-[11px] text-slate-500 line-clamp-1 mb-2 font-normal leading-relaxed">
                       {project.description}
                     </p>
                   )}
 
-                  {/* Compact Progress Bar */}
-                  <div className="my-2 bg-slate-50/80 p-2 rounded-xl border border-slate-200/60">
+                  {/* Dynamic Colorful Progress Bar Container */}
+                  <div className="my-2 bg-slate-50/90 p-2 sm:p-2.5 rounded-xl border border-slate-200/70">
                     <ProgressBar
                       progress={project.overallProgress}
                       label="Delivery Velocity"
@@ -376,8 +476,8 @@ const ProjectsPage = () => {
                     />
                   </div>
 
-                  {/* Compact Assigned Team Row */}
-                  <div className="flex items-center justify-between text-xs text-slate-600 mb-2.5 pt-1.5 border-t border-slate-100">
+                  {/* Assigned Team Row with Colorful Gradient Avatar Stack */}
+                  <div className="flex items-center justify-between text-xs text-slate-600 pt-2 border-t border-slate-100">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <div className="flex items-center -space-x-1.5 overflow-hidden py-0.5">
                         {project.developers && project.developers.length > 0 ? (
@@ -385,7 +485,7 @@ const ProjectsPage = () => {
                             <div
                               key={d._id || i}
                               title={d.name || d.email}
-                              className="inline-flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-gradient-to-tr from-brand-600 to-indigo-600 text-white text-[8px] sm:text-[9px] font-bold ring-1.5 sm:ring-2 ring-white shadow-xs"
+                              className={`inline-flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-gradient-to-tr ${getDevAvatarGradient(d.name || d._id)} text-white text-[8px] sm:text-[9px] font-bold ring-1.5 sm:ring-2 ring-white shadow-xs`}
                             >
                               {(d.name || 'D').charAt(0).toUpperCase()}
                             </div>
@@ -395,26 +495,28 @@ const ProjectsPage = () => {
                         )}
                       </div>
                       {project.developers && project.developers.length > 4 && (
-                        <span className="text-[10px] font-bold text-slate-400">
+                        <span className="text-[10px] font-bold text-slate-500 font-mono">
                           +{project.developers.length - 4}
                         </span>
                       )}
                     </div>
 
-                    <span className="text-[10px] font-bold text-slate-500 font-mono">
+                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${theme.badge} font-mono`}>
                       {project.developers?.length || 0} {project.developers?.length === 1 ? 'Dev' : 'Devs'}
                     </span>
                   </div>
                 </div>
 
-                {/* View Details Action */}
-                <Link
-                  to={`/admin/projects/${project._id}`}
-                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand-50 hover:bg-brand-100 border border-brand-200/80 py-1.5 sm:py-2 text-xs font-bold text-brand-700 transition-colors shadow-soft-xs"
-                >
-                  <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                  View Details
-                </Link>
+                {/* View Details Action with Colorful Gradient */}
+                <div className="px-3 pb-3 sm:px-4 sm:pb-4 pt-0.5">
+                  <Link
+                    to={`/admin/projects/${project._id}`}
+                    className={`w-full inline-flex items-center justify-center gap-1.5 rounded-xl ${theme.btn} py-1.5 sm:py-2 text-xs font-extrabold transition-all shadow-soft-xs active:scale-98`}
+                  >
+                    <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                    <span>View Details & Tree</span>
+                  </Link>
+                </div>
               </div>
             );
           })}
