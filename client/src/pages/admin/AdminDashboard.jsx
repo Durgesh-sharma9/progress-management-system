@@ -50,37 +50,37 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Top Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-brand-950 p-6 sm:p-8 text-white shadow-soft-xl border border-slate-800">
-        <div className="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-brand-500/20 blur-3xl pointer-events-none" />
-        <div className="absolute right-1/3 -bottom-10 h-48 w-48 rounded-full bg-purple-500/20 blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-brand-950 p-4 sm:p-6 lg:p-8 text-white shadow-soft-xl border border-slate-800">
+        <div className="absolute -right-10 -top-10 h-48 sm:h-64 w-48 sm:w-64 rounded-full bg-brand-500/20 blur-3xl pointer-events-none" />
+        <div className="absolute right-1/3 -bottom-10 h-36 sm:h-48 w-36 sm:w-48 rounded-full bg-purple-500/20 blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-5">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[11px] font-semibold text-brand-200 mb-3">
-              <Sparkles className="h-3.5 w-3.5 text-brand-300" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[10px] sm:text-[11px] font-semibold text-brand-200 mb-2 sm:mb-3">
+              <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-brand-300" />
               Organizational Command Center
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-sans">
-              Welcome to Admin Dashboard
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-white font-sans">
+              Admin Dashboard
             </h2>
-            <p className="text-sm text-slate-300 mt-1 max-w-xl">
+            <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl line-clamp-2 sm:line-clamp-none">
               Monitor real-time development velocity, inspect tree workflows, and manage cross-functional engineering teams.
             </p>
           </div>
           <Link
             to="/admin/projects"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand-500 to-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-soft-md shadow-brand-500/30 hover:from-brand-400 hover:to-indigo-500 transition-all duration-200 active:scale-95 shrink-0"
+            className="inline-flex items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-brand-500 to-indigo-600 px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm font-bold text-white shadow-soft-md shadow-brand-500/30 hover:from-brand-400 hover:to-indigo-500 transition-all duration-200 active:scale-95 shrink-0"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             Manage Projects
           </Link>
         </div>
       </div>
 
       {/* Metric Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         <StatCard
           title="Total Projects"
           value={stats?.totalProjects || 0}
@@ -90,46 +90,46 @@ const AdminDashboard = () => {
           trend="Overview"
         />
         <StatCard
-          title="Standalone Projects"
+          title="Standalone"
           value={stats?.standaloneProjects || 0}
           icon={User}
           color="amber"
           subtitle="Solo engineer deliverables"
-          trend="Individual Focus"
+          trend="Solo Focus"
         />
         <StatCard
-          title="Group Projects"
+          title="Group Teams"
           value={stats?.groupProjects || 0}
           icon={Users}
           color="purple"
           subtitle="Multi-developer teams"
-          trend="Team Collaboration"
+          trend="Team Collab"
         />
         <StatCard
-          title="Total Engineers"
+          title="Engineers"
           value={stats?.totalDevelopers || 0}
           icon={Layers}
           color="emerald"
-          subtitle="Registered team members"
-          trend="Active Contributors"
+          subtitle="Registered members"
+          trend="Active Devs"
         />
       </div>
 
       {/* Recent Projects Section */}
-      <div className="space-y-5">
-        <div className="flex items-center justify-between">
+      <div className="space-y-3 sm:space-y-4">
+        <div className="flex items-center justify-between gap-2">
           <div>
-            <h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">Recent Projects</h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h3 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight">Recent Projects</h3>
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 hidden sm:block">
               Live progress, Standalone vs Group classification, and active team assignments
             </p>
           </div>
           <Link
             to="/admin/projects"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100/80 border border-brand-200/80 px-3.5 py-1.5 rounded-full transition-all duration-200"
+            className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100/80 border border-brand-200/80 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full transition-all duration-200 shrink-0"
           >
-            View All Projects
-            <ArrowRight className="h-3.5 w-3.5" />
+            View All
+            <ArrowRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </Link>
         </div>
 
@@ -141,7 +141,7 @@ const AdminDashboard = () => {
             onAction={() => window.location.href = '/admin/projects'}
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
             {stats.recentProjects.map((project) => {
               const currentType =
                 project.projectType ||
@@ -151,11 +151,11 @@ const AdminDashboard = () => {
               return (
                 <div
                   key={project._id}
-                  className="glass-card glass-card-hover rounded-3xl p-6 flex flex-col justify-between"
+                  className="glass-card glass-card-hover rounded-2xl sm:rounded-3xl p-4 sm:p-6 flex flex-col justify-between"
                 >
                   <div>
                     {/* Top Badge (Type) */}
-                    <div className="flex items-center justify-between gap-2 mb-3">
+                    <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
                       <ProjectTypeBadge
                         projectType={currentType}
                         memberCount={project.developerCount || 0}

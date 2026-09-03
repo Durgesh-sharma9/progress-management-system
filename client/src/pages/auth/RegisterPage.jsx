@@ -52,25 +52,25 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col justify-center py-6 sm:py-12 px-3 sm:px-6 lg:px-8 bg-slate-50 relative overflow-hidden">
       {/* Background Decorative Mesh Orbs */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-brand-300/25 via-indigo-200/20 to-transparent blur-3xl pointer-events-none -z-10" />
-      <div className="absolute bottom-10 left-10 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] sm:w-[1000px] h-[350px] sm:h-[500px] bg-gradient-to-b from-brand-300/25 via-indigo-200/20 to-transparent blur-3xl pointer-events-none -z-10" />
+      <div className="absolute bottom-10 left-10 w-64 sm:w-96 h-64 sm:h-96 bg-purple-200/20 rounded-full blur-3xl pointer-events-none -z-10" />
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-center">
-        <div className="inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-brand-700 shadow-xl shadow-brand-500/25 text-white mb-5 animate-float">
-          <Layers className="h-8 w-8" />
+        <div className="inline-flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-2xl sm:rounded-3xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-brand-700 shadow-xl shadow-brand-500/25 text-white mb-3 sm:mb-5 animate-float">
+          <Layers className="h-6 w-6 sm:h-8 sm:w-8" />
         </div>
-        <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-sans">
+        <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 font-sans">
           Create <span className="text-brand-600">DevTrack</span> Account
         </h2>
-        <p className="mt-2.5 text-sm text-slate-600 font-medium">
+        <p className="mt-1 sm:mt-2.5 text-xs sm:text-sm text-slate-600 font-medium">
           Start collaborating and tracking project deliverables
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <div className="glass-card rounded-3xl p-7 sm:p-9 shadow-soft-xl border border-slate-200/90 backdrop-blur-2xl">
+      <div className="mt-5 sm:mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+        <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-9 shadow-soft-xl border border-slate-200/90 backdrop-blur-2xl">
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">

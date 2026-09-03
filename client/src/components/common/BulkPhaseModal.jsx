@@ -186,13 +186,13 @@ const BulkPhaseModal = ({ isOpen, onClose, projectId, onPhasesCreated }) => {
                 Quick Sprint Presets (1-Click Fill)
               </label>
             </div>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1 sm:gap-1.5">
               {BUILTIN_PRESETS.map((tmpl) => (
                 <button
                   key={tmpl.name}
                   type="button"
                   onClick={() => handleApplyTemplate(tmpl.text)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200/90 bg-slate-50 hover:bg-brand-50 hover:border-brand-300 hover:text-brand-700 text-xs font-semibold text-slate-700 transition-all shadow-soft-xs"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl border border-slate-200/90 bg-slate-50 hover:bg-brand-50 hover:border-brand-300 hover:text-brand-700 text-[11px] sm:text-xs font-semibold text-slate-700 transition-all shadow-soft-xs"
                 >
                   {tmpl.name}
                 </button>

@@ -51,33 +51,33 @@ const StatCard = ({
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-2xl border bg-gradient-to-b p-5 backdrop-blur-md transition-all duration-300 shadow-soft ${style.bg} ${style.border} ${style.glow} hover:-translate-y-1 ${className}`}
+      className={`group relative overflow-hidden rounded-2xl border bg-gradient-to-b p-3.5 sm:p-5 backdrop-blur-md transition-all duration-300 shadow-soft ${style.bg} ${style.border} ${style.glow} hover:-translate-y-0.5 ${className}`}
     >
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 truncate">
             {title}
           </p>
-          <h3 className="mt-1 text-3xl font-extrabold tracking-tight text-slate-900 font-mono">
+          <h3 className="mt-0.5 sm:mt-1 text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-slate-900 font-mono">
             {value}
           </h3>
           {subtitle && (
-            <p className="mt-1 text-xs text-slate-500 flex items-center gap-1 font-medium line-clamp-1">
+            <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-slate-500 flex items-center gap-1 font-medium line-clamp-1">
               {subtitle}
             </p>
           )}
         </div>
         {Icon && (
           <div
-            className={`flex h-11 w-11 items-center justify-center rounded-xl shadow-md ${style.iconBg} shrink-0 transition-transform duration-300 group-hover:scale-110`}
+            className={`flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl shadow-sm ${style.iconBg} shrink-0 transition-transform duration-300 group-hover:scale-105`}
           >
-            <Icon className="h-5 w-5" />
+            <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
         )}
       </div>
 
       {trend && (
-        <div className="mt-3.5 flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50/80 border border-emerald-200/80 px-2.5 py-1 rounded-full w-fit">
+        <div className="mt-2 sm:mt-3 flex items-center gap-1 text-[10px] sm:text-xs font-semibold text-emerald-700 bg-emerald-50/80 border border-emerald-200/80 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full w-fit">
           <span>{trend}</span>
         </div>
       )}

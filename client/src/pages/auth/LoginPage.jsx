@@ -44,27 +44,27 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col justify-center py-6 sm:py-12 px-3 sm:px-6 lg:px-8 bg-slate-50 relative overflow-hidden">
       {/* Background Decorative Mesh Orbs */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-brand-300/25 via-indigo-200/20 to-transparent blur-3xl pointer-events-none -z-10" />
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] sm:w-[1000px] h-[350px] sm:h-[500px] bg-gradient-to-b from-brand-300/25 via-indigo-200/20 to-transparent blur-3xl pointer-events-none -z-10" />
+      <div className="absolute bottom-10 right-10 w-64 sm:w-96 h-64 sm:h-96 bg-purple-200/20 rounded-full blur-3xl pointer-events-none -z-10" />
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <div className="h-14 w-14 rounded-3xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white shadow-soft-lg shadow-brand-500/30">
-            <Layers className="h-7 w-7" />
+          <div className="h-11 w-11 sm:h-14 sm:w-14 rounded-2xl sm:rounded-3xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white shadow-soft-lg shadow-brand-500/30">
+            <Layers className="h-5 w-5 sm:h-7 sm:w-7" />
           </div>
         </div>
-        <h2 className="mt-5 text-center text-3xl font-extrabold tracking-tight text-slate-900 font-sans">
+        <h2 className="mt-3 sm:mt-5 text-center text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 font-sans">
           DevTrack
         </h2>
-        <p className="mt-1 text-center text-sm text-slate-500 font-medium">
+        <p className="mt-0.5 sm:mt-1 text-center text-xs sm:text-sm text-slate-500 font-medium">
           Sign in to access your project dashboard and workspaces
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="glass-card py-8 px-6 sm:px-10 rounded-3xl shadow-soft-xl border border-white/60">
+      <div className="mt-5 sm:mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="glass-card py-6 sm:py-8 px-4 sm:px-10 rounded-2xl sm:rounded-3xl shadow-soft-xl border border-white/60">
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">

@@ -54,43 +54,43 @@ const DeveloperDashboard = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Top Welcome Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-brand-950 p-6 sm:p-8 text-white shadow-soft-xl border border-slate-800">
-        <div className="absolute -right-10 -top-10 h-64 w-64 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" />
-        <div className="absolute right-1/3 -bottom-10 h-48 w-48 rounded-full bg-brand-500/20 blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-brand-950 p-4 sm:p-6 lg:p-8 text-white shadow-soft-xl border border-slate-800">
+        <div className="absolute -right-10 -top-10 h-48 sm:h-64 w-48 sm:w-64 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" />
+        <div className="absolute right-1/3 -bottom-10 h-36 sm:h-48 w-36 sm:w-48 rounded-full bg-brand-500/20 blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-5">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[11px] font-semibold text-emerald-300 mb-3">
-              <Code2 className="h-3.5 w-3.5" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[10px] sm:text-[11px] font-semibold text-emerald-300 mb-2 sm:mb-3">
+              <Code2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
               Developer Workspace Active
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white font-sans">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-white font-sans">
               Welcome back, {user?.name}!
             </h2>
-            <p className="text-sm text-slate-300 mt-1.5 leading-relaxed font-normal">
-              Manage your deliverable phases, check off sprint milestones in real-time, and monitor team velocity across your active projects.
+            <p className="text-xs sm:text-sm text-slate-300 mt-1 line-clamp-2 sm:line-clamp-none font-normal">
+              Manage your deliverable phases, check off sprint milestones in real-time, and monitor team velocity.
             </p>
           </div>
           <Link
             to="/developer/phases"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-3 text-sm font-bold text-white shadow-soft-md shadow-emerald-500/30 hover:from-emerald-400 hover:to-teal-500 transition-all duration-200 active:scale-95 shrink-0"
+            className="inline-flex items-center justify-center gap-2 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2.5 sm:px-5 sm:py-3 text-xs sm:text-sm font-bold text-white shadow-soft-md shadow-emerald-500/30 hover:from-emerald-400 hover:to-teal-500 transition-all duration-200 active:scale-95 shrink-0"
           >
-            <CheckSquare className="h-4 w-4" />
+            <CheckSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             My Phases
           </Link>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         <StatCard
           title="Assigned Projects"
           value={stats?.totalProjects || 0}
           icon={FolderGit2}
           color="blue"
-          subtitle="Active project workspaces"
+          subtitle="Active workspaces"
           trend="In Progress"
         />
         <StatCard
@@ -98,42 +98,42 @@ const DeveloperDashboard = () => {
           value={stats?.totalPhases || stats?.totalTasks || 0}
           icon={Layers}
           color="purple"
-          subtitle="Created across projects"
-          trend="Total Deliverables"
+          subtitle="Total deliverables"
+          trend="All Phases"
         />
         <StatCard
           title="Delivered"
           value={stats?.completedPhases || stats?.completedTasks || 0}
           icon={CheckCircle2}
           color="emerald"
-          subtitle="Checked off & verified"
-          trend="Completed Milestones"
+          subtitle="Completed milestones"
+          trend="Done"
         />
         <StatCard
           title="Pending"
           value={stats?.pendingPhases || stats?.pendingTasks || 0}
           icon={Clock}
           color="amber"
-          subtitle="Awaiting completion"
-          trend="Action Required"
+          subtitle="In progress"
+          trend="Remaining"
         />
       </div>
 
       {/* My Projects Section */}
-      <div className="space-y-5">
-        <div className="flex items-center justify-between">
+      <div className="space-y-3 sm:space-y-4">
+        <div className="flex items-center justify-between gap-2">
           <div>
-            <h3 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">My Active Workspaces</h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Assigned project workspaces with real-time interactive checklist & flowchart synchronization
+            <h3 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight">Active Workspaces</h3>
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 hidden sm:block">
+              Assigned project workspaces with interactive checklist & flowchart synchronization
             </p>
           </div>
           <Link
             to="/developer/projects"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100/80 border border-brand-200/80 px-3.5 py-1.5 rounded-full transition-all duration-200"
+            className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100/80 border border-brand-200/80 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-full transition-all duration-200 shrink-0"
           >
-            View All Workspaces
-            <ArrowRight className="h-3.5 w-3.5" />
+            View All
+            <ArrowRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
           </Link>
         </div>
 

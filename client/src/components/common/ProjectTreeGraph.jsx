@@ -44,46 +44,49 @@ const ProjectTreeGraph = ({
       : 0;
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-8 shadow-soft space-y-7 overflow-x-auto">
+    <div className="rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-3.5 sm:p-6 lg:p-8 shadow-soft space-y-4 sm:space-y-7 overflow-x-auto">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
-        <div className="flex items-center gap-3.5">
-          <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-soft-md shadow-brand-500/25 shrink-0">
-            <GitBranch className="h-5 w-5" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3 sm:pb-5">
+        <div className="flex items-center gap-2.5 sm:gap-3.5">
+          <div className="h-9 w-9 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-soft-md shadow-brand-500/25 shrink-0">
+            <GitBranch className="h-4 w-4 sm:h-5 sm:w-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-extrabold text-slate-900 tracking-tight">
-                Project Tree Pipeline Flowchart
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <h3 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight">
+                Project Tree Flowchart
               </h3>
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-soft-xs">
+              <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-soft-xs">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Live Tree
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Flow: <strong className="text-slate-700">Root Node</strong> ➔ <strong className="text-slate-700">Engineer Branches</strong> ➔ <strong className="text-slate-700">Deliverables</strong>
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5">
+              Flow: <strong className="text-slate-700">Root Node</strong> ➔ <strong className="text-slate-700">Branches</strong> ➔ <strong className="text-slate-700">Deliverables</strong>
             </p>
           </div>
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-3 text-xs font-bold">
-          <span className="flex items-center gap-1.5 text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full shadow-soft-xs">
-            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+        <div className="flex flex-wrap items-center gap-2 text-[11px] sm:text-xs font-bold">
+          <span className="flex items-center gap-1 text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-soft-xs">
+            <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-600" />
             {completedProjectPhases} Delivered
           </span>
-          <span className="flex items-center gap-1.5 text-amber-800 bg-amber-50 border border-amber-200 px-3 py-1 rounded-full shadow-soft-xs">
-            <Clock className="h-3.5 w-3.5 text-amber-600" />
+          <span className="flex items-center gap-1 text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-soft-xs">
+            <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-amber-600" />
             {totalProjectPhases - completedProjectPhases} In Progress
+          </span>
+          <span className="text-[10px] text-slate-400 font-medium sm:hidden ml-auto">
+            Swipe ➔
           </span>
         </div>
       </div>
 
       {/* TREE PIPE STRUCTURE CONTAINER */}
-      <div className="min-w-[620px] py-2">
+      <div className="min-w-[500px] sm:min-w-[620px] py-1 sm:py-2">
         {/* 1. ROOT NODE (PROJECT) */}
-        <div className="inline-flex items-center gap-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-brand-950 text-white shadow-soft-lg border border-slate-800 min-w-[320px] max-w-[500px]">
+        <div className="inline-flex items-center gap-3 p-3.5 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-brand-950 text-white shadow-soft-lg border border-slate-800 min-w-[280px] sm:min-w-[320px] max-w-[500px]">
           <div className="h-11 w-11 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-brand-300 shrink-0 border border-white/20">
             <FolderGit2 className="h-5 w-5" />
           </div>
