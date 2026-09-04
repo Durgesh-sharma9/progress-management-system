@@ -280,7 +280,35 @@ const ProjectsPage = () => {
   const handlePhaseChange = (index, newTitle) => {
     setFormData((prev) => {
       const updated = [...(prev.phases || [])];
-      updated[index] = newTitle;
+      const item = updated[index];
+      if (typeof item === 'object' && item !== null) {
+        updated[index] = { ...item, title: newTitle };
+      } else {
+        updated[index] = newTitle;
+      }
+      return { ...prev, phases: updated };
+    });
+  };
+
+  const handlePhaseAssigneeChange = (index, developerId) => {
+    setFormData((prev) => {
+      const updated = [...(prev.phases || [])];
+      const item = updated[index];
+      const title = typeof item === 'object' && item !== null ? item.title : item;
+      updated[index] = { title, developerId };
+      return { ...prev, phases: updated };
+    });
+  };
+
+  const handleDistributePhasesEvenly = () => {
+    if (!formData.developers || formData.developers.length === 0) return;
+    setFormData((prev) => {
+      const devs = prev.developers;
+      const updated = (prev.phases || []).map((p, idx) => {
+        const title = typeof p === 'object' && p !== null ? p.title : p;
+        const assignedDev = devs[idx % devs.length];
+        return { title, developerId: assignedDev };
+      });
       return { ...prev, phases: updated };
     });
   };
@@ -313,7 +341,8 @@ const ProjectsPage = () => {
     if (!title || !title.trim()) return;
     setFormData((prev) => {
       const list = [...(prev.phases || [])];
-      list.splice(index, 0, title.trim());
+      const defaultDev = prev.developers?.length > 0 ? prev.developers[0] : '';
+      list.splice(index, 0, { title: title.trim(), developerId: defaultDev });
       return { ...prev, phases: list };
     });
   };
@@ -321,10 +350,13 @@ const ProjectsPage = () => {
   const handleAppendPhase = (e) => {
     if (e) e.preventDefault();
     if (!newPhaseInput.trim()) return;
-    setFormData((prev) => ({
-      ...prev,
-      phases: [...(prev.phases || []), newPhaseInput.trim()],
-    }));
+    setFormData((prev) => {
+      const defaultDev = prev.developers?.length > 0 ? prev.developers[0] : '';
+      return {
+        ...prev,
+        phases: [...(prev.phases || []), { title: newPhaseInput.trim(), developerId: defaultDev }],
+      };
+    });
     setNewPhaseInput('');
   };
 
@@ -1226,7 +1258,7 @@ const ProjectsPage = () => {
                     type="button"
                     onClick={() => handleApplyTemplate('web')}
                     className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all ${
-                      formData.phases?.length === 17 && formData.phases[5] === 'Frontend Development'
+                      formData.phases?.length === 17 && (typeof formData.phases[5] === 'string' ? formData.phases[5] : formData.phases[5]?.title) === 'Frontend Development'
                         ? 'bg-brand-600 text-white border-brand-600 shadow-2xs'
                         : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
                     }`}
@@ -1237,13 +1269,23 @@ const ProjectsPage = () => {
                     type="button"
                     onClick={() => handleApplyTemplate('android')}
                     className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all ${
-                      formData.phases?.length === 17 && formData.phases[5] === 'Android UI Development'
+                      formData.phases?.length === 17 && (typeof formData.phases[5] === 'string' ? formData.phases[5] : formData.phases[5]?.title) === 'Android UI Development'
                         ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
                         : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
                     📱 Android Template (17)
                   </button>
+                  {formData.developers.length > 1 && formData.phases?.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleDistributePhasesEvenly}
+                      title="Distribute phases 50/50 evenly among selected developers"
+                      className="px-2 py-1 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-all shadow-2xs"
+                    >
+                      ⚖️ Distribute Evenly (50/50)
+                    </button>
+                  )}
                   {formData.phases?.length > 0 && (
                     <button
                       type="button"
@@ -1279,63 +1321,87 @@ const ProjectsPage = () => {
                     </div>
                   </div>
                 ) : (
-                  formData.phases.map((phaseTitle, idx) => (
-                    <div key={idx} className="group/item flex flex-col gap-1">
-                      <div className="flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100/80 p-1.5 rounded-lg border border-slate-200/70 transition-all">
-                        {/* Order Badge */}
-                        <span className="h-5 w-5 rounded bg-slate-200 text-slate-700 font-mono text-[10px] font-bold flex items-center justify-center shrink-0">
-                          {idx + 1}
-                        </span>
+                  formData.phases.map((phaseItem, idx) => {
+                    const phaseTitle = typeof phaseItem === 'object' && phaseItem !== null ? phaseItem.title : phaseItem;
+                    const assignedDevId = typeof phaseItem === 'object' && phaseItem !== null ? phaseItem.developerId || '' : '';
 
-                        {/* Editable Phase Title Input */}
-                        <input
-                          type="text"
-                          value={phaseTitle}
-                          onChange={(e) => handlePhaseChange(idx, e.target.value)}
-                          placeholder={`Phase #${idx + 1} Title`}
-                          className="flex-1 bg-white border border-slate-200 rounded-md px-2.5 py-1 text-xs text-slate-800 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500/20 font-medium"
-                        />
+                    return (
+                      <div key={idx} className="group/item flex flex-col gap-1">
+                        <div className="flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100/80 p-1.5 rounded-lg border border-slate-200/70 transition-all">
+                          {/* Order Badge */}
+                          <span className="h-5 w-5 rounded bg-slate-200 text-slate-700 font-mono text-[10px] font-bold flex items-center justify-center shrink-0">
+                            {idx + 1}
+                          </span>
 
-                        {/* Action Buttons: Move Up / Move Down / Insert / Delete */}
-                        <div className="flex items-center gap-0.5 shrink-0">
-                          <button
-                            type="button"
-                            disabled={idx === 0}
-                            onClick={() => handleMovePhase(idx, 'up')}
-                            title="Move Up"
-                            className="p-1 rounded text-slate-400 hover:text-brand-600 hover:bg-white border border-transparent hover:border-slate-200 disabled:opacity-30 disabled:pointer-events-none transition-all"
-                          >
-                            <ArrowUp className="h-3 w-3" />
-                          </button>
-                          <button
-                            type="button"
-                            disabled={idx === formData.phases.length - 1}
-                            onClick={() => handleMovePhase(idx, 'down')}
-                            title="Move Down"
-                            className="p-1 rounded text-slate-400 hover:text-brand-600 hover:bg-white border border-transparent hover:border-slate-200 disabled:opacity-30 disabled:pointer-events-none transition-all"
-                          >
-                            <ArrowDown className="h-3 w-3" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleInsertPhaseAt(idx + 1)}
-                            title="Insert Phase Here"
-                            className="p-1 rounded text-slate-400 hover:text-emerald-600 hover:bg-white border border-transparent hover:border-slate-200 transition-all text-[10px] font-bold"
-                          >
-                            <Plus className="h-3 w-3" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeletePhase(idx)}
-                            title="Delete Phase"
-                            className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-all"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
+                          {/* Editable Phase Title Input */}
+                          <input
+                            type="text"
+                            value={phaseTitle}
+                            onChange={(e) => handlePhaseChange(idx, e.target.value)}
+                            placeholder={`Phase #${idx + 1} Title`}
+                            className="flex-1 bg-white border border-slate-200 rounded-md px-2.5 py-1 text-xs text-slate-800 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500/20 font-medium min-w-0"
+                          />
+
+                          {/* Assignee Selector if Group Project (2+ devs selected) */}
+                          {formData.developers.length > 1 && (
+                            <select
+                              value={assignedDevId || formData.developers[0]}
+                              onChange={(e) => handlePhaseAssigneeChange(idx, e.target.value)}
+                              className="bg-white border border-slate-300 text-slate-700 text-[10px] font-bold rounded-md px-1.5 py-1 focus:border-brand-500 focus:outline-none shrink-0 max-w-[115px] truncate"
+                              title="Assign this phase to specific engineer"
+                            >
+                              {formData.developers.map((devId) => {
+                                const dev = developersList.find((d) => d._id === devId);
+                                return (
+                                  <option key={devId} value={devId}>
+                                    👤 {dev ? dev.name.split(' ')[0] : 'Engineer'}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          )}
+
+                          {/* Action Buttons: Move Up / Move Down / Insert / Delete */}
+                          <div className="flex items-center gap-0.5 shrink-0">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => handleMovePhase(idx, 'up')}
+                              title="Move Up"
+                              className="p-1 rounded text-slate-400 hover:text-brand-600 hover:bg-white border border-transparent hover:border-slate-200 disabled:opacity-30 disabled:pointer-events-none transition-all"
+                            >
+                              <ArrowUp className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === formData.phases.length - 1}
+                              onClick={() => handleMovePhase(idx, 'down')}
+                              title="Move Down"
+                              className="p-1 rounded text-slate-400 hover:text-brand-600 hover:bg-white border border-transparent hover:border-slate-200 disabled:opacity-30 disabled:pointer-events-none transition-all"
+                            >
+                              <ArrowDown className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleInsertPhaseAt(idx + 1)}
+                              title="Insert Phase Here"
+                              className="p-1 rounded text-slate-400 hover:text-emerald-600 hover:bg-white border border-transparent hover:border-slate-200 transition-all text-[10px] font-bold"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePhase(idx)}
+                              title="Delete Phase"
+                              className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-all"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
 

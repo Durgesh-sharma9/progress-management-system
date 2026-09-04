@@ -217,33 +217,39 @@ exports.createProject = async (req, res, next) => {
       createdBy: req.user._id,
     });
 
-    // Create initial phases if provided
+    // Create initial phases if provided (single project lifecycle, no duplicate multiplier)
     if (Array.isArray(phases) && phases.length > 0) {
-      let targetDevs = devs;
-      if (targetDevs.length === 0) {
-        targetDevs = [req.user._id]; // placeholder until developer assigned
-      }
+      const defaultDevId = devs.length > 0 ? devs[0] : req.user._id;
 
-      for (const devId of targetDevs) {
-        const phaseDocs = phases
-          .map((p, idx) => {
-            const title = typeof p === 'string' ? p.trim() : (p.title || '').trim();
-            const desc = typeof p === 'object' && p.description ? p.description.trim() : '';
-            const ord = typeof p === 'object' && typeof p.order === 'number' ? p.order : idx + 1;
-            return {
-              title,
-              description: desc,
-              order: ord,
-              completed: false,
-              projectId: project._id,
-              developerId: devId,
-            };
-          })
-          .filter((doc) => Boolean(doc.title));
+      const phaseDocs = phases
+        .map((p, idx) => {
+          const title = typeof p === 'string' ? p.trim() : (p.title || '').trim();
+          const desc = typeof p === 'object' && p.description ? p.description.trim() : '';
+          const ord = typeof p === 'object' && typeof p.order === 'number' ? p.order : idx + 1;
+          
+          // Determine assigned developer
+          let assignedDev = defaultDevId;
+          if (typeof p === 'object' && p.developerId) {
+            // If specified dev is valid among project developers, assign it
+            const matchedDev = devs.find((d) => d.toString() === p.developerId.toString());
+            if (matchedDev) {
+              assignedDev = matchedDev;
+            }
+          }
 
-        if (phaseDocs.length > 0) {
-          await Phase.insertMany(phaseDocs);
-        }
+          return {
+            title,
+            description: desc,
+            order: ord,
+            completed: false,
+            projectId: project._id,
+            developerId: assignedDev,
+          };
+        })
+        .filter((doc) => Boolean(doc.title));
+
+      if (phaseDocs.length > 0) {
+        await Phase.insertMany(phaseDocs);
       }
     }
 
