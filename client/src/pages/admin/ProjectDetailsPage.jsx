@@ -191,6 +191,10 @@ const ProjectDetailsPage = () => {
                   showCount={true}
                   size="xs"
                 />
+                <span className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                  <Calendar className="h-3 w-3 text-slate-500" />
+                  Started: {new Date(project.startDate || project.createdAt).toLocaleDateString()}
+                </span>
               </div>
               {project.description && (
                 <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">

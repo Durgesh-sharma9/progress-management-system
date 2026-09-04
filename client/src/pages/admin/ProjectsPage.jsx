@@ -172,6 +172,7 @@ const ProjectsPage = () => {
     category: 'Web App',
     techStack: ['React', 'Node.js', 'MongoDB'],
     developers: [],
+    startDate: new Date().toISOString().split('T')[0],
   });
   const [customTechInput, setCustomTechInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -223,6 +224,7 @@ const ProjectsPage = () => {
       category: 'Web App',
       techStack: ['React', 'Node.js', 'MongoDB'],
       developers: [],
+      startDate: new Date().toISOString().split('T')[0],
     });
     setCustomTechInput('');
     setIsModalOpen(true);
@@ -242,6 +244,9 @@ const ProjectsPage = () => {
       category: project.category || 'Web App',
       techStack: project.techStack || [],
       developers: assignedDevIds,
+      startDate: project.startDate
+        ? new Date(project.startDate).toISOString().split('T')[0]
+        : new Date(project.createdAt).toISOString().split('T')[0],
     });
     setCustomTechInput('');
     setIsModalOpen(true);
@@ -716,6 +721,14 @@ const ProjectsPage = () => {
                     </div>
                   )}
 
+                  {/* Start Date info */}
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium mb-1.5">
+                    <span className="inline-flex items-center gap-1 font-mono text-slate-500">
+                      <Calendar className="h-3 w-3 text-slate-400" />
+                      Start: {new Date(project.startDate || project.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+
                   {/* Dynamic Colorful Progress Bar Container */}
                   <div className="my-2 bg-slate-50/90 p-2 sm:p-2.5 rounded-xl border border-slate-200/70">
                     <ProgressBar
@@ -998,18 +1011,33 @@ const ProjectsPage = () => {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-              Project Name *
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="e.g. E-Commerce Mobile App"
-              className="block w-full rounded-xl border border-slate-300/80 bg-white/70 px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
+                Project Name *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="e.g. E-Commerce Mobile App"
+                className="block w-full rounded-xl border border-slate-300/80 bg-white/70 px-3.5 py-2 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1 flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-brand-600" />
+                <span>Project Start Date</span>
+              </label>
+              <input
+                type="date"
+                value={formData.startDate}
+                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                className="block w-full rounded-xl border border-slate-300/80 bg-white/70 px-3.5 py-2 text-sm text-slate-900 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 font-mono"
+              />
+            </div>
           </div>
 
           <div>

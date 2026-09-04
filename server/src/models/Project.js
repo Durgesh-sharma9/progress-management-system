@@ -43,6 +43,10 @@ const projectSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  startDate: {
+    type: Date,
+    default: Date.now,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

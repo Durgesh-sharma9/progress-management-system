@@ -12,12 +12,14 @@ import {
   ArrowRight,
   Loader2,
   Sparkles,
+  Calendar,
 } from 'lucide-react';
 
 const RegisterPage = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [joiningDate, setJoiningDate] = useState(new Date().toISOString().split('T')[0]);
   const [role, setRole] = useState('developer');
   const [loading, setLoading] = useState(false);
 
@@ -38,7 +40,7 @@ const RegisterPage = () => {
     }
 
     setLoading(true);
-    const res = await register(name, email, password, role);
+    const res = await register(name, email, password, role, joiningDate);
     setLoading(false);
 
     if (res.success) {
@@ -130,6 +132,21 @@ const RegisterPage = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="At least 6 characters"
                   className="block w-full rounded-xl border border-slate-300/80 bg-white/70 py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-brand-600" />
+                <span>Joining Date</span>
+              </label>
+              <div className="relative rounded-xl shadow-soft-xs">
+                <input
+                  type="date"
+                  value={joiningDate}
+                  onChange={(e) => setJoiningDate(e.target.value)}
+                  className="block w-full rounded-xl border border-slate-300/80 bg-white/70 py-2.5 px-3 text-sm text-slate-900 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 font-mono"
                 />
               </div>
             </div>

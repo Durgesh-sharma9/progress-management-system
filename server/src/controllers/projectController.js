@@ -23,6 +23,7 @@ const enrichProjectsWithProgress = async (projects, userId = null, userRole = 'a
       projObj.completedTasks = completedPhases;
       projObj.overallProgress = overallProgress;
       projObj.developerCount = project.developers ? project.developers.length : 0;
+      projObj.startDate = project.startDate || project.createdAt;
       projObj.projectType =
         project.projectType ||
         (project.developers && project.developers.length > 1 ? 'Group' : 'Standalone');
@@ -198,7 +199,7 @@ exports.getProjectById = async (req, res, next) => {
 // @access  Private (Admin only)
 exports.createProject = async (req, res, next) => {
   try {
-    const { name, description, status, projectType, category, techStack, developers } = req.body;
+    const { name, description, status, projectType, category, techStack, developers, startDate } = req.body;
 
     const devs = Array.isArray(developers) ? developers : [];
     const determinedType =
@@ -212,6 +213,7 @@ exports.createProject = async (req, res, next) => {
       category: category || 'Web App',
       techStack: Array.isArray(techStack) ? techStack : [],
       developers: devs,
+      startDate: startDate ? new Date(startDate) : Date.now(),
       createdBy: req.user._id,
     });
 
@@ -234,7 +236,7 @@ exports.createProject = async (req, res, next) => {
 // @access  Private (Admin only)
 exports.updateProject = async (req, res, next) => {
   try {
-    const { name, description, status, projectType, category, techStack, developers } = req.body;
+    const { name, description, status, projectType, category, techStack, developers, startDate } = req.body;
 
     let project = await Project.findById(req.params.id);
     if (!project) {
@@ -246,6 +248,7 @@ exports.updateProject = async (req, res, next) => {
     if (status) project.status = status;
     if (projectType) project.projectType = projectType;
     if (category) project.category = category;
+    if (startDate) project.startDate = new Date(startDate);
     if (techStack !== undefined) project.techStack = Array.isArray(techStack) ? techStack : [];
     if (developers !== undefined) {
       project.developers = developers;

@@ -30,6 +30,7 @@ exports.getDevelopers = async (req, res, next) => {
           name: dev.name,
           email: dev.email,
           role: dev.role,
+          joiningDate: dev.joiningDate || dev.createdAt,
           createdAt: dev.createdAt,
           assignedProjects,
           assignedProjectsCount: assignedProjects.length,
@@ -58,7 +59,7 @@ exports.getDevelopers = async (req, res, next) => {
 // @access  Private (Admin only)
 exports.createDeveloper = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, joiningDate } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({
@@ -80,6 +81,7 @@ exports.createDeveloper = async (req, res, next) => {
       email: email.toLowerCase().trim(),
       password,
       role: 'developer',
+      joiningDate: joiningDate ? new Date(joiningDate) : Date.now(),
     });
 
     res.status(201).json({
@@ -90,6 +92,7 @@ exports.createDeveloper = async (req, res, next) => {
         name: developer.name,
         email: developer.email,
         role: developer.role,
+        joiningDate: developer.joiningDate || developer.createdAt,
         createdAt: developer.createdAt,
       },
     });

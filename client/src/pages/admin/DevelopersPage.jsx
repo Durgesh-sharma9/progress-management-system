@@ -22,6 +22,7 @@ import {
   FolderGit2,
   CheckCircle2,
   ArrowUpRight,
+  Calendar,
 } from 'lucide-react';
 
 const DevelopersPage = () => {
@@ -35,6 +36,7 @@ const DevelopersPage = () => {
     name: '',
     email: '',
     password: '',
+    joiningDate: new Date().toISOString().split('T')[0],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -81,7 +83,7 @@ const DevelopersPage = () => {
       if (res.data.success) {
         success('Developer created successfully');
         setIsAddOpen(false);
-        setFormData({ name: '', email: '', password: '' });
+        setFormData({ name: '', email: '', password: '', joiningDate: new Date().toISOString().split('T')[0] });
         fetchDevelopers();
       }
     } catch (err) {
@@ -293,7 +295,7 @@ const DevelopersPage = () => {
                   {dev.pendingTasks} Pending
                 </span>
                 <span className="text-[9px] text-slate-400 font-mono">
-                  Joined {new Date(dev.createdAt).toLocaleDateString()}
+                  Joined {new Date(dev.joiningDate || dev.createdAt).toLocaleDateString()}
                 </span>
               </div>
             </div>
@@ -364,6 +366,21 @@ const DevelopersPage = () => {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="At least 6 characters"
                 className="block w-full rounded-xl border border-slate-300/80 bg-white/70 py-2.5 pl-10 pr-3 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-brand-600" />
+              <span>Joining Date</span>
+            </label>
+            <div className="relative rounded-xl shadow-soft-xs">
+              <input
+                type="date"
+                value={formData.joiningDate}
+                onChange={(e) => setFormData({ ...formData, joiningDate: e.target.value })}
+                className="block w-full rounded-xl border border-slate-300/80 bg-white/70 py-2.5 px-3 text-sm text-slate-900 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 font-mono"
               />
             </div>
           </div>

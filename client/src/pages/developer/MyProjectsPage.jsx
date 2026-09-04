@@ -434,6 +434,14 @@ const MyProjectsPage = () => {
                     </div>
                   )}
 
+                  {/* Start Date info */}
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium mb-1.5">
+                    <span className="inline-flex items-center gap-1 font-mono text-slate-500">
+                      <Calendar className="h-3 w-3 text-slate-400" />
+                      Start: {new Date(project.startDate || project.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+
                   {/* My Personal Progress Box */}
                   <div className="my-2 bg-slate-50/90 p-2 sm:p-2.5 rounded-xl border border-slate-200/70">
                     <ProgressBar

@@ -54,9 +54,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (name, email, password, role = 'developer') => {
+  const register = async (name, email, password, role = 'developer', joiningDate = null) => {
     try {
-      const res = await api.post('/auth/register', { name, email, password, role });
+      const payload = { name, email, password, role };
+      if (joiningDate) payload.joiningDate = joiningDate;
+      const res = await api.post('/auth/register', payload);
       if (res.data.success) {
         const { token: newToken, user: newUser } = res.data;
         localStorage.setItem('devtrack_token', newToken);

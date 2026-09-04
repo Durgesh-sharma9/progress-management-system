@@ -13,7 +13,7 @@ const generateToken = (id) => {
 // @access  Public
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, joiningDate } = req.body;
 
     // Check if user exists
     const userExists = await User.findOne({ email: email.toLowerCase() });
@@ -30,6 +30,7 @@ exports.register = async (req, res, next) => {
       email: email.toLowerCase(),
       password,
       role: role === 'admin' ? 'admin' : 'developer',
+      joiningDate: joiningDate ? new Date(joiningDate) : Date.now(),
     });
 
     const token = generateToken(user._id);
@@ -43,6 +44,7 @@ exports.register = async (req, res, next) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        joiningDate: user.joiningDate || user.createdAt,
         createdAt: user.createdAt,
       },
     });

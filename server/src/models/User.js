@@ -29,6 +29,10 @@ const userSchema = new mongoose.Schema({
     enum: ['admin', 'developer'],
     default: 'developer',
   },
+  joiningDate: {
+    type: Date,
+    default: Date.now,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
