@@ -29,6 +29,12 @@ import {
   Layout,
   Server,
   Code2,
+  ArrowUpDown,
+  ArrowDownWideNarrow,
+  ArrowUpNarrowWide,
+  CheckCircle2,
+  Clock,
+  Filter,
 } from 'lucide-react';
 
 const categoryTechPresets = {
@@ -152,6 +158,8 @@ const ProjectsPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('All'); // 'All' | 'Standalone' | 'Group'
+  const [statusFilter, setStatusFilter] = useState('All'); // 'All' | 'In Progress' | 'Completed'
+  const [sortBy, setSortBy] = useState('default'); // 'default' | 'progress-asc' | 'progress-desc' | 'name'
 
   // Create / Edit Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -364,7 +372,7 @@ const ProjectsPage = () => {
     }
   };
 
-  // Compute Standalone vs Group counts
+  // Compute counts
   const standaloneCount = projects.filter((p) => {
     const type = p.projectType || (p.developers?.length > 1 ? 'Group' : 'Standalone');
     return type === 'Standalone';
@@ -375,19 +383,64 @@ const ProjectsPage = () => {
     return type === 'Group';
   }).length;
 
-  // Filter projects
-  const filteredProjects = projects.filter((project) => {
-    const matchesSearch =
-      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description?.toLowerCase().includes(searchQuery.toLowerCase());
+  const inProgressCount = projects.filter((p) => {
+    const isCompleted =
+      p.status === 'Completed' ||
+      (p.totalPhases > 0 && p.completedPhases === p.totalPhases) ||
+      (p.overallProgress === 100 && p.totalPhases > 0);
+    return !isCompleted;
+  }).length;
 
-    const pType =
-      project.projectType || (project.developers?.length > 1 ? 'Group' : 'Standalone');
-    const matchesType =
-      typeFilter === 'All' || pType.toLowerCase() === typeFilter.toLowerCase();
+  const completedCount = projects.filter((p) => {
+    const isCompleted =
+      p.status === 'Completed' ||
+      (p.totalPhases > 0 && p.completedPhases === p.totalPhases) ||
+      (p.overallProgress === 100 && p.totalPhases > 0);
+    return isCompleted;
+  }).length;
 
-    return matchesSearch && matchesType;
-  });
+  // Filter and Sort projects
+  const filteredProjects = projects
+    .filter((project) => {
+      const matchesSearch =
+        project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (project.techStack && project.techStack.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())));
+
+      const pType =
+        project.projectType || (project.developers?.length > 1 ? 'Group' : 'Standalone');
+      const matchesType =
+        typeFilter === 'All' || pType.toLowerCase() === typeFilter.toLowerCase();
+
+      const isCompleted =
+        project.status === 'Completed' ||
+        (project.totalPhases > 0 && project.completedPhases === project.totalPhases) ||
+        (project.overallProgress === 100 && project.totalPhases > 0);
+
+      const matchesStatus =
+        statusFilter === 'All' ||
+        (statusFilter === 'In Progress' && !isCompleted) ||
+        (statusFilter === 'Completed' && isCompleted);
+
+      return matchesSearch && matchesType && matchesStatus;
+    })
+    .sort((a, b) => {
+      const progA = a.overallProgress || 0;
+      const progB = b.overallProgress || 0;
+
+      if (sortBy === 'progress-asc') {
+        // Lowest to highest progress
+        return progA - progB;
+      }
+      if (sortBy === 'progress-desc') {
+        // Highest to lowest progress
+        return progB - progA;
+      }
+      if (sortBy === 'name') {
+        return a.name.localeCompare(b.name);
+      }
+      return 0; // Default order
+    });
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -401,11 +454,11 @@ const ProjectsPage = () => {
             <span className="text-[10px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200 shrink-0">
               {projects.length} Total
             </span>
-            <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-200 shrink-0 hidden sm:inline-block">
-              👤 {standaloneCount} Standalone
+            <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 shrink-0 hidden sm:inline-block">
+              ⚡ {inProgressCount} In Progress
             </span>
-            <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 shrink-0 hidden sm:inline-block">
-              👥 {groupCount} Group
+            <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0 hidden sm:inline-block">
+              ✅ {completedCount} Completed
             </span>
           </div>
           <p className="text-[11px] sm:text-xs text-slate-500 line-clamp-1 mt-0.5 hidden sm:block">
@@ -422,13 +475,13 @@ const ProjectsPage = () => {
         </button>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
+      {/* Search Bar & Sort Dropdown */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search projects..."
+            placeholder="Search projects by name, description, tech stack..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-xl sm:rounded-2xl border border-slate-200/90 bg-white/80 py-2 sm:py-2.5 pl-9 pr-8 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 shadow-soft-xs"
@@ -443,26 +496,127 @@ const ProjectsPage = () => {
           )}
         </div>
 
-        {/* Project Type Filter Buttons */}
+        {/* Sort Selector Dropdown */}
+        <div className="flex items-center gap-1.5 bg-white border border-slate-200/90 rounded-xl sm:rounded-2xl px-3 py-2 shadow-soft-xs shrink-0">
+          <ArrowUpDown className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+          <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">Sort:</span>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="bg-transparent text-[11px] sm:text-xs font-bold text-slate-800 focus:outline-none cursor-pointer pr-1"
+          >
+            <option value="default">Default</option>
+            <option value="progress-asc">📈 Lowest Progress (0% → 100%)</option>
+            <option value="progress-desc">📉 Highest Progress (100% → 0%)</option>
+            <option value="name">🔤 Name (A-Z)</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Double Filter Bar: Project Type + Project Status */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2">
+        {/* Type Filter Tabs */}
         <div className="flex items-center gap-1 p-1 rounded-xl sm:rounded-2xl border border-slate-200/80 bg-white shadow-soft-xs overflow-x-auto no-scrollbar">
           {[
-            { id: 'All', label: 'All' },
-            { id: 'Standalone', label: '👤 Standalone' },
-            { id: 'Group', label: '👥 Group' },
-          ].map((type) => (
-            <button
-              key={type.id}
-              onClick={() => setTypeFilter(type.id)}
-              className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all duration-200 ${
-                typeFilter === type.id
-                  ? 'bg-slate-900 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-              }`}
-            >
-              {type.label}
-            </button>
-          ))}
+            { id: 'All', label: 'All', count: projects.length },
+            { id: 'Standalone', label: '👤 Standalone', count: standaloneCount },
+            { id: 'Group', label: '👥 Group', count: groupCount },
+          ].map((type) => {
+            const active = typeFilter === type.id;
+            return (
+              <button
+                key={type.id}
+                onClick={() => setTypeFilter(type.id)}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all duration-200 ${
+                  active
+                    ? 'bg-slate-900 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                }`}
+              >
+                <span>{type.label}</span>
+                <span
+                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+                    active
+                      ? 'bg-white/20 text-white'
+                      : 'bg-slate-100 text-slate-700'
+                  }`}
+                >
+                  {type.count}
+                </span>
+              </button>
+            );
+          })}
         </div>
+
+        {/* Status Filter Tabs (Double Filter) */}
+        <div className="flex items-center gap-1 p-1 rounded-xl sm:rounded-2xl border border-slate-200/80 bg-white shadow-soft-xs overflow-x-auto no-scrollbar">
+          {[
+            { id: 'All', label: 'All Status', count: projects.length },
+            { id: 'In Progress', label: '⚡ In Progress', count: inProgressCount, activeColor: 'bg-amber-500 text-white' },
+            { id: 'Completed', label: '✅ Completed', count: completedCount, activeColor: 'bg-emerald-600 text-white' },
+          ].map((status) => {
+            const active = statusFilter === status.id;
+            return (
+              <button
+                key={status.id}
+                onClick={() => setStatusFilter(status.id)}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all duration-200 ${
+                  active
+                    ? (status.activeColor ? `${status.activeColor} shadow-sm` : 'bg-slate-900 text-white shadow-sm')
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                }`}
+              >
+                <span>{status.label}</span>
+                <span
+                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
+                    active
+                      ? 'bg-white/25 text-white'
+                      : 'bg-slate-100 text-slate-700'
+                  }`}
+                >
+                  {status.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Quick Progress Sort Buttons */}
+      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-[11px]">
+        <span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider shrink-0">
+          Progress Sort:
+        </span>
+        <button
+          onClick={() => setSortBy(sortBy === 'progress-asc' ? 'default' : 'progress-asc')}
+          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold border transition-all shrink-0 ${
+            sortBy === 'progress-asc'
+              ? 'bg-amber-50 text-amber-800 border-amber-300 shadow-2xs'
+              : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <span>📈 Lowest to Highest (0% → 100%)</span>
+          {sortBy === 'progress-asc' && <span className="text-amber-600 font-extrabold">✓</span>}
+        </button>
+        <button
+          onClick={() => setSortBy(sortBy === 'progress-desc' ? 'default' : 'progress-desc')}
+          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold border transition-all shrink-0 ${
+            sortBy === 'progress-desc'
+              ? 'bg-indigo-50 text-indigo-800 border-indigo-300 shadow-2xs'
+              : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+          }`}
+        >
+          <span>📉 Highest to Lowest (100% → 0%)</span>
+          {sortBy === 'progress-desc' && <span className="text-indigo-600 font-extrabold">✓</span>}
+        </button>
+        {sortBy !== 'default' && (
+          <button
+            onClick={() => setSortBy('default')}
+            className="text-[10px] font-semibold text-slate-400 hover:text-slate-600 underline ml-1 shrink-0"
+          >
+            Reset
+          </button>
+        )}
       </div>
 
       {/* Projects Grid */}
