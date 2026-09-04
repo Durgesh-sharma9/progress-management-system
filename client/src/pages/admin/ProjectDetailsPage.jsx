@@ -84,6 +84,7 @@ const ProjectDetailsPage = () => {
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
   const [selectedPhaseForNotes, setSelectedPhaseForNotes] = useState(null);
   const [expandedNotePhaseId, setExpandedNotePhaseId] = useState(null);
+  const [expandedDevId, setExpandedDevId] = useState(null);
 
   useEffect(() => {
     fetchProjectData();
