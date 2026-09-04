@@ -35,7 +35,16 @@ import {
   CheckCircle2,
   Clock,
   Filter,
+  ArrowUp,
+  ArrowDown,
+  ListPlus,
+  CheckSquare,
 } from 'lucide-react';
+import {
+  WEB_APP_DEFAULT_PHASES,
+  ANDROID_APP_DEFAULT_PHASES,
+  getTemplateForCategory,
+} from '../../utils/phaseTemplates';
 
 const categoryTechPresets = {
   'Web App': [
@@ -173,8 +182,10 @@ const ProjectsPage = () => {
     techStack: ['React', 'Node.js', 'MongoDB'],
     developers: [],
     startDate: new Date().toISOString().split('T')[0],
+    phases: [...WEB_APP_DEFAULT_PHASES],
   });
   const [customTechInput, setCustomTechInput] = useState('');
+  const [newPhaseInput, setNewPhaseInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Delete modal state
@@ -225,8 +236,10 @@ const ProjectsPage = () => {
       techStack: ['React', 'Node.js', 'MongoDB'],
       developers: [],
       startDate: new Date().toISOString().split('T')[0],
+      phases: getTemplateForCategory('Web App'),
     });
     setCustomTechInput('');
+    setNewPhaseInput('');
     setIsModalOpen(true);
   };
 
@@ -247,6 +260,7 @@ const ProjectsPage = () => {
       startDate: project.startDate
         ? new Date(project.startDate).toISOString().split('T')[0]
         : new Date(project.createdAt).toISOString().split('T')[0],
+      phases: [],
     });
     setCustomTechInput('');
     setIsModalOpen(true);
@@ -258,7 +272,70 @@ const ProjectsPage = () => {
       ...prev,
       category: newCat,
       techStack: defaultTech,
+      phases: modalMode === 'create' ? getTemplateForCategory(newCat) : prev.phases,
     }));
+  };
+
+  // Phase Manipulation Handlers
+  const handlePhaseChange = (index, newTitle) => {
+    setFormData((prev) => {
+      const updated = [...(prev.phases || [])];
+      updated[index] = newTitle;
+      return { ...prev, phases: updated };
+    });
+  };
+
+  const handleMovePhase = (index, direction) => {
+    setFormData((prev) => {
+      const list = [...(prev.phases || [])];
+      if (direction === 'up' && index > 0) {
+        const temp = list[index];
+        list[index] = list[index - 1];
+        list[index - 1] = temp;
+      } else if (direction === 'down' && index < list.length - 1) {
+        const temp = list[index];
+        list[index] = list[index + 1];
+        list[index + 1] = temp;
+      }
+      return { ...prev, phases: list };
+    });
+  };
+
+  const handleDeletePhase = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      phases: (prev.phases || []).filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleInsertPhaseAt = (index) => {
+    const title = prompt('Enter new phase title:');
+    if (!title || !title.trim()) return;
+    setFormData((prev) => {
+      const list = [...(prev.phases || [])];
+      list.splice(index, 0, title.trim());
+      return { ...prev, phases: list };
+    });
+  };
+
+  const handleAppendPhase = (e) => {
+    if (e) e.preventDefault();
+    if (!newPhaseInput.trim()) return;
+    setFormData((prev) => ({
+      ...prev,
+      phases: [...(prev.phases || []), newPhaseInput.trim()],
+    }));
+    setNewPhaseInput('');
+  };
+
+  const handleApplyTemplate = (type) => {
+    if (type === 'web') {
+      setFormData((prev) => ({ ...prev, phases: [...WEB_APP_DEFAULT_PHASES] }));
+    } else if (type === 'android') {
+      setFormData((prev) => ({ ...prev, phases: [...ANDROID_APP_DEFAULT_PHASES] }));
+    } else if (type === 'clear') {
+      setFormData((prev) => ({ ...prev, phases: [] }));
+    }
   };
 
   const toggleTechTag = (tech) => {
@@ -791,7 +868,7 @@ const ProjectsPage = () => {
         onClose={() => setIsModalOpen(false)}
         title={modalMode === 'create' ? 'Create New Project' : 'Edit Project'}
         subtitle="Specify category, tech stack, structure, and team assignments."
-        maxWidth="lg"
+        maxWidth="2xl"
       >
         <form onSubmit={handleFormSubmit} className="space-y-4">
           {/* STEP 1: Application Category / Platform Selector */}
@@ -1124,6 +1201,170 @@ const ProjectsPage = () => {
               )}
             </div>
           </div>
+
+          {/* STEP 4: Project Deliverables & Workflow Phases (Interactive Builder) */}
+          {modalMode === 'create' && (
+            <div className="p-3 rounded-2xl bg-slate-50/90 border border-slate-200/90 space-y-2.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-800">
+                      4. Project Deliverables & Phases
+                    </label>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.2 rounded-full bg-brand-50 text-brand-700 border border-brand-200">
+                      {formData.phases?.length || 0} Planned
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-500">
+                    Reorder (▲/▼), edit, insert in the middle, or choose a workflow template.
+                  </p>
+                </div>
+
+                {/* Template Preset Buttons */}
+                <div className="flex flex-wrap items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleApplyTemplate('web')}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+                      formData.phases?.length === 17 && formData.phases[5] === 'Frontend Development'
+                        ? 'bg-brand-600 text-white border-brand-600 shadow-2xs'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    🌐 Web Template (17)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleApplyTemplate('android')}
+                    className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all ${
+                      formData.phases?.length === 17 && formData.phases[5] === 'Android UI Development'
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    📱 Android Template (17)
+                  </button>
+                  {formData.phases?.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleApplyTemplate('clear')}
+                      className="px-2 py-1 rounded-lg text-[10px] font-bold bg-white text-rose-600 border border-rose-200 hover:bg-rose-50 transition-all"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Phase List Scroll Container */}
+              <div className="max-h-56 overflow-y-auto space-y-1.5 pr-1 rounded-xl border border-slate-200/90 bg-white p-2">
+                {(!formData.phases || formData.phases.length === 0) ? (
+                  <div className="text-center py-6">
+                    <p className="text-xs text-slate-400 font-medium mb-2">No phases planned yet</p>
+                    <div className="flex justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleApplyTemplate('web')}
+                        className="px-3 py-1 rounded-lg text-xs font-bold bg-brand-50 text-brand-700 border border-brand-200 hover:bg-brand-100"
+                      >
+                        Load Web Template (17)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleApplyTemplate('android')}
+                        className="px-3 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+                      >
+                        Load Android Template (17)
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  formData.phases.map((phaseTitle, idx) => (
+                    <div key={idx} className="group/item flex flex-col gap-1">
+                      <div className="flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100/80 p-1.5 rounded-lg border border-slate-200/70 transition-all">
+                        {/* Order Badge */}
+                        <span className="h-5 w-5 rounded bg-slate-200 text-slate-700 font-mono text-[10px] font-bold flex items-center justify-center shrink-0">
+                          {idx + 1}
+                        </span>
+
+                        {/* Editable Phase Title Input */}
+                        <input
+                          type="text"
+                          value={phaseTitle}
+                          onChange={(e) => handlePhaseChange(idx, e.target.value)}
+                          placeholder={`Phase #${idx + 1} Title`}
+                          className="flex-1 bg-white border border-slate-200 rounded-md px-2.5 py-1 text-xs text-slate-800 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500/20 font-medium"
+                        />
+
+                        {/* Action Buttons: Move Up / Move Down / Insert / Delete */}
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          <button
+                            type="button"
+                            disabled={idx === 0}
+                            onClick={() => handleMovePhase(idx, 'up')}
+                            title="Move Up"
+                            className="p-1 rounded text-slate-400 hover:text-brand-600 hover:bg-white border border-transparent hover:border-slate-200 disabled:opacity-30 disabled:pointer-events-none transition-all"
+                          >
+                            <ArrowUp className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={idx === formData.phases.length - 1}
+                            onClick={() => handleMovePhase(idx, 'down')}
+                            title="Move Down"
+                            className="p-1 rounded text-slate-400 hover:text-brand-600 hover:bg-white border border-transparent hover:border-slate-200 disabled:opacity-30 disabled:pointer-events-none transition-all"
+                          >
+                            <ArrowDown className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInsertPhaseAt(idx + 1)}
+                            title="Insert Phase Here"
+                            className="p-1 rounded text-slate-400 hover:text-emerald-600 hover:bg-white border border-transparent hover:border-slate-200 transition-all text-[10px] font-bold"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePhase(idx)}
+                            title="Delete Phase"
+                            className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-all"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Append Phase Form */}
+              <div className="flex items-center gap-2 pt-1 border-t border-slate-200/70">
+                <input
+                  type="text"
+                  value={newPhaseInput}
+                  onChange={(e) => setNewPhaseInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAppendPhase();
+                    }
+                  }}
+                  placeholder="Add another phase title (e.g. CI/CD Pipeline Deployment)..."
+                  className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500/20"
+                />
+                <button
+                  type="button"
+                  onClick={handleAppendPhase}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shrink-0 active:scale-95"
+                >
+                  <Plus className="h-3 w-3" />
+                  <span>Add Phase</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200">
             <button

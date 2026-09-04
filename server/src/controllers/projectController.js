@@ -199,7 +199,7 @@ exports.getProjectById = async (req, res, next) => {
 // @access  Private (Admin only)
 exports.createProject = async (req, res, next) => {
   try {
-    const { name, description, status, projectType, category, techStack, developers, startDate } = req.body;
+    const { name, description, status, projectType, category, techStack, developers, startDate, phases } = req.body;
 
     const devs = Array.isArray(developers) ? developers : [];
     const determinedType =
@@ -216,6 +216,36 @@ exports.createProject = async (req, res, next) => {
       startDate: startDate ? new Date(startDate) : Date.now(),
       createdBy: req.user._id,
     });
+
+    // Create initial phases if provided
+    if (Array.isArray(phases) && phases.length > 0) {
+      let targetDevs = devs;
+      if (targetDevs.length === 0) {
+        targetDevs = [req.user._id]; // placeholder until developer assigned
+      }
+
+      for (const devId of targetDevs) {
+        const phaseDocs = phases
+          .map((p, idx) => {
+            const title = typeof p === 'string' ? p.trim() : (p.title || '').trim();
+            const desc = typeof p === 'object' && p.description ? p.description.trim() : '';
+            const ord = typeof p === 'object' && typeof p.order === 'number' ? p.order : idx + 1;
+            return {
+              title,
+              description: desc,
+              order: ord,
+              completed: false,
+              projectId: project._id,
+              developerId: devId,
+            };
+          })
+          .filter((doc) => Boolean(doc.title));
+
+        if (phaseDocs.length > 0) {
+          await Phase.insertMany(phaseDocs);
+        }
+      }
+    }
 
     const populatedProject = await Project.findById(project._id)
       .populate('developers', 'name email role')
@@ -328,6 +358,20 @@ exports.assignDeveloper = async (req, res, next) => {
       project.projectType = 'Group';
     }
     await project.save();
+
+    // Check if project has placeholder phases assigned to admin (createdBy)
+    const adminPlaceholderPhases = await Phase.find({
+      projectId: project._id,
+      developerId: project.createdBy,
+    });
+
+    if (adminPlaceholderPhases.length > 0) {
+      // Reassign them to this first assigned developer
+      await Phase.updateMany(
+        { projectId: project._id, developerId: project.createdBy },
+        { $set: { developerId: developerId } }
+      );
+    }
 
     const updated = await Project.findById(project._id)
       .populate('developers', 'name email role')

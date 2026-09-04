@@ -12,6 +12,7 @@ import ProjectAnalytics from '../../components/common/ProjectAnalytics';
 import ProjectTypeBadge from '../../components/common/ProjectTypeBadge';
 import ProjectCategoryBadge from '../../components/common/ProjectCategoryBadge';
 import TechStackPills from '../../components/common/TechStackPills';
+import BulkPhaseModal from '../../components/common/BulkPhaseModal';
 import {
   ArrowLeft,
   Users,
@@ -32,6 +33,12 @@ import {
   Layers,
   Sparkles,
   ShieldCheck,
+  Plus,
+  Edit2,
+  Trash2,
+  ArrowUp,
+  ArrowDown,
+  Calendar,
 } from 'lucide-react';
 
 const ProjectDetailsPage = () => {
@@ -55,8 +62,23 @@ const ProjectDetailsPage = () => {
   const [devToRemove, setDevToRemove] = useState(null);
   const [isRemoving, setIsRemoving] = useState(false);
 
-  // Collapsible phases viewer state
-  const [expandedDevId, setExpandedDevId] = useState(null);
+  // Phase Modal state (Add / Edit / Middle Insert)
+  const [isPhaseModalOpen, setIsPhaseModalOpen] = useState(false);
+  const [phaseModalMode, setPhaseModalMode] = useState('create'); // 'create' | 'edit'
+  const [selectedPhase, setSelectedPhase] = useState(null);
+  const [phaseTitle, setPhaseTitle] = useState('');
+  const [phaseDescription, setPhaseDescription] = useState('');
+  const [targetDevId, setTargetDevId] = useState('');
+  const [insertPosition, setInsertPosition] = useState(null);
+  const [isSubmittingPhase, setIsSubmittingPhase] = useState(false);
+
+  // Bulk Phase Import Modal
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+
+  // Delete Phase Modal state
+  const [isDeletePhaseOpen, setIsDeletePhaseOpen] = useState(false);
+  const [phaseToDelete, setPhaseToDelete] = useState(null);
+  const [isDeletingPhase, setIsDeletingPhase] = useState(false);
 
   // Notes Modal state for Admin inspection
   const [isNotesModalOpen, setIsNotesModalOpen] = useState(false);
@@ -142,6 +164,129 @@ const ProjectDetailsPage = () => {
       error(err.response?.data?.message || 'Failed to remove developer');
     } finally {
       setIsRemoving(false);
+    }
+  };
+
+  // Open Create Phase Modal
+  const openCreatePhaseModal = (pos = null, devId = null) => {
+    setPhaseModalMode('create');
+    setSelectedPhase(null);
+    setPhaseTitle('');
+    setPhaseDescription('');
+    setInsertPosition(typeof pos === 'number' ? pos : null);
+    const defaultDev = devId || (project?.developers?.[0]?._id || project?.developers?.[0] || '');
+    setTargetDevId(defaultDev);
+    setIsPhaseModalOpen(true);
+  };
+
+  // Open Edit Phase Modal
+  const openEditPhaseModal = (phase) => {
+    setPhaseModalMode('edit');
+    setSelectedPhase(phase);
+    setPhaseTitle(phase.title || '');
+    setPhaseDescription(phase.description || '');
+    const devId = phase.developerId?._id || phase.developerId || '';
+    setTargetDevId(devId);
+    setInsertPosition(null);
+    setIsPhaseModalOpen(true);
+  };
+
+  // Save / Update Phase Form
+  const handlePhaseFormSubmit = async (e) => {
+    e.preventDefault();
+    if (!phaseTitle.trim()) {
+      error('Phase title is required');
+      return;
+    }
+
+    setIsSubmittingPhase(true);
+    try {
+      if (phaseModalMode === 'create') {
+        const payload = {
+          title: phaseTitle.trim(),
+          description: phaseDescription.trim(),
+          projectId: id,
+          developerId: targetDevId || undefined,
+        };
+        if (typeof insertPosition === 'number') {
+          payload.insertPosition = insertPosition;
+        }
+
+        const res = await api.post('/phases', payload);
+        if (res.data.success) {
+          success(
+            typeof insertPosition === 'number'
+              ? `Phase inserted at #${insertPosition + 1}`
+              : 'Phase created successfully'
+          );
+          setIsPhaseModalOpen(false);
+          fetchProjectData();
+        }
+      } else {
+        const res = await api.put(`/phases/${selectedPhase._id}`, {
+          title: phaseTitle.trim(),
+          description: phaseDescription.trim(),
+        });
+        if (res.data.success) {
+          success('Phase updated successfully');
+          setIsPhaseModalOpen(false);
+          fetchProjectData();
+        }
+      }
+    } catch (err) {
+      error(err.response?.data?.message || 'Failed to save phase');
+    } finally {
+      setIsSubmittingPhase(false);
+    }
+  };
+
+  // Reorder / Move Phase Up & Down
+  const handleMovePhase = async (phaseId, direction) => {
+    try {
+      const res = await api.patch(`/phases/${phaseId}/move`, { direction });
+      if (res.data.success) {
+        success(res.data.message || `Phase moved ${direction}`);
+        fetchProjectData();
+      }
+    } catch (err) {
+      error(err.response?.data?.message || 'Failed to move phase');
+    }
+  };
+
+  // Toggle Phase Status
+  const handleTogglePhase = async (phaseId) => {
+    try {
+      const res = await api.patch(`/phases/${phaseId}/toggle`);
+      if (res.data.success) {
+        success(res.data.message);
+        fetchProjectData();
+      }
+    } catch (err) {
+      error('Failed to toggle phase status');
+    }
+  };
+
+  // Confirm and Delete Phase
+  const confirmDeletePhase = (phase) => {
+    setPhaseToDelete(phase);
+    setIsDeletePhaseOpen(true);
+  };
+
+  const handleDeletePhase = async () => {
+    if (!phaseToDelete) return;
+    setIsDeletingPhase(true);
+    try {
+      const res = await api.delete(`/phases/${phaseToDelete._id}`);
+      if (res.data.success) {
+        success('Phase deleted successfully');
+        setIsDeletePhaseOpen(false);
+        setPhaseToDelete(null);
+        fetchProjectData();
+      }
+    } catch (err) {
+      error(err.response?.data?.message || 'Failed to delete phase');
+    } finally {
+      setIsDeletingPhase(false);
     }
   };
 
@@ -292,6 +437,11 @@ const ProjectDetailsPage = () => {
             setSelectedPhaseForNotes(phase);
             setIsNotesModalOpen(true);
           }}
+          onTogglePhase={handleTogglePhase}
+          onMovePhase={handleMovePhase}
+          onInsertPhase={openCreatePhaseModal}
+          onEditPhase={openEditPhaseModal}
+          onDeletePhase={confirmDeletePhase}
           currentUserId={null}
         />
       )}
@@ -299,48 +449,76 @@ const ProjectDetailsPage = () => {
       {/* VIEW 2: ALL DELIVERABLES & WORK NOTES */}
       {viewMode === 'deliverables' && (
         <div className="space-y-3 sm:space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Project Deliverables & Developer Logs</h3>
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Project Deliverables & Roadmap</h3>
               <p className="text-[11px] sm:text-xs text-slate-500">
-                Track all completed deliverables, PR links, and implementation notes from developers
+                Track, reorder (▲/▼), edit, or insert new phases into this project roadmap.
               </p>
             </div>
-            <span className="text-[10px] sm:text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200 shrink-0">
-              {phases.filter(p => p.completed).length}/{phases.length} Done
-            </span>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={() => setIsBulkModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 shadow-2xs transition-all"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                <span>Workflow Templates</span>
+              </button>
+
+              <button
+                onClick={() => openCreatePhaseModal()}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-soft-xs hover:from-brand-500 hover:to-indigo-500 transition-all active:scale-95"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add Phase</span>
+              </button>
+            </div>
           </div>
 
           {phases.length === 0 ? (
             <EmptyState
               icon={ListTodo}
               title="No deliverables created"
-              description="Assigned engineers have not created any deliverable phases for this project yet."
+              description="No deliverable phases have been planned for this project yet. Choose a workflow template or add custom phases."
+              actionText="Apply Workflow Template"
+              onAction={() => setIsBulkModalOpen(true)}
             />
           ) : (
-            <div className="space-y-2.5 sm:space-y-3">
-              {phases.map((phase) => {
-                const devName = phase.developerId?.name || 'Developer';
+            <div className="space-y-2 sm:space-y-2.5">
+              {phases.map((phase, idx) => {
+                const devName = phase.developerId?.name || 'Assigned Dev';
                 return (
                   <div
                     key={phase._id}
-                    className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl border transition-all duration-200 shadow-soft-xs ${
+                    className={`p-3 rounded-xl sm:rounded-2xl border transition-all duration-200 shadow-soft-xs ${
                       phase.completed
                         ? 'bg-emerald-50/30 border-emerald-200/80'
-                        : 'bg-white border-slate-200'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2.5">
                       <div className="flex items-start gap-2.5 min-w-0 flex-1">
-                        <div className="mt-0.5">
-                          {phase.completed ? (
-                            <CheckSquare className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 fill-emerald-100" />
-                          ) : (
-                            <Square className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
-                          )}
+                        {/* Order & Status Check */}
+                        <div className="flex items-center gap-1.5 mt-0.5 shrink-0">
+                          <span className="h-5 w-5 rounded bg-slate-100 text-slate-700 font-mono text-[10px] font-bold flex items-center justify-center">
+                            #{idx + 1}
+                          </span>
+                          <button
+                            onClick={() => handleTogglePhase(phase._id)}
+                            title="Toggle completion status"
+                            className="hover:scale-110 transition-transform"
+                          >
+                            {phase.completed ? (
+                              <CheckSquare className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 fill-emerald-100" />
+                            ) : (
+                              <Square className="h-4 w-4 sm:h-5 sm:w-5 text-slate-400" />
+                            )}
+                          </button>
                         </div>
+
                         <div className="min-w-0 flex-1">
-                          <h4 className="text-xs sm:text-sm font-bold text-slate-900">
+                          <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
                             {phase.title}
                           </h4>
                           {phase.description && (
@@ -348,7 +526,7 @@ const ProjectDetailsPage = () => {
                               {phase.description}
                             </p>
                           )}
-                          <div className="flex flex-wrap items-center gap-1.5 mt-2 text-[10px] sm:text-[11px]">
+                          <div className="flex flex-wrap items-center gap-1.5 mt-1.5 text-[10px] sm:text-[11px]">
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 font-semibold text-slate-700">
                               <User className="h-3 w-3 text-brand-600" />
                               {devName}
@@ -368,21 +546,51 @@ const ProjectDetailsPage = () => {
                         </div>
                       </div>
 
-                      {phase.notes ? (
+                      {/* Action Controls: Move Up / Down, Edit, Delete, Notes */}
+                      <div className="flex items-center gap-1 shrink-0">
                         <button
-                          onClick={() => {
-                            setExpandedNotePhaseId((prev) => (prev === phase._id ? null : phase._id));
-                          }}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-bold transition-all border shadow-soft-xs shrink-0 bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100 active:scale-95"
+                          disabled={idx === 0}
+                          onClick={() => handleMovePhase(phase._id, 'up')}
+                          title="Move Up"
+                          className="p-1 rounded text-slate-400 hover:text-brand-600 hover:bg-slate-100 disabled:opacity-25 disabled:pointer-events-none transition-all"
                         >
-                          📝 {expandedNotePhaseId === phase._id ? 'Hide Note' : 'View Note'}
-                          <ChevronDown className={`h-3 w-3 transition-transform ${expandedNotePhaseId === phase._id ? 'rotate-180' : ''}`} />
+                          <ArrowUp className="h-3.5 w-3.5" />
                         </button>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] sm:text-xs text-slate-400 bg-slate-50 border border-slate-200">
-                          No Notes
-                        </span>
-                      )}
+                        <button
+                          disabled={idx === phases.length - 1}
+                          onClick={() => handleMovePhase(phase._id, 'down')}
+                          title="Move Down"
+                          className="p-1 rounded text-slate-400 hover:text-brand-600 hover:bg-slate-100 disabled:opacity-25 disabled:pointer-events-none transition-all"
+                        >
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => openEditPhaseModal(phase)}
+                          title="Edit Phase"
+                          className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => confirmDeletePhase(phase)}
+                          title="Delete Phase"
+                          className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+
+                        {phase.notes && (
+                          <button
+                            onClick={() => {
+                              setExpandedNotePhaseId((prev) => (prev === phase._id ? null : phase._id));
+                            }}
+                            className="inline-flex items-center gap-0.5 px-2 py-1 rounded-lg text-[10px] font-bold bg-amber-50 border border-amber-300 text-amber-900 hover:bg-amber-100 ml-1"
+                          >
+                            📝
+                            <ChevronDown className={`h-3 w-3 transition-transform ${expandedNotePhaseId === phase._id ? 'rotate-180' : ''}`} />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {/* Expandable Notes Box (only 1 open at a time) */}
@@ -669,15 +877,120 @@ const ProjectDetailsPage = () => {
         isLoading={isRemoving}
       />
 
-      {/* Admin Notes Viewer Modal */}
-      <PhaseNotesModal
-        isOpen={isNotesModalOpen}
-        onClose={() => {
-          setIsNotesModalOpen(false);
-          setSelectedPhaseForNotes(null);
-        }}
-        phase={selectedPhaseForNotes}
-        isOwner={false}
+      {/* Add / Edit Phase Modal */}
+      <Modal
+        isOpen={isPhaseModalOpen}
+        onClose={() => setIsPhaseModalOpen(false)}
+        title={
+          phaseModalMode === 'create'
+            ? typeof insertPosition === 'number'
+              ? `Insert Phase at #${insertPosition + 1}`
+              : 'Add Deliverable Phase'
+            : 'Edit Deliverable Phase'
+        }
+        subtitle={
+          phaseModalMode === 'create'
+            ? 'Define a new milestone step for project roadmap.'
+            : 'Update title and description for this phase.'
+        }
+        maxWidth="md"
+      >
+        <form onSubmit={handlePhaseFormSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Phase Title *
+            </label>
+            <input
+              type="text"
+              required
+              value={phaseTitle}
+              onChange={(e) => setPhaseTitle(e.target.value)}
+              placeholder="e.g. Database Connection, Testing & QA..."
+              className="block w-full rounded-xl border border-slate-300/80 bg-white/70 py-2.5 px-3.5 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 shadow-soft-xs"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Description (Optional)
+            </label>
+            <textarea
+              rows={3}
+              value={phaseDescription}
+              onChange={(e) => setPhaseDescription(e.target.value)}
+              placeholder="Provide context, acceptance criteria, or implementation details..."
+              className="block w-full rounded-xl border border-slate-300/80 bg-white/70 py-2.5 px-3.5 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 shadow-soft-xs"
+            />
+          </div>
+
+          {/* If project has developers, allow choosing which developer this phase belongs to */}
+          {project.developers && project.developers.length > 1 && phaseModalMode === 'create' && (
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                Assign to Developer
+              </label>
+              <select
+                value={targetDevId}
+                onChange={(e) => setTargetDevId(e.target.value)}
+                className="block w-full rounded-xl border border-slate-300/80 bg-white py-2 px-3 text-xs text-slate-800 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              >
+                {project.developers.map((d) => (
+                  <option key={d._id || d} value={d._id || d}>
+                    {d.name || d.email || 'Developer'}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsPhaseModalOpen(false)}
+              className="rounded-xl border border-slate-300/80 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-soft-xs"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmittingPhase}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-soft-md shadow-brand-500/25 hover:from-brand-500 hover:to-indigo-500 transition-all disabled:opacity-50"
+            >
+              {isSubmittingPhase ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Saving...
+                </>
+              ) : phaseModalMode === 'create' ? (
+                typeof insertPosition === 'number'
+                  ? `Insert at #${insertPosition + 1}`
+                  : 'Add Phase'
+              ) : (
+                'Save Changes'
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Delete Phase Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isDeletePhaseOpen}
+        onClose={() => setIsDeletePhaseOpen(false)}
+        onConfirm={handleDeletePhase}
+        title="Delete Deliverable Phase"
+        message={`Are you sure you want to permanently delete "${phaseToDelete?.title}"?`}
+        confirmText="Delete Phase"
+        confirmVariant="danger"
+        isLoading={isDeletingPhase}
+      />
+
+      {/* Bulk Phase & Templates Modal */}
+      <BulkPhaseModal
+        isOpen={isBulkModalOpen}
+        onClose={() => setIsBulkModalOpen(false)}
+        projectId={id}
+        onPhasesCreated={() => fetchProjectData()}
       />
     </div>
   );

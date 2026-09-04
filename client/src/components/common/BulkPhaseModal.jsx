@@ -15,21 +15,23 @@ import {
   Check,
 } from 'lucide-react';
 
+import { WEB_APP_DEFAULT_PHASES, ANDROID_APP_DEFAULT_PHASES } from '../../utils/phaseTemplates';
+
 const BUILTIN_PRESETS = [
   {
-    name: '🌐 Full-Stack Web App',
-    text: `Phase 1: Setup Authentication, JWT & Protected Routes\nPhase 2: Database Schema & Entity Relationships\nPhase 3: REST API Endpoints with Input Validation\nPhase 4: Responsive UI Layout & Interactive Components\nPhase 5: Automated Testing, Deployment & Optimization`,
+    name: '🌐 Web App Lifecycle (17 Phases)',
+    text: WEB_APP_DEFAULT_PHASES.map((p, i) => `Phase ${i + 1}: ${p}`).join('\n'),
   },
   {
-    name: '📱 Mobile App Sprint',
-    text: `Phase 1: Splash Screen & Onboarding User Flow\nPhase 2: State Management & Offline Caching\nPhase 3: Camera & Device Hardware Permissions\nPhase 4: Push Notifications & Release Packaging`,
+    name: '📱 Android App Lifecycle (17 Phases)',
+    text: ANDROID_APP_DEFAULT_PHASES.map((p, i) => `Phase ${i + 1}: ${p}`).join('\n'),
   },
   {
-    name: '💳 Payment & E-Commerce',
-    text: `Phase 1: Product Catalog & Dynamic Filtering\nPhase 2: Shopping Cart & Session Persistence\nPhase 3: Stripe / Razorpay Checkout & Webhook Ingestion\nPhase 4: PDF Order Invoices & Email Receipts`,
+    name: '⚡ Quick MVP Sprint (5 Phases)',
+    text: `Phase 1: Idea & Requirement Analysis\nPhase 2: Prototype & UI Architecture\nPhase 3: Core Frontend & Backend API\nPhase 4: Quality Testing & Bug Fixing\nPhase 5: Final Production Launch 🚀`,
   },
   {
-    name: '🛡️ Security & Testing',
+    name: '🛡️ Security & Testing Audit',
     text: `Phase 1: Rate Limiting, Helmet Headers & CORS Config\nPhase 2: End-to-End API Integration Testing\nPhase 3: Penetration Testing & SQL/NoSQL Injection Audits\nPhase 4: Production Logging & Error Alert Webhooks`,
   },
 ];
