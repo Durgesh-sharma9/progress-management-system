@@ -263,7 +263,7 @@ const ProjectDetailsPage = () => {
           }`}
         >
           <Users className="h-3.5 w-3.5" />
-          Team ({project.developerStats?.length || 0})
+          {project.developerStats?.length === 1 ? 'Developer' : 'Developers'} ({project.developerStats?.length || 0})
         </button>
 
         <button
@@ -422,9 +422,9 @@ const ProjectDetailsPage = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-2">
             <div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Assigned Engineering Team</h3>
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Assigned Developers</h3>
               <p className="text-[11px] sm:text-xs text-slate-500">
-                Engineers and individual milestone progress
+                Developers and individual milestone progress
               </p>
             </div>
 
