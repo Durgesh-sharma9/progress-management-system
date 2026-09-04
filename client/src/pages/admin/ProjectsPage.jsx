@@ -1269,12 +1269,12 @@ const ProjectsPage = () => {
                     type="button"
                     onClick={() => handleApplyTemplate('android')}
                     className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all ${
-                      formData.phases?.length === 17 && (typeof formData.phases[5] === 'string' ? formData.phases[5] : formData.phases[5]?.title) === 'Android UI Development'
+                      formData.phases?.length === 19 && (typeof formData.phases[5] === 'string' ? formData.phases[5] : formData.phases[5]?.title) === 'Android UI Development'
                         ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
                         : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
-                    📱 Android Template (17)
+                    📱 Android Template (19)
                   </button>
                   {formData.developers.length > 1 && formData.phases?.length > 0 && (
                     <button
@@ -1316,7 +1316,7 @@ const ProjectsPage = () => {
                         onClick={() => handleApplyTemplate('android')}
                         className="px-3 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
                       >
-                        Load Android Template (17)
+                        Load Android Template (19)
                       </button>
                     </div>
                   </div>

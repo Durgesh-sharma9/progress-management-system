@@ -23,7 +23,7 @@ const BUILTIN_PRESETS = [
     text: WEB_APP_DEFAULT_PHASES.map((p, i) => `Phase ${i + 1}: ${p}`).join('\n'),
   },
   {
-    name: '📱 Android App Lifecycle (17 Phases)',
+    name: '📱 Android App Lifecycle (19 Phases)',
     text: ANDROID_APP_DEFAULT_PHASES.map((p, i) => `Phase ${i + 1}: ${p}`).join('\n'),
   },
   {
