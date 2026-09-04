@@ -830,11 +830,15 @@ const ProjectsPage = () => {
                     </div>
                   )}
 
-                  {/* Start Date info */}
-                  <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium mb-1.5">
+                  {/* Start Date & Total Phases count */}
+                  <div className="flex items-center justify-between text-[10px] text-slate-500 font-medium mb-1.5">
                     <span className="inline-flex items-center gap-1 font-mono text-slate-500">
                       <Calendar className="h-3 w-3 text-slate-400" />
                       Start: {new Date(project.startDate || project.createdAt).toLocaleDateString()}
+                    </span>
+                    <span className="inline-flex items-center gap-1 font-mono font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
+                      <Layers className="h-2.5 w-2.5 text-brand-600" />
+                      {project.totalPhases || project.totalTasks || 0} Phases
                     </span>
                   </div>
 
@@ -843,8 +847,18 @@ const ProjectsPage = () => {
                     <ProgressBar
                       progress={project.overallProgress}
                       label="Delivery Velocity"
+                      countText={`${project.completedPhases || project.completedTasks || 0}/${project.totalPhases || project.totalTasks || 0} Done`}
                       size="sm"
                     />
+                    <div className="flex items-center justify-between text-[10px] text-slate-600 mt-1.5 font-medium">
+                      <span className="flex items-center gap-1 font-semibold text-emerald-700">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                        {project.completedPhases || project.completedTasks || 0} completed
+                      </span>
+                      <span className="font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-1.5 py-0.2 rounded font-mono">
+                        {Math.max(0, (project.totalPhases || project.totalTasks || 0) - (project.completedPhases || project.completedTasks || 0))} pending
+                      </span>
+                    </div>
                   </div>
 
                   {/* Assigned Team Row with Colorful Gradient Avatar Stack */}

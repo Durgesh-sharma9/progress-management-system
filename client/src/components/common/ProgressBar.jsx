@@ -5,6 +5,7 @@ const ProgressBar = ({
   size = 'md',
   showLabel = true,
   label = '',
+  countText = '',
   className = '',
 }) => {
   // Ensure bounds
@@ -44,9 +45,16 @@ const ProgressBar = ({
     <div className={`w-full ${className}`}>
       {showLabel && (
         <div className="flex items-center justify-between mb-1.5 text-xs">
-          <span className="text-slate-600 font-medium truncate pr-2 text-[11px] tracking-tight">
-            {label}
-          </span>
+          <div className="flex items-center gap-1.5 min-w-0 pr-2">
+            <span className="text-slate-600 font-medium truncate text-[11px] tracking-tight">
+              {label}
+            </span>
+            {countText && (
+              <span className="text-[10px] font-bold text-slate-600 font-mono bg-white px-1.5 py-0.2 rounded border border-slate-200 shadow-2xs shrink-0">
+                {countText}
+              </span>
+            )}
+          </div>
           <span
             className={`px-2 py-0.5 rounded-full border text-[10px] font-mono font-bold tabular-nums shadow-soft-xs transition-colors duration-200 ${badgeColor} shrink-0`}
           >

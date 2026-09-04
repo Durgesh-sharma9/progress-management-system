@@ -16,6 +16,8 @@ import {
   Loader2,
   Sparkles,
   Layers,
+  CheckCircle2,
+  Calendar,
 } from 'lucide-react';
 
 const projectColorThemes = [
@@ -272,13 +274,23 @@ const AdminDashboard = () => {
                       </div>
                     )}
 
-                    {/* Progress Bar */}
+                    {/* Progress Bar & Phase Metric Counts */}
                     <div className="my-2 bg-slate-50/90 p-2 sm:p-2.5 rounded-xl border border-slate-200/70">
                       <ProgressBar
                         progress={project.overallProgress}
                         label="Milestones Delivered"
+                        countText={`${project.completedPhases || project.completedTasks || 0}/${project.totalPhases || project.totalTasks || 0} Done`}
                         size="sm"
                       />
+                      <div className="flex items-center justify-between text-[10px] text-slate-600 mt-1.5 font-medium">
+                        <span className="flex items-center gap-1 font-semibold text-emerald-700">
+                          <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                          {project.completedPhases || project.completedTasks || 0} completed
+                        </span>
+                        <span className="font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-1.5 py-0.2 rounded font-mono">
+                          {Math.max(0, (project.totalPhases || project.totalTasks || 0) - (project.completedPhases || project.completedTasks || 0))} pending
+                        </span>
+                      </div>
                     </div>
 
                     {/* Compact Assigned Team Row */}
