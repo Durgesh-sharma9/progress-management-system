@@ -6,6 +6,7 @@ import {
   Code2,
   LogOut,
   Sparkles,
+  Settings,
 } from 'lucide-react';
 
 const Header = () => {
@@ -57,18 +58,19 @@ const Header = () => {
           <span className="font-mono text-[9px]">Live</span>
         </div>
 
-        {/* Profile Avatar Pill Link */}
+        {/* Profile / Settings Button */}
         <Link
           to="/profile"
           className="group flex items-center gap-1.5 rounded-lg p-0.5 sm:pr-2 border border-transparent hover:border-slate-200 hover:bg-slate-100/70 transition-all duration-150"
-          title="View Profile Settings"
+          title="Settings & Profile"
+          aria-label="Settings"
         >
-          <div className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-[9px] sm:text-[10px] font-bold text-white shadow-2xs group-hover:scale-105 transition-transform">
-            {user?.name?.substring(0, 2)?.toUpperCase() || 'DT'}
+          <div className="h-6 w-6 sm:h-7 sm:w-7 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-white shadow-2xs group-hover:scale-105 group-hover:rotate-45 transition-all">
+            <Settings className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </div>
           <div className="hidden lg:block text-left min-w-0">
             <p className="text-[11px] font-bold text-slate-800 truncate leading-tight group-hover:text-brand-600 transition-colors">
-              {user?.name || 'User'}
+              {user?.name || 'Settings'}
             </p>
           </div>
         </Link>
