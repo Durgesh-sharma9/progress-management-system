@@ -268,6 +268,75 @@ exports.getMyAttendanceHistory = async (req, res, next) => {
   }
 };
 
+// @desc    Developer Monthly Calendar View (Developer's personal attendance calendar)
+// @route   GET /api/attendance/my-calendar
+// @access  Private (Developer & Admin)
+exports.getDeveloperMonthlyCalendar = async (req, res, next) => {
+  try {
+    const year = parseInt(req.query.year, 10) || new Date().getFullYear();
+    const month = parseInt(req.query.month, 10) || new Date().getMonth() + 1;
+    const developerId = req.user._id;
+
+    const monthPadded = String(month).padStart(2, '0');
+    const prefix = `${year}-${monthPadded}`;
+
+    const [myRecords, holidays] = await Promise.all([
+      Attendance.find({ developer: developerId, date: { $regex: `^${prefix}` } }),
+      Holiday.find({ date: { $regex: `^${prefix}` } }).sort({ date: 1 }),
+    ]);
+
+    const holidayMap = new Map();
+    holidays.forEach((h) => holidayMap.set(h.date, h));
+
+    const attendanceMap = new Map();
+    myRecords.forEach((att) => attendanceMap.set(att.date, att));
+
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const calendarDays = [];
+
+    let totalPresentDays = 0;
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dayPadded = String(d).padStart(2, '0');
+      const dateStr = `${year}-${monthPadded}-${dayPadded}`;
+      const dayOfWeek = new Date(year, month - 1, d).getDay(); // 0 = Sun
+
+      const holiday = holidayMap.get(dateStr) || null;
+      const record = attendanceMap.get(dateStr) || null;
+      const isPresent = Boolean(record && record.status === 'Present' && record.punchIn?.time);
+
+      if (isPresent) totalPresentDays++;
+
+      calendarDays.push({
+        date: dateStr,
+        dayNumber: d,
+        dayOfWeek,
+        isSunday: dayOfWeek === 0,
+        isHoliday: Boolean(holiday),
+        holiday,
+        isMarked: isPresent,
+        status: isPresent ? 'Present' : (record ? record.status : 'Absent'),
+        punchIn: record ? record.punchIn : null,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        year,
+        month,
+        totalPresentDays,
+        daysInMonth,
+        calendarDays,
+        holidays,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 // @desc    Get Real-time Admin Attendance Overview (All Developers Today + Filters)
 // @route   GET /api/attendance/admin/overview
 // @access  Private (Admin only)

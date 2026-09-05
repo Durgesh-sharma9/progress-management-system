@@ -7,6 +7,7 @@ const {
   punchOut,
   getMyAttendanceToday,
   getMyAttendanceHistory,
+  getDeveloperMonthlyCalendar,
   getAdminAttendanceOverview,
   getAdminMonthlyCalendar,
   getHolidays,
@@ -23,6 +24,7 @@ router.get('/today', protect, getMyAttendanceToday);
 router.post('/punch-in', protect, punchIn);
 router.post('/punch-out', protect, punchOut);
 router.get('/my-history', protect, getMyAttendanceHistory);
+router.get('/my-calendar', protect, getDeveloperMonthlyCalendar);
 router.get('/holidays', protect, getHolidays);
 
 // Admin-only routes
