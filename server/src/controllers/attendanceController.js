@@ -4,13 +4,22 @@ const Holiday = require('../models/Holiday');
 const User = require('../models/User');
 const { calculateDistanceInMeters, formatDistance } = require('../utils/geoUtils');
 
-// Helper to get formatted YYYY-MM-DD string for a date in local timezone
+// Helper to get formatted YYYY-MM-DD string for a date in Indian Standard Time (Asia/Kolkata)
 const getTodayDateString = (dateObj = new Date()) => {
-  const d = new Date(dateObj);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date(dateObj));
+  } catch (e) {
+    const d = new Date(dateObj);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
 };
 
 // Helper to ensure at least one WorkspaceConfig exists

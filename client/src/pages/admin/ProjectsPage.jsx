@@ -9,6 +9,7 @@ import TechStackPills from '../../components/common/TechStackPills';
 import Modal from '../../components/common/Modal';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import EmptyState from '../../components/common/EmptyState';
+import { getLocalDateString } from '../../utils/dateUtils';
 import {
   FolderGit2,
   Plus,
@@ -184,7 +185,7 @@ const ProjectsPage = () => {
     techStack: ['React', 'Node.js', 'MongoDB'],
     adminRemarks: '',
     developers: [],
-    startDate: new Date().toISOString().split('T')[0],
+    startDate: getLocalDateString(),
     phases: [...WEB_APP_DEFAULT_PHASES],
   });
   const [customTechInput, setCustomTechInput] = useState('');
@@ -248,7 +249,7 @@ const ProjectsPage = () => {
       techStack: ['React', 'Node.js', 'MongoDB'],
       adminRemarks: '',
       developers: [],
-      startDate: new Date().toISOString().split('T')[0],
+      startDate: getLocalDateString(),
       phases: getTemplateForCategory('Web App'),
     });
     setCustomTechInput('');
@@ -272,8 +273,8 @@ const ProjectsPage = () => {
       adminRemarks: project.adminRemarks || '',
       developers: assignedDevIds,
       startDate: project.startDate
-        ? new Date(project.startDate).toISOString().split('T')[0]
-        : new Date(project.createdAt).toISOString().split('T')[0],
+        ? getLocalDateString(project.startDate)
+        : getLocalDateString(project.createdAt),
       phases: [],
     });
     setCustomTechInput('');

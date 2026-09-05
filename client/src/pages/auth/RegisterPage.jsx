@@ -15,11 +15,13 @@ import {
   Calendar,
 } from 'lucide-react';
 
+import { getLocalDateString } from '../../utils/dateUtils';
+
 const RegisterPage = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [joiningDate, setJoiningDate] = useState(new Date().toISOString().split('T')[0]);
+  const [joiningDate, setJoiningDate] = useState(getLocalDateString());
   const [role, setRole] = useState('developer');
   const [loading, setLoading] = useState(false);
 

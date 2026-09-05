@@ -27,6 +27,7 @@ import {
   PartyPopper,
   XCircle,
 } from 'lucide-react';
+import { getLocalDateString } from '../../utils/dateUtils';
 
 const DeveloperAttendancePage = () => {
   const { success, error } = useToast();
@@ -39,30 +40,26 @@ const DeveloperAttendancePage = () => {
   const [attendance, setAttendance] = useState(null);
   const [workspace, setWorkspace] = useState(null);
 
-  // GPS State
+  // Active View Tab
+  const [activeTab, setActiveTab] = useState('terminal'); // 'terminal' | 'calendar' | 'history'
+
+  // Mark Attendance State
+  const [isMarking, setIsMarking] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [currentCoords, setCurrentCoords] = useState(null);
-  const [gpsError, setGpsError] = useState(null);
-  const [distanceToOffice, setDistanceToOffice] = useState(null);
-  const [isInsideGeofence, setIsInsideGeofence] = useState(false);
+  const [distanceInfo, setDistanceInfo] = useState(null);
 
-  // Marking Attendance State
-  const [isMarking, setIsMarking] = useState(false);
-
-  // Tabs State: 'terminal' | 'calendar' | 'history'
-  const [activeTab, setActiveTab] = useState('terminal');
-
-  // Calendar State
+  // Calendar View State
+  const [calendarLoading, setCalendarLoading] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth() + 1);
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
-  const [calendarLoading, setCalendarLoading] = useState(false);
   const [selectedDayDetails, setSelectedDayDetails] = useState(null);
   const [isDayDetailsModalOpen, setIsDayDetailsModalOpen] = useState(false);
 
   const generateFallbackCalendarDays = (year, month, todayAtt = null) => {
     const daysInMonth = new Date(year, month, 0).getDate();
     const monthPadded = String(month).padStart(2, '0');
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateString();
     const days = [];
 
     let totalPresent = 0;
@@ -391,7 +388,7 @@ const DeveloperAttendancePage = () => {
                 ) : (
                   <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
                     <Clock className="h-3.5 w-3.5 text-amber-600" />
-                    Attendance Not Marked Yet
+                    Punch-In Pending
                   </span>
                 )}
               </div>
@@ -690,7 +687,7 @@ const DeveloperAttendancePage = () => {
 
                     {/* Month Days */}
                     {calendarData?.calendarDays?.map((day) => {
-                      const todayStr = new Date().toISOString().split('T')[0];
+                      const todayStr = getLocalDateString();
                       const isToday = day.date === todayStr;
                       const isFuture = day.date > todayStr;
 
@@ -771,7 +768,7 @@ const DeveloperAttendancePage = () => {
                               </div>
                             ) : (
                               <span className="text-[9px] text-slate-400 italic">
-                                {day.isSunday ? 'Weekly Off' : isToday ? 'Pending Today' : 'Not Marked'}
+                                {day.isSunday ? 'Weekly Off' : isToday ? 'Pending Today' : 'Absent'}
                               </span>
                             )}
                           </div>
@@ -909,7 +906,7 @@ const DeveloperAttendancePage = () => {
             ? '✅ Attendance Marked & Verified'
             : selectedDayDetails?.isSunday
             ? '🌴 Weekly Off (Sunday)'
-            : '❌ Attendance Not Marked'
+            : '❌ Absent'
         }
         maxWidth="sm"
       >

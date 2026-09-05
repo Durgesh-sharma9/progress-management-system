@@ -37,6 +37,7 @@ import {
   User,
   TrendingUp,
 } from 'lucide-react';
+import { getLocalDateString } from '../../utils/dateUtils';
 
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -50,9 +51,7 @@ const AdminAttendancePage = () => {
 
   // Live Today Overview State
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split('T')[0]
-  );
+  const [selectedDate, setSelectedDate] = useState(getLocalDateString());
   const [attendanceData, setAttendanceData] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -70,7 +69,7 @@ const AdminAttendancePage = () => {
   const [holidays, setHolidays] = useState([]);
   const [isHolidayModalOpen, setIsHolidayModalOpen] = useState(false);
   const [holidayFormData, setHolidayFormData] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: getLocalDateString(),
     title: '',
     description: '',
   });
@@ -129,7 +128,7 @@ const AdminAttendancePage = () => {
   const generateFallbackCalendarDays = (year, month, devsCount = 0, currentRoster = []) => {
     const daysInMonth = new Date(year, month, 0).getDate();
     const monthPadded = String(month).padStart(2, '0');
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateString();
     const days = [];
 
     for (let d = 1; d <= daysInMonth; d++) {
@@ -297,7 +296,7 @@ const AdminAttendancePage = () => {
   // Holiday Actions
   const openAddHolidayModal = (prefillDate = null) => {
     setHolidayFormData({
-      date: prefillDate || new Date().toISOString().split('T')[0],
+      date: prefillDate || getLocalDateString(),
       title: '',
       description: '',
     });
@@ -410,7 +409,7 @@ const AdminAttendancePage = () => {
 
   const monthlyAnalytics = useMemo(() => {
     const days = calendarData?.calendarDays || [];
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateString();
 
     // Past or current working days (not future, not Sunday, not Holiday)
     const activeWorkingDays = days.filter(
@@ -660,13 +659,13 @@ const AdminAttendancePage = () => {
                 </p>
               </div>
               <div className="glass-card rounded-2xl p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
-                <p className="text-[10px] font-bold uppercase text-emerald-600">Present (Marked)</p>
+                <p className="text-[10px] font-bold uppercase text-emerald-600">Present</p>
                 <p className="text-xl sm:text-2xl font-extrabold text-emerald-600 font-mono mt-0.5">
                   {attendanceData.summary.presentCount}
                 </p>
               </div>
               <div className="glass-card rounded-2xl p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
-                <p className="text-[10px] font-bold uppercase text-rose-600">Absent (Not Marked)</p>
+                <p className="text-[10px] font-bold uppercase text-rose-600">Absent</p>
                 <p className="text-xl sm:text-2xl font-extrabold text-rose-600 font-mono mt-0.5">
                   {attendanceData.summary.absentCount}
                 </p>
@@ -722,11 +721,11 @@ const AdminAttendancePage = () => {
                 <CalendarIcon className="h-3.5 w-3.5 text-slate-500" />
                 <input
                   type="date"
-                  max={new Date().toISOString().split('T')[0]}
+                  max={getLocalDateString()}
                   value={selectedDate}
                   onChange={(e) => {
                     const val = e.target.value;
-                    const maxVal = new Date().toISOString().split('T')[0];
+                    const maxVal = getLocalDateString();
                     setSelectedDate(val > maxVal ? maxVal : val);
                   }}
                   className="bg-transparent text-xs font-mono font-bold text-slate-800 focus:outline-none"
@@ -740,8 +739,8 @@ const AdminAttendancePage = () => {
                 className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-brand-500"
               >
                 <option value="All">All Statuses</option>
-                <option value="Present">Present (Marked)</option>
-                <option value="Absent">Absent (Not Marked)</option>
+                <option value="Present">Present</option>
+                <option value="Absent">Absent</option>
               </select>
 
               <button
@@ -834,7 +833,7 @@ const AdminAttendancePage = () => {
                                   hour: '2-digit',
                                   minute: '2-digit',
                                 })
-                              : 'Not Marked'}
+                              : 'Absent'}
                           </span>
                         </div>
 
@@ -1200,7 +1199,7 @@ const AdminAttendancePage = () => {
 
                 {/* Days of the Month */}
                 {calendarData?.calendarDays?.map((day) => {
-                  const todayStr = new Date().toISOString().split('T')[0];
+                  const todayStr = getLocalDateString();
                   const isToday = day.date === todayStr;
                   const isFuture = day.date > todayStr;
 
@@ -1326,7 +1325,7 @@ const AdminAttendancePage = () => {
                             </div>
                           ) : (
                             <span className="text-[8px] sm:text-[9px] text-slate-400 italic">
-                              0 Marked
+                              0 Present
                             </span>
                           )
                         )}
@@ -1822,8 +1821,8 @@ const AdminAttendancePage = () => {
               onChange={(e) => setOverrideStatus(e.target.value)}
               className="block w-full rounded-xl border border-slate-300 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-brand-500 focus:outline-none"
             >
-              <option value="Present">Present (Marked)</option>
-              <option value="Absent">Absent (Not Marked)</option>
+              <option value="Present">Present</option>
+              <option value="Absent">Absent</option>
             </select>
           </div>
 

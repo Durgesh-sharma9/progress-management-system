@@ -24,6 +24,7 @@ import {
   ArrowUpRight,
   Calendar,
 } from 'lucide-react';
+import { getLocalDateString } from '../../utils/dateUtils';
 
 const DevelopersPage = () => {
   const [developers, setDevelopers] = useState([]);
@@ -36,7 +37,7 @@ const DevelopersPage = () => {
     name: '',
     email: '',
     password: '',
-    joiningDate: new Date().toISOString().split('T')[0],
+    joiningDate: getLocalDateString(),
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -83,7 +84,7 @@ const DevelopersPage = () => {
       if (res.data.success) {
         success('Developer created successfully');
         setIsAddOpen(false);
-        setFormData({ name: '', email: '', password: '', joiningDate: new Date().toISOString().split('T')[0] });
+        setFormData({ name: '', email: '', password: '', joiningDate: getLocalDateString() });
         fetchDevelopers();
       }
     } catch (err) {
