@@ -166,7 +166,11 @@ const DeveloperAttendancePage = () => {
           ws.location.longitude
         );
         setDistanceToOffice(dist);
-        setIsInsideGeofence(dist <= (ws.radiusMeters || 100));
+        const allowedRadius = ws.radiusMeters || 100;
+        const accuracy = coords.accuracy || 0;
+        // Inside geofence if direct distance is within radius OR within device accuracy margin
+        const isWithin = dist <= allowedRadius || (accuracy > 0 && dist <= allowedRadius + accuracy);
+        setIsInsideGeofence(isWithin);
       }
     } catch (err) {
       setGpsError(err.message || 'Unable to retrieve GPS coordinates.');
@@ -230,6 +234,7 @@ const DeveloperAttendancePage = () => {
       const res = await api.post('/attendance/punch-in', {
         latitude: loc.latitude,
         longitude: loc.longitude,
+        accuracy: loc.accuracy,
         deviceInfo: navigator.userAgent || 'Web Browser',
       });
       if (res.data.success) {
@@ -439,22 +444,28 @@ const DeveloperAttendancePage = () => {
                         <div>
                           <p className="text-xs font-bold">
                             {isInsideGeofence
-                              ? 'Inside Workspace Geofence'
+                              ? distanceToOffice <= (workspace?.radiusMeters || 100)
+                                ? 'Inside Workspace Geofence'
+                                : 'Verified within Device Accuracy Margin'
                               : workspace?.geofenceEnabled === false
                               ? 'Geofence Optional (Marking Allowed)'
                               : 'Outside Allowed Workspace Zone'}
                           </p>
                           <p className="text-[11px] opacity-80">
                             {formatDistance(distanceToOffice)} away from{' '}
-                            <span className="font-semibold">{workspace?.workspaceName || workspace?.name || 'Office'}</span> (Allowed Radius: {formatDistance(workspace?.radiusMeters || 100)})
+                            <span className="font-semibold">{workspace?.workspaceName || workspace?.name || 'Office'}</span> (Allowed: {formatDistance(workspace?.radiusMeters || 100)})
                           </p>
                         </div>
                       </div>
                     </div>
 
                     {currentCoords && (
-                      <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono px-1">
-                        <span>Accuracy: ±{Math.round(currentCoords.accuracy || 0)}m</span>
+                      <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono px-1">
+                        <span>
+                          {currentCoords.accuracy >= 1000
+                            ? `Accuracy: ±${(currentCoords.accuracy / 1000).toFixed(0)}km (WiFi/Network Location)`
+                            : `Accuracy: ±${Math.round(currentCoords.accuracy || 0)}m (High Precision GPS)`}
+                        </span>
                         <span>
                           {currentCoords.latitude.toFixed(4)}, {currentCoords.longitude.toFixed(4)}
                         </span>

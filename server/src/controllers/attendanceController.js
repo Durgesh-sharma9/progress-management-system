@@ -94,7 +94,7 @@ exports.updateWorkspaceConfig = async (req, res, next) => {
 // @access  Private (Developer & Admin)
 exports.punchIn = async (req, res, next) => {
   try {
-    const { latitude, longitude, deviceInfo, address } = req.body;
+    const { latitude, longitude, accuracy, deviceInfo, address } = req.body;
     const developerId = req.user._id;
     const today = getTodayDateString();
 
@@ -116,16 +116,24 @@ exports.punchIn = async (req, res, next) => {
       officeLng
     );
 
-    const isWithin = distance <= config.radiusMeters;
+    const allowedRadius = config.radiusMeters || 100;
+    const accuracyNum = Number(accuracy) || 0;
+
+    // Within zone if direct distance <= allowedRadius,
+    // OR if distance is covered within the device's accuracy uncertainty margin
+    const isWithin =
+      distance <= allowedRadius ||
+      (accuracyNum > 0 && distance <= allowedRadius + accuracyNum);
 
     // Strict check if geofence is enabled
     if (config.geofenceEnabled && !isWithin) {
       return res.status(400).json({
         success: false,
-        message: `You are outside the workspace zone (${formatDistance(distance)} away). Allowed radius is ${formatDistance(config.radiusMeters)}. Please be within the workspace to mark attendance.`,
+        message: `You are outside the workspace zone (${formatDistance(distance)} away). Allowed radius is ${formatDistance(allowedRadius)}. Please be within the workspace to mark attendance.`,
         data: {
           distanceMeters: distance,
-          radiusMeters: config.radiusMeters,
+          radiusMeters: allowedRadius,
+          accuracy: accuracyNum,
           isWithinGeofence: false,
         },
       });

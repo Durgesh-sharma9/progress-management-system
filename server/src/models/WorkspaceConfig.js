@@ -30,7 +30,7 @@ const workspaceConfigSchema = new mongoose.Schema(
       required: true,
       default: 100, // 100 meters default geofence radius
       min: 10,
-      max: 50000,
+      max: 500000,
     },
     geofenceEnabled: {
       type: Boolean,
