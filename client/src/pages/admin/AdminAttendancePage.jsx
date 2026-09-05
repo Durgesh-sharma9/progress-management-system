@@ -1180,26 +1180,7 @@ const AdminAttendancePage = () => {
             </div>
 
             {/* Save Button */}
-            <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <button
-                type="button"
-                onClick={handleClearAllAttendance}
-                disabled={isClearingAll}
-                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-all disabled:opacity-50 active:scale-95"
-              >
-                {isClearingAll ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Clearing Records...</span>
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="h-4 w-4 text-rose-600" />
-                    <span>Clear All Attendance Records</span>
-                  </>
-                )}
-              </button>
-
+            <div className="pt-4 border-t border-slate-200 flex justify-end">
               <button
                 type="submit"
                 disabled={isSavingConfig}
