@@ -359,7 +359,7 @@ const DevelopersPage = () => {
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-              Initial Password *
+              Password *
             </label>
             <div className="relative rounded-xl shadow-soft-xs">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
