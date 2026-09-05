@@ -186,10 +186,10 @@ const DeveloperAttendancePage = () => {
         </div>
 
         {/* Tab Buttons */}
-        <div className="flex items-center gap-1.5 bg-slate-100/80 p-1 rounded-xl shrink-0">
+        <div className="flex items-center gap-1.5 bg-slate-100/80 p-1 rounded-xl shrink-0 w-full sm:w-auto">
           <button
             onClick={() => setActiveTab('terminal')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
               activeTab === 'terminal'
                 ? 'bg-white text-slate-900 shadow-soft-xs'
                 : 'text-slate-600 hover:text-slate-900'
@@ -200,7 +200,7 @@ const DeveloperAttendancePage = () => {
           </button>
           <button
             onClick={() => setActiveTab('history')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
               activeTab === 'history'
                 ? 'bg-white text-slate-900 shadow-soft-xs'
                 : 'text-slate-600 hover:text-slate-900'
@@ -216,7 +216,7 @@ const DeveloperAttendancePage = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
           {/* Main Attendance Check-in Card (2 Cols) */}
           <div className="md:col-span-2 space-y-4">
-            <div className="glass-card rounded-2xl p-5 sm:p-7 border border-slate-200/90 shadow-soft-md bg-gradient-to-b from-white to-slate-50/50 flex flex-col items-center text-center relative overflow-hidden">
+            <div className="glass-card rounded-2xl p-4 sm:p-7 border border-slate-200/90 shadow-soft-md bg-gradient-to-b from-white to-slate-50/50 flex flex-col items-center text-center relative overflow-hidden">
               {/* Background ambient blur */}
               <div
                 className={`absolute -top-12 -right-12 h-44 w-44 rounded-full blur-3xl opacity-30 pointer-events-none transition-all ${

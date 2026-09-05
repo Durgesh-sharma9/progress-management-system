@@ -699,128 +699,132 @@ const AdminAttendancePage = () => {
             </div>
           ) : (
             <div className="glass-card rounded-2xl bg-white border border-slate-200/90 shadow-soft-xs overflow-hidden">
-              {/* Day of Week Headers */}
-              <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50/80 text-center text-[11px] font-extrabold text-slate-600 py-2.5">
-                <span className="text-rose-600">Sun</span>
-                <span>Mon</span>
-                <span>Tue</span>
-                <span>Wed</span>
-                <span>Thu</span>
-                <span>Fri</span>
-                <span className="text-indigo-600">Sat</span>
-              </div>
+              <div className="overflow-x-auto">
+                <div className="min-w-[580px] sm:min-w-0">
+                  {/* Day of Week Headers */}
+                  <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50/80 text-center text-[11px] font-extrabold text-slate-600 py-2.5">
+                    <span className="text-rose-600">Sun</span>
+                    <span>Mon</span>
+                    <span>Tue</span>
+                    <span>Wed</span>
+                    <span>Thu</span>
+                    <span>Fri</span>
+                    <span className="text-indigo-600">Sat</span>
+                  </div>
 
-              {/* Day Cells Grid */}
-              <div className="grid grid-cols-7 divide-x divide-y divide-slate-100">
-                {/* Blank Leading Cells */}
-                {Array.from({ length: firstDayOfMonthWeekday }).map((_, idx) => (
-                  <div key={`blank-${idx}`} className="h-24 sm:h-28 bg-slate-50/30 p-1.5" />
-                ))}
+                  {/* Day Cells Grid */}
+                  <div className="grid grid-cols-7 divide-x divide-y divide-slate-100">
+                    {/* Blank Leading Cells */}
+                    {Array.from({ length: firstDayOfMonthWeekday }).map((_, idx) => (
+                      <div key={`blank-${idx}`} className="h-24 sm:h-28 bg-slate-50/30 p-1.5" />
+                    ))}
 
-                {/* Days of the Month */}
-                {calendarData?.calendarDays?.map((day) => {
-                  const isToday =
-                    day.date === new Date().toISOString().split('T')[0];
+                    {/* Days of the Month */}
+                    {calendarData?.calendarDays?.map((day) => {
+                      const isToday =
+                        day.date === new Date().toISOString().split('T')[0];
 
-                  return (
-                    <div
-                      key={day.date}
-                      onClick={() => openDayDetails(day)}
-                      className={`h-24 sm:h-28 p-1.5 sm:p-2 transition-all flex flex-col justify-between cursor-pointer hover:bg-purple-50/40 relative group ${
-                        day.isHoliday
-                          ? 'bg-purple-50/50'
-                          : day.isSunday
-                          ? 'bg-rose-50/20'
-                          : 'bg-white'
-                      } ${isToday ? 'ring-2 ring-brand-500 ring-inset' : ''}`}
-                    >
-                      {/* Top bar: Day number & Holiday / Rate */}
-                      <div className="flex items-start justify-between">
-                        <span
-                          className={`font-mono text-xs sm:text-sm font-extrabold h-6 w-6 rounded-lg flex items-center justify-center ${
-                            isToday
-                              ? 'bg-brand-600 text-white shadow-2xs'
+                      return (
+                        <div
+                          key={day.date}
+                          onClick={() => openDayDetails(day)}
+                          className={`h-24 sm:h-28 p-1.5 sm:p-2 transition-all flex flex-col justify-between cursor-pointer hover:bg-purple-50/40 relative group ${
+                            day.isHoliday
+                              ? 'bg-purple-50/50'
                               : day.isSunday
-                              ? 'text-rose-600'
-                              : 'text-slate-800'
-                          }`}
+                              ? 'bg-rose-50/20'
+                              : 'bg-white'
+                          } ${isToday ? 'ring-2 ring-brand-500 ring-inset' : ''}`}
                         >
-                          {day.dayNumber}
-                        </span>
-
-                        {/* Holiday Badge */}
-                        {day.isHoliday && (
-                          <span
-                            className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-purple-100 text-purple-800 border border-purple-200 truncate max-w-[70px] sm:max-w-[100px] flex items-center gap-0.5"
-                            title={day.holiday?.title}
-                          >
-                            🎉 {day.holiday?.title}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Middle: Attendance summary stats */}
-                      {!day.isHoliday && (
-                        <div className="my-auto">
-                          {day.presentCount > 0 ? (
-                            <div className="space-y-0.5">
-                              <span
-                                className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.2 rounded-md ${
-                                  day.presentRate >= 80
-                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                    : 'bg-amber-50 text-amber-800 border border-amber-200'
-                                }`}
-                              >
-                                <CheckCircle2 className="h-2.5 w-2.5" />
-                                <span>
-                                  {day.presentCount}/{day.totalDevelopers} ({day.presentRate}%)
-                                </span>
-                              </span>
-
-                              {/* Attendee Avatar Initial Circles */}
-                              <div className="hidden sm:flex items-center gap-0.5 overflow-hidden">
-                                {day.attendees.slice(0, 3).map((att, i) => (
-                                  <span
-                                    key={i}
-                                    className="h-4 w-4 rounded-full bg-emerald-600 text-[8px] font-bold text-white flex items-center justify-center shrink-0"
-                                    title={`${att.developerName}`}
-                                  >
-                                    {att.developerName?.charAt(0)}
-                                  </span>
-                                ))}
-                                {day.attendees.length > 3 && (
-                                  <span className="text-[8px] text-slate-400 font-bold">
-                                    +{day.attendees.length - 3}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="text-[9px] text-slate-400 italic">
-                              {day.isSunday ? 'Weekly Off' : '0 Marked'}
+                          {/* Top bar: Day number & Holiday / Rate */}
+                          <div className="flex items-start justify-between">
+                            <span
+                              className={`font-mono text-xs sm:text-sm font-extrabold h-6 w-6 rounded-lg flex items-center justify-center ${
+                                isToday
+                                  ? 'bg-brand-600 text-white shadow-2xs'
+                                  : day.isSunday
+                                  ? 'text-rose-600'
+                                  : 'text-slate-800'
+                              }`}
+                            >
+                              {day.dayNumber}
                             </span>
-                          )}
-                        </div>
-                      )}
 
-                      {/* Bottom hover action: Quick Add Holiday */}
-                      <div className="flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openAddHolidayModal(day.date);
-                          }}
-                          className="text-[9px] font-bold text-purple-700 hover:text-purple-900 bg-purple-100/90 px-1.5 py-0.5 rounded transition-all"
-                          title="Declare Holiday on this day"
-                        >
-                          + Holiday
-                        </button>
-                        <span className="text-[9px] text-slate-400 underline">Details</span>
-                      </div>
-                    </div>
-                  );
-                })}
+                            {/* Holiday Badge */}
+                            {day.isHoliday && (
+                              <span
+                                className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-purple-100 text-purple-800 border border-purple-200 truncate max-w-[70px] sm:max-w-[100px] flex items-center gap-0.5"
+                                title={day.holiday?.title}
+                              >
+                                🎉 {day.holiday?.title}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Middle: Attendance summary stats */}
+                          {!day.isHoliday && (
+                            <div className="my-auto">
+                              {day.presentCount > 0 ? (
+                                <div className="space-y-0.5">
+                                  <span
+                                    className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.2 rounded-md ${
+                                      day.presentRate >= 80
+                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                        : 'bg-amber-50 text-amber-800 border border-amber-200'
+                                    }`}
+                                  >
+                                    <CheckCircle2 className="h-2.5 w-2.5" />
+                                    <span>
+                                      {day.presentCount}/{day.totalDevelopers} ({day.presentRate}%)
+                                    </span>
+                                  </span>
+
+                                  {/* Attendee Avatar Initial Circles */}
+                                  <div className="hidden sm:flex items-center gap-0.5 overflow-hidden">
+                                    {day.attendees.slice(0, 3).map((att, i) => (
+                                      <span
+                                        key={i}
+                                        className="h-4 w-4 rounded-full bg-emerald-600 text-[8px] font-bold text-white flex items-center justify-center shrink-0"
+                                        title={`${att.developerName}`}
+                                      >
+                                        {att.developerName?.charAt(0)}
+                                      </span>
+                                    ))}
+                                    {day.attendees.length > 3 && (
+                                      <span className="text-[8px] text-slate-400 font-bold">
+                                        +{day.attendees.length - 3}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              ) : (
+                                <span className="text-[9px] text-slate-400 italic">
+                                  {day.isSunday ? 'Weekly Off' : '0 Marked'}
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Bottom action: Quick Add Holiday */}
+                          <div className="flex items-center justify-between opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity pt-0.5">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openAddHolidayModal(day.date);
+                              }}
+                              className="text-[9px] font-bold text-purple-700 hover:text-purple-900 bg-purple-100/90 hover:bg-purple-200/90 px-1.5 py-0.5 rounded transition-all"
+                              title="Declare Holiday on this day"
+                            >
+                              + Holiday
+                            </button>
+                            <span className="text-[9px] text-slate-400 hover:text-slate-600">Details</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
           )}

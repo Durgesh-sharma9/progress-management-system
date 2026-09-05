@@ -127,9 +127,9 @@ const DeveloperDashboard = () => {
         <div className="absolute -right-10 -top-10 h-48 sm:h-64 w-48 sm:w-64 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" />
         <div className="absolute right-1/3 -bottom-10 h-36 sm:h-48 w-36 sm:w-48 rounded-full bg-brand-500/20 blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
               <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[9px] sm:text-[10px] font-semibold text-emerald-300">
                 <Code2 className="h-2.5 w-2.5" />
                 <span>Developer Workspace</span>
@@ -158,17 +158,17 @@ const DeveloperDashboard = () => {
               Manage your deliverable phases and track live milestone velocity.
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <Link
               to="/developer/attendance"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-white shadow-soft-xs transition-all shrink-0 active:scale-95"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 px-3 py-2 text-xs font-bold text-white shadow-soft-xs transition-all shrink-0 active:scale-95"
             >
               <Clock className="h-3.5 w-3.5 text-emerald-400" />
               <span>Attendance</span>
             </Link>
             <Link
               to="/developer/phases"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-bold text-white shadow-soft-xs hover:from-emerald-400 hover:to-teal-500 transition-all shrink-0 active:scale-95"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-soft-xs hover:from-emerald-400 hover:to-teal-500 transition-all shrink-0 active:scale-95"
             >
               <CheckSquare className="h-3.5 w-3.5" />
               <span>My Phases</span>
