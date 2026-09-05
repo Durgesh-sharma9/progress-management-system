@@ -137,7 +137,7 @@ const DeveloperDashboard = () => {
               {/* Live Attendance Chip */}
               <Link
                 to="/developer/attendance"
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold border transition-all ${
+                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold border transition-all ${
                   isMarkedToday
                     ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
                     : 'bg-amber-500/20 text-amber-300 border-amber-400/30 animate-pulse'
@@ -145,8 +145,8 @@ const DeveloperDashboard = () => {
               >
                 <Clock className="h-2.5 w-2.5" />
                 <span>
-                  {isMarkedToday
-                    ? `Marked Present (${attendance?.status || 'Present'})`
+                  {isMarkedToday && attendance?.punchIn?.time
+                    ? `Checked in at ${new Date(attendance.punchIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                     : '📍 Mark Attendance'}
                 </span>
               </Link>
