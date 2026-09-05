@@ -118,8 +118,7 @@ const DeveloperDashboard = () => {
     );
   }
 
-  const isPunchedIn = Boolean(attendance?.punchIn?.time);
-  const isPunchedOut = Boolean(attendance?.punchOut?.time);
+  const isMarkedToday = Boolean(attendance?.punchIn?.time);
 
   return (
     <div className="space-y-3.5 sm:space-y-6">
@@ -139,20 +138,16 @@ const DeveloperDashboard = () => {
               <Link
                 to="/developer/attendance"
                 className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold border transition-all ${
-                  isPunchedOut
-                    ? 'bg-blue-500/20 text-blue-300 border-blue-400/30'
-                    : isPunchedIn
-                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30 animate-pulse'
-                    : 'bg-amber-500/20 text-amber-300 border-amber-400/30'
+                  isMarkedToday
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
+                    : 'bg-amber-500/20 text-amber-300 border-amber-400/30 animate-pulse'
                 }`}
               >
                 <Clock className="h-2.5 w-2.5" />
                 <span>
-                  {isPunchedOut
-                    ? 'Shift Completed'
-                    : isPunchedIn
-                    ? 'Punched In (Active)'
-                    : '📍 Punch In Today'}
+                  {isMarkedToday
+                    ? `Marked Present (${attendance?.status || 'Present'})`
+                    : '📍 Mark Attendance'}
                 </span>
               </Link>
             </div>

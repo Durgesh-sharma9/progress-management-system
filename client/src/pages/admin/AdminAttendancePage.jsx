@@ -4,7 +4,6 @@ import { useToast } from '../../context/ToastContext';
 import {
   getCurrentGPSLocation,
   formatDistance,
-  formatWorkingMinutes,
 } from '../../utils/geoUtils';
 import Modal from '../../components/common/Modal';
 import {
@@ -15,7 +14,6 @@ import {
   AlertTriangle,
   Loader2,
   Calendar,
-  Sparkles,
   ShieldCheck,
   Building2,
   Compass,
@@ -26,7 +24,6 @@ import {
   Edit2,
   UserCheck,
   UserX,
-  FileSpreadsheet,
   RefreshCw,
   Info,
   Navigation,
@@ -59,18 +56,14 @@ const AdminAttendancePage = () => {
     radiusMeters: 100,
     geofenceEnabled: true,
     workStartTime: '09:30',
-    workEndTime: '18:30',
     gracePeriodMinutes: 15,
-    minHoursFullDay: 8,
-    minHoursHalfDay: 4,
   });
 
   // Manual Override Modal
   const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
   const [overrideItem, setOverrideItem] = useState(null);
   const [overrideStatus, setOverrideStatus] = useState('Present');
-  const [overridePunchInTime, setOverridePunchInTime] = useState('');
-  const [overridePunchOutTime, setOverridePunchOutTime] = useState('');
+  const [overridePunchInTime, setOverridePunchInTime] = useState('09:30');
   const [overrideNotes, setOverrideNotes] = useState('');
   const [isSubmittingOverride, setIsSubmittingOverride] = useState(false);
 
@@ -107,10 +100,7 @@ const AdminAttendancePage = () => {
           radiusMeters: c.radiusMeters || 100,
           geofenceEnabled: c.geofenceEnabled !== false,
           workStartTime: c.workStartTime || '09:30',
-          workEndTime: c.workEndTime || '18:30',
           gracePeriodMinutes: c.gracePeriodMinutes || 15,
-          minHoursFullDay: c.minHoursFullDay || 8,
-          minHoursHalfDay: c.minHoursHalfDay || 4,
         });
       }
     } catch (err) {
@@ -161,11 +151,6 @@ const AdminAttendancePage = () => {
         ? new Date(item.punchIn.time).toTimeString().slice(0, 5)
         : '09:30'
     );
-    setOverridePunchOutTime(
-      item.punchOut?.time
-        ? new Date(item.punchOut.time).toTimeString().slice(0, 5)
-        : ''
-    );
     setOverrideNotes(item.adminNotes || '');
     setIsOverrideModalOpen(true);
   };
@@ -178,13 +163,9 @@ const AdminAttendancePage = () => {
     try {
       const dateStr = overrideItem.date || selectedDate;
       let inDateTime = null;
-      let outDateTime = null;
 
       if (overridePunchInTime) {
         inDateTime = new Date(`${dateStr}T${overridePunchInTime}:00`);
-      }
-      if (overridePunchOutTime) {
-        outDateTime = new Date(`${dateStr}T${overridePunchOutTime}:00`);
       }
 
       const res = await api.post('/attendance/admin/manual', {
@@ -192,7 +173,6 @@ const AdminAttendancePage = () => {
         date: dateStr,
         status: overrideStatus,
         punchInTime: inDateTime,
-        punchOutTime: outDateTime,
         adminNotes: overrideNotes,
       });
 
@@ -238,7 +218,7 @@ const AdminAttendancePage = () => {
               Attendance & Geofence Console
             </h1>
             <p className="text-xs text-slate-500">
-              Live GPS Developer Roster & Workspace Geofence Settings
+              Live GPS Developer Attendance & Workspace Location Settings
             </p>
           </div>
         </div>
@@ -285,7 +265,7 @@ const AdminAttendancePage = () => {
         <div className="space-y-4">
           {/* Quick Metrics Bar */}
           {attendanceData?.summary && (
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 sm:gap-3.5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3.5">
               <div className="glass-card rounded-2xl p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
                 <p className="text-[10px] font-bold uppercase text-slate-400">Total Engineers</p>
                 <p className="text-xl sm:text-2xl font-extrabold text-slate-900 font-mono mt-0.5">
@@ -305,15 +285,9 @@ const AdminAttendancePage = () => {
                 </p>
               </div>
               <div className="glass-card rounded-2xl p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
-                <p className="text-[10px] font-bold uppercase text-rose-600">Absent / Not Punched</p>
+                <p className="text-[10px] font-bold uppercase text-rose-600">Absent / Not Marked</p>
                 <p className="text-xl sm:text-2xl font-extrabold text-rose-600 font-mono mt-0.5">
                   {attendanceData.summary.absentCount}
-                </p>
-              </div>
-              <div className="glass-card rounded-2xl p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center col-span-2 sm:col-span-1">
-                <p className="text-[10px] font-bold uppercase text-brand-600">Attendance Rate</p>
-                <p className="text-xl sm:text-2xl font-extrabold text-brand-700 font-mono mt-0.5">
-                  {attendanceData.summary.presentRate}%
                 </p>
               </div>
             </div>
@@ -333,7 +307,7 @@ const AdminAttendancePage = () => {
               />
             </div>
 
-            {/* Date Picker (for history tab or custom date) */}
+            {/* Date Picker */}
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1">
                 <Calendar className="h-3.5 w-3.5 text-slate-500" />
@@ -354,7 +328,6 @@ const AdminAttendancePage = () => {
                 <option value="All">All Statuses</option>
                 <option value="Present">Present</option>
                 <option value="Late">Late</option>
-                <option value="Half Day">Half Day</option>
                 <option value="Absent">Absent</option>
               </select>
 
@@ -370,7 +343,7 @@ const AdminAttendancePage = () => {
             </div>
           </div>
 
-          {/* Roster Cards / Table */}
+          {/* Roster Cards */}
           {loading ? (
             <div className="py-12 flex flex-col items-center justify-center gap-2 bg-white rounded-2xl border border-slate-200">
               <Loader2 className="h-6 w-6 animate-spin text-brand-600" />
@@ -387,7 +360,6 @@ const AdminAttendancePage = () => {
                 const isPresent = item.status === 'Present';
                 const isLate = item.status === 'Late';
                 const isAbsent = item.status === 'Absent';
-                const isHalfDay = item.status === 'Half Day';
 
                 return (
                   <div
@@ -404,8 +376,6 @@ const AdminAttendancePage = () => {
                                 ? 'bg-gradient-to-tr from-emerald-600 to-teal-600'
                                 : isLate
                                 ? 'bg-gradient-to-tr from-amber-500 to-orange-600'
-                                : isHalfDay
-                                ? 'bg-gradient-to-tr from-blue-600 to-cyan-600'
                                 : 'bg-gradient-to-tr from-slate-400 to-slate-500'
                             }`}
                           >
@@ -428,8 +398,6 @@ const AdminAttendancePage = () => {
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                               : isLate
                               ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                              : isHalfDay
-                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
                               : 'bg-rose-50 text-rose-700 border border-rose-200'
                           }`}
                         >
@@ -440,11 +408,11 @@ const AdminAttendancePage = () => {
                         </span>
                       </div>
 
-                      {/* Punch Details Box */}
+                      {/* Check-in Details Box */}
                       <div className="space-y-2 p-2.5 rounded-xl bg-slate-50/90 border border-slate-200/80 text-xs mb-3">
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] font-bold text-slate-400 uppercase">
-                            Punch In:
+                            Check-in Time:
                           </span>
                           <span className="font-mono font-bold text-slate-800">
                             {item.punchIn?.time
@@ -452,36 +420,9 @@ const AdminAttendancePage = () => {
                                   hour: '2-digit',
                                   minute: '2-digit',
                                 })
-                              : 'Not Logged'}
+                              : 'Not Marked'}
                           </span>
                         </div>
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase">
-                            Punch Out:
-                          </span>
-                          <span className="font-mono font-bold text-slate-800">
-                            {item.punchOut?.time
-                              ? new Date(item.punchOut.time).toLocaleTimeString([], {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                })
-                              : item.hasPunchedIn
-                              ? 'Active Working...'
-                              : 'Not Logged'}
-                          </span>
-                        </div>
-
-                        {item.totalWorkingMinutes > 0 && (
-                          <div className="flex items-center justify-between pt-1 border-t border-slate-200/70">
-                            <span className="text-[10px] font-bold text-brand-700 uppercase">
-                              Work Duration:
-                            </span>
-                            <span className="font-mono font-extrabold text-brand-700">
-                              {formatWorkingMinutes(item.totalWorkingMinutes)}
-                            </span>
-                          </div>
-                        )}
 
                         {/* GPS Distance indicator */}
                         {item.punchIn?.distanceMeters !== undefined && (
@@ -496,18 +437,18 @@ const AdminAttendancePage = () => {
                         )}
                       </div>
 
-                      {/* Work Summary / Notes if present */}
-                      {item.punchOut?.workSummary && (
-                        <div className="mb-2 p-2 rounded-lg bg-blue-50/70 border border-blue-200/70 text-[10px] text-blue-900">
-                          <p className="font-bold text-[9px] uppercase tracking-wider text-blue-700 mb-0.5">
-                            Work Summary
+                      {/* Admin Notes if present */}
+                      {item.adminNotes && (
+                        <div className="mb-2 p-2 rounded-lg bg-purple-50/70 border border-purple-200/70 text-[10px] text-purple-900">
+                          <p className="font-bold text-[9px] uppercase tracking-wider text-purple-700 mb-0.5">
+                            Note:
                           </p>
-                          <p className="line-clamp-2 italic">"{item.punchOut.workSummary}"</p>
+                          <p className="line-clamp-2">{item.adminNotes}</p>
                         </div>
                       )}
                     </div>
 
-                    {/* Card Footer: Manual Action */}
+                    {/* Card Footer */}
                     <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
                       <span className="text-[10px] text-slate-400">
                         {item.isManualOverride ? '⚠️ Adjusted by Admin' : 'GPS Verified'}
@@ -676,7 +617,7 @@ const AdminAttendancePage = () => {
                   Allowed Geofence Radius: <span className="text-brand-600 font-mono font-extrabold">{formatDistance(configForm.radiusMeters)}</span>
                 </label>
                 <span className="text-[11px] text-slate-400">
-                  Engineers outside this radius will be blocked from punching in.
+                  Engineers outside this radius will be blocked from marking attendance.
                 </span>
               </div>
 
@@ -721,7 +662,7 @@ const AdminAttendancePage = () => {
                 Shift Timings & Rules
               </h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
                     Shift Start Time
@@ -750,20 +691,6 @@ const AdminAttendancePage = () => {
                         ...configForm,
                         gracePeriodMinutes: parseInt(e.target.value, 10) || 0,
                       })
-                    }
-                    className="block w-full rounded-xl border border-slate-300 bg-white p-2 text-xs font-mono font-bold text-slate-800 focus:border-brand-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
-                    Shift End Time
-                  </label>
-                  <input
-                    type="time"
-                    value={configForm.workEndTime}
-                    onChange={(e) =>
-                      setConfigForm({ ...configForm, workEndTime: e.target.value })
                     }
                     className="block w-full rounded-xl border border-slate-300 bg-white p-2 text-xs font-mono font-bold text-slate-800 focus:border-brand-500 focus:outline-none"
                   />
@@ -812,35 +739,20 @@ const AdminAttendancePage = () => {
             >
               <option value="Present">Present (On Time)</option>
               <option value="Late">Late</option>
-              <option value="Half Day">Half Day</option>
               <option value="Absent">Absent</option>
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
-                Punch In Time
-              </label>
-              <input
-                type="time"
-                value={overridePunchInTime}
-                onChange={(e) => setOverridePunchInTime(e.target.value)}
-                className="block w-full rounded-xl border border-slate-300 bg-white p-2 text-xs font-mono font-bold text-slate-800 focus:border-brand-500 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
-                Punch Out Time
-              </label>
-              <input
-                type="time"
-                value={overridePunchOutTime}
-                onChange={(e) => setOverridePunchOutTime(e.target.value)}
-                className="block w-full rounded-xl border border-slate-300 bg-white p-2 text-xs font-mono font-bold text-slate-800 focus:border-brand-500 focus:outline-none"
-              />
-            </div>
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+              Check-in Time
+            </label>
+            <input
+              type="time"
+              value={overridePunchInTime}
+              onChange={(e) => setOverridePunchInTime(e.target.value)}
+              className="block w-full rounded-xl border border-slate-300 bg-white p-2 text-xs font-mono font-bold text-slate-800 focus:border-brand-500 focus:outline-none"
+            />
           </div>
 
           <div>
