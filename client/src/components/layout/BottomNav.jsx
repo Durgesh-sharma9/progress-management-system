@@ -9,6 +9,7 @@ import {
   User,
   Shield,
   Code2,
+  MapPin,
 } from 'lucide-react';
 
 const BottomNav = () => {
@@ -17,12 +18,14 @@ const BottomNav = () => {
   const adminNavItems = [
     { name: 'Home', path: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Projects', path: '/admin/projects', icon: FolderGit2 },
+    { name: 'Attendance', path: '/admin/attendance', icon: MapPin },
     { name: 'Developers', path: '/admin/developers', icon: Users },
     { name: 'Profile', path: '/profile', icon: User },
   ];
 
   const developerNavItems = [
     { name: 'Home', path: '/developer/dashboard', icon: LayoutDashboard },
+    { name: 'Attendance', path: '/developer/attendance', icon: MapPin },
     { name: 'Projects', path: '/developer/projects', icon: FolderGit2 },
     { name: 'Phases', path: '/developer/phases', icon: CheckSquare },
     { name: 'Profile', path: '/profile', icon: User },

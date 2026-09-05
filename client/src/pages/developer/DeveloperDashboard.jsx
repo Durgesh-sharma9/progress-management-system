@@ -79,18 +79,26 @@ const getProjectTheme = (idOrName, index = 0) => {
 const DeveloperDashboard = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState(null);
+  const [attendance, setAttendance] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchStats();
+    fetchDashboardData();
   }, []);
 
-  const fetchStats = async () => {
+  const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/projects/developer/dashboard-stats');
-      if (res.data.success) {
-        setStats(res.data.data);
+      const [statsRes, attRes] = await Promise.all([
+        api.get('/projects/developer/dashboard-stats'),
+        api.get('/attendance/today').catch(() => ({ data: { success: false } })),
+      ]);
+
+      if (statsRes.data.success) {
+        setStats(statsRes.data.data);
+      }
+      if (attRes.data.success) {
+        setAttendance(attRes.data.data.attendance);
       }
     } catch (err) {
       console.error('Error fetching developer dashboard stats:', err);
@@ -110,6 +118,9 @@ const DeveloperDashboard = () => {
     );
   }
 
+  const isPunchedIn = Boolean(attendance?.punchIn?.time);
+  const isPunchedOut = Boolean(attendance?.punchOut?.time);
+
   return (
     <div className="space-y-3.5 sm:space-y-6">
       {/* Top Welcome Banner */}
@@ -117,11 +128,33 @@ const DeveloperDashboard = () => {
         <div className="absolute -right-10 -top-10 h-48 sm:h-64 w-48 sm:w-64 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" />
         <div className="absolute right-1/3 -bottom-10 h-36 sm:h-48 w-36 sm:w-48 rounded-full bg-brand-500/20 blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex items-center justify-between gap-3">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[9px] sm:text-[10px] font-semibold text-emerald-300 mb-0.5 sm:mb-1">
-              <Code2 className="h-2.5 w-2.5" />
-              <span>Developer Workspace</span>
+            <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-[9px] sm:text-[10px] font-semibold text-emerald-300">
+                <Code2 className="h-2.5 w-2.5" />
+                <span>Developer Workspace</span>
+              </div>
+              {/* Live Attendance Chip */}
+              <Link
+                to="/developer/attendance"
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold border transition-all ${
+                  isPunchedOut
+                    ? 'bg-blue-500/20 text-blue-300 border-blue-400/30'
+                    : isPunchedIn
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30 animate-pulse'
+                    : 'bg-amber-500/20 text-amber-300 border-amber-400/30'
+                }`}
+              >
+                <Clock className="h-2.5 w-2.5" />
+                <span>
+                  {isPunchedOut
+                    ? 'Shift Completed'
+                    : isPunchedIn
+                    ? 'Punched In (Active)'
+                    : '📍 Punch In Today'}
+                </span>
+              </Link>
             </div>
             <h2 className="text-base sm:text-xl lg:text-2xl font-extrabold tracking-tight text-white font-sans">
               Welcome back, {user?.name}!
@@ -130,13 +163,22 @@ const DeveloperDashboard = () => {
               Manage your deliverable phases and track live milestone velocity.
             </p>
           </div>
-          <Link
-            to="/developer/phases"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-bold text-white shadow-soft-xs hover:from-emerald-400 hover:to-teal-500 transition-all shrink-0 active:scale-95"
-          >
-            <CheckSquare className="h-3.5 w-3.5" />
-            <span>My Phases</span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/developer/attendance"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs font-bold text-white shadow-soft-xs transition-all shrink-0 active:scale-95"
+            >
+              <Clock className="h-3.5 w-3.5 text-emerald-400" />
+              <span>Attendance</span>
+            </Link>
+            <Link
+              to="/developer/phases"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 px-3 py-1.5 sm:px-4 sm:py-2 text-xs font-bold text-white shadow-soft-xs hover:from-emerald-400 hover:to-teal-500 transition-all shrink-0 active:scale-95"
+            >
+              <CheckSquare className="h-3.5 w-3.5" />
+              <span>My Phases</span>
+            </Link>
+          </div>
         </div>
       </div>
 

@@ -15,12 +15,14 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import ProjectsPage from './pages/admin/ProjectsPage';
 import ProjectDetailsPage from './pages/admin/ProjectDetailsPage';
 import DevelopersPage from './pages/admin/DevelopersPage';
+import AdminAttendancePage from './pages/admin/AdminAttendancePage';
 
 // Developer Pages
 import DeveloperDashboard from './pages/developer/DeveloperDashboard';
 import MyProjectsPage from './pages/developer/MyProjectsPage';
 import ProjectWorkspacePage from './pages/developer/ProjectWorkspacePage';
 import MyTasksPage from './pages/developer/MyTasksPage';
+import DeveloperAttendancePage from './pages/developer/DeveloperAttendancePage';
 
 // Shared Pages
 import ProfilePage from './pages/ProfilePage';
@@ -55,6 +57,7 @@ function App() {
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="projects/:id" element={<ProjectDetailsPage />} />
         <Route path="developers" element={<DevelopersPage />} />
+        <Route path="attendance" element={<AdminAttendancePage />} />
       </Route>
 
       {/* Developer Protected Routes */}
@@ -68,6 +71,7 @@ function App() {
       >
         <Route index element={<Navigate to="/developer/dashboard" replace />} />
         <Route path="dashboard" element={<DeveloperDashboard />} />
+        <Route path="attendance" element={<DeveloperAttendancePage />} />
         <Route path="projects" element={<MyProjectsPage />} />
         <Route path="workspace/:id" element={<ProjectWorkspacePage />} />
         <Route path="phases" element={<MyTasksPage />} />

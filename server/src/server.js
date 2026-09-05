@@ -24,6 +24,7 @@ app.use('/api/projects', require('./routes/projectRoutes'));
 app.use('/api/phases', require('./routes/phaseRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/attendance', require('./routes/attendanceRoutes'));
 
 const path = require('path');
 

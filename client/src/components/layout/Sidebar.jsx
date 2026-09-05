@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Code2,
   Sparkles,
+  MapPin,
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -28,11 +29,13 @@ const Sidebar = ({ isOpen, onClose }) => {
     { name: 'Overview', path: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Projects', path: '/admin/projects', icon: FolderGit2 },
     { name: 'Developers', path: '/admin/developers', icon: Users },
+    { name: 'Attendance', path: '/admin/attendance', icon: MapPin },
     { name: 'Profile & Security', path: '/profile', icon: User },
   ];
 
   const developerNavItems = [
     { name: 'Overview', path: '/developer/dashboard', icon: LayoutDashboard },
+    { name: 'Attendance', path: '/developer/attendance', icon: MapPin },
     { name: 'My Projects', path: '/developer/projects', icon: FolderGit2 },
     { name: 'My Phases', path: '/developer/phases', icon: CheckSquare },
     { name: 'Profile & Security', path: '/profile', icon: User },
