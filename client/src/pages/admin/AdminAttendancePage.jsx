@@ -261,7 +261,7 @@ const AdminAttendancePage = () => {
         latitude: Number(loc.latitude.toFixed(6)),
         longitude: Number(loc.longitude.toFixed(6)),
       }));
-      success(`📍 Coordinates captured! Accuracy: ±${Math.round(loc.accuracy || 0)}m`);
+      success('📍 Office GPS coordinates captured successfully!');
     } catch (err) {
       error(err.message || 'Failed to detect GPS location');
     } finally {

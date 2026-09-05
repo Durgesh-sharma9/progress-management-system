@@ -444,9 +444,7 @@ const DeveloperAttendancePage = () => {
                         <div>
                           <p className="text-xs font-bold">
                             {isInsideGeofence
-                              ? distanceToOffice <= (workspace?.radiusMeters || 100)
-                                ? 'Inside Workspace Geofence'
-                                : 'Verified within Device Accuracy Margin'
+                              ? 'Inside Workspace Geofence'
                               : workspace?.geofenceEnabled === false
                               ? 'Geofence Optional (Marking Allowed)'
                               : 'Outside Allowed Workspace Zone'}
@@ -461,10 +459,11 @@ const DeveloperAttendancePage = () => {
 
                     {currentCoords && (
                       <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono px-1">
-                        <span>
-                          {currentCoords.accuracy >= 1000
-                            ? `Accuracy: ±${(currentCoords.accuracy / 1000).toFixed(0)}km (WiFi/Network Location)`
-                            : `Accuracy: ±${Math.round(currentCoords.accuracy || 0)}m (High Precision GPS)`}
+                        <span className="flex items-center gap-1">
+                          <ShieldCheck className="h-3 w-3 text-emerald-600" />
+                          {currentCoords.accuracy < 100
+                            ? `GPS Verified (±${Math.round(currentCoords.accuracy)}m)`
+                            : `Device Location Verified`}
                         </span>
                         <span>
                           {currentCoords.latitude.toFixed(4)}, {currentCoords.longitude.toFixed(4)}
