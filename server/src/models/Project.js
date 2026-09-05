@@ -23,7 +23,18 @@ const projectSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ['Web App', 'Android App', 'General Website', 'Backend API', 'Other'],
+    enum: [
+      'Web App',
+      'Android App',
+      'General Website',
+      'Backend API',
+      'Mobile App',
+      'AI / ML',
+      'E-Commerce',
+      'Full Stack',
+      'Desktop App',
+      'Other',
+    ],
     default: 'Web App',
   },
   techStack: [
@@ -32,6 +43,11 @@ const projectSchema = new mongoose.Schema({
       trim: true,
     },
   ],
+  adminRemarks: {
+    type: String,
+    trim: true,
+    default: '',
+  },
   developers: [
     {
       type: mongoose.Schema.Types.ObjectId,

@@ -11,9 +11,33 @@ exports.getDevelopers = async (req, res, next) => {
 
     const enriched = await Promise.all(
       developers.map(async (dev) => {
-        const assignedProjects = await Project.find({
+        const rawAssignedProjects = await Project.find({
           developers: dev._id,
-        }).select('_id name projectType status');
+        }).select('_id name projectType status category techStack adminRemarks');
+
+        const assignedProjects = await Promise.all(
+          rawAssignedProjects.map(async (proj) => {
+            const devTotalPhases = await Phase.countDocuments({
+              projectId: proj._id,
+              developerId: dev._id,
+            });
+            const devCompletedPhases = await Phase.countDocuments({
+              projectId: proj._id,
+              developerId: dev._id,
+              completed: true,
+            });
+            return {
+              _id: proj._id,
+              name: proj.name,
+              projectType: proj.projectType,
+              status: proj.status,
+              category: proj.category,
+              techStack: proj.techStack,
+              totalPhases: devTotalPhases,
+              completedPhases: devCompletedPhases,
+            };
+          })
+        );
 
         const totalPhases = await Phase.countDocuments({
           developerId: dev._id,

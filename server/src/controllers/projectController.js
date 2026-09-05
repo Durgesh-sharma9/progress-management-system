@@ -199,7 +199,18 @@ exports.getProjectById = async (req, res, next) => {
 // @access  Private (Admin only)
 exports.createProject = async (req, res, next) => {
   try {
-    const { name, description, status, projectType, category, techStack, developers, startDate, phases } = req.body;
+    const {
+      name,
+      description,
+      status,
+      projectType,
+      category,
+      techStack,
+      adminRemarks,
+      developers,
+      startDate,
+      phases,
+    } = req.body;
 
     const devs = Array.isArray(developers) ? developers : [];
     const determinedType =
@@ -212,6 +223,7 @@ exports.createProject = async (req, res, next) => {
       projectType: determinedType,
       category: category || 'Web App',
       techStack: Array.isArray(techStack) ? techStack : [],
+      adminRemarks: adminRemarks ? adminRemarks.trim() : '',
       developers: devs,
       startDate: startDate ? new Date(startDate) : Date.now(),
       createdBy: req.user._id,
@@ -272,7 +284,17 @@ exports.createProject = async (req, res, next) => {
 // @access  Private (Admin only)
 exports.updateProject = async (req, res, next) => {
   try {
-    const { name, description, status, projectType, category, techStack, developers, startDate } = req.body;
+    const {
+      name,
+      description,
+      status,
+      projectType,
+      category,
+      techStack,
+      adminRemarks,
+      developers,
+      startDate,
+    } = req.body;
 
     let project = await Project.findById(req.params.id);
     if (!project) {
@@ -285,6 +307,7 @@ exports.updateProject = async (req, res, next) => {
     if (projectType) project.projectType = projectType;
     if (category) project.category = category;
     if (startDate) project.startDate = new Date(startDate);
+    if (adminRemarks !== undefined) project.adminRemarks = adminRemarks.trim();
     if (techStack !== undefined) project.techStack = Array.isArray(techStack) ? techStack : [];
     if (developers !== undefined) {
       project.developers = developers;
@@ -303,6 +326,33 @@ exports.updateProject = async (req, res, next) => {
       success: true,
       message: 'Project updated successfully',
       data: updatedProject,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update admin remarks for a project
+// @route   PATCH /api/projects/:id/remarks
+// @access  Private (Admin only)
+exports.updateAdminRemarks = async (req, res, next) => {
+  try {
+    const { adminRemarks } = req.body;
+    const project = await Project.findById(req.params.id);
+    if (!project) {
+      return res.status(404).json({ success: false, message: 'Project not found' });
+    }
+
+    project.adminRemarks = adminRemarks !== undefined ? adminRemarks.trim() : '';
+    await project.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Admin remarks updated successfully',
+      data: {
+        _id: project._id,
+        adminRemarks: project.adminRemarks,
+      },
     });
   } catch (error) {
     next(error);

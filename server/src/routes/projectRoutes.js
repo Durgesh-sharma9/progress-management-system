@@ -10,6 +10,7 @@ const {
   removeDeveloper,
   getAdminDashboardStats,
   getDeveloperDashboardStats,
+  updateAdminRemarks,
 } = require('../controllers/projectController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -28,6 +29,9 @@ router
   .get(protect, getProjectById)
   .put(protect, authorize('admin'), updateProject)
   .delete(protect, authorize('admin'), deleteProject);
+
+// Admin remarks route
+router.patch('/:id/remarks', protect, authorize('admin'), updateAdminRemarks);
 
 // Developer assignment to project
 router.post('/:id/developers', protect, authorize('admin'), assignDeveloper);

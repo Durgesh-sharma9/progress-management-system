@@ -268,18 +268,25 @@ const DevelopersPage = () => {
                   </div>
 
                   {dev.assignedProjects && dev.assignedProjects.length > 0 ? (
-                    <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto no-scrollbar">
-                      {dev.assignedProjects.map((proj) => (
-                        <Link
-                          key={proj._id}
-                          to={`/admin/projects/${proj._id}`}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200/80 hover:border-brand-300 transition-all shadow-2xs group/proj active:scale-95"
-                          title={`Open ${proj.name} Details`}
-                        >
-                          <span className="truncate max-w-[120px]">{proj.name}</span>
-                          <ArrowUpRight className="h-2.5 w-2.5 text-brand-500 group-hover/proj:translate-x-0.5 group-hover/proj:-translate-y-0.5 transition-transform" />
-                        </Link>
-                      ))}
+                    <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto no-scrollbar">
+                      {dev.assignedProjects.map((proj) => {
+                        const done = proj.completedPhases ?? 0;
+                        const total = proj.totalPhases ?? 0;
+                        return (
+                          <Link
+                            key={proj._id}
+                            to={`/admin/projects/${proj._id}`}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-brand-50 hover:bg-brand-100 text-brand-700 border border-brand-200/80 hover:border-brand-300 transition-all shadow-2xs group/proj active:scale-95"
+                            title={`Open ${proj.name} Details (${done}/${total} Phases Delivered)`}
+                          >
+                            <span className="truncate max-w-[130px]">{proj.name}</span>
+                            <span className="font-mono text-[9px] px-1 py-0.2 rounded bg-white/80 border border-brand-200 text-brand-800 shrink-0 font-extrabold">
+                              {done}/{total}
+                            </span>
+                            <ArrowUpRight className="h-2.5 w-2.5 text-brand-500 group-hover/proj:translate-x-0.5 group-hover/proj:-translate-y-0.5 transition-transform shrink-0" />
+                          </Link>
+                        );
+                      })}
                     </div>
                   ) : (
                     <p className="text-[10px] text-slate-400 italic py-0.5">
@@ -292,7 +299,7 @@ const DevelopersPage = () => {
               <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500">
                 <span className="flex items-center gap-1 font-semibold text-slate-700">
                   <Clock className="h-3 w-3 text-amber-600" />
-                  {dev.pendingTasks} Pending
+                  {dev.pendingTasks} Phases Pending
                 </span>
                 <span className="text-[9px] text-slate-400 font-mono">
                   Joined {new Date(dev.joiningDate || dev.createdAt).toLocaleDateString()}

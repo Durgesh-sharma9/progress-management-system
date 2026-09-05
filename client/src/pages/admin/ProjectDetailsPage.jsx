@@ -86,6 +86,11 @@ const ProjectDetailsPage = () => {
   const [expandedNotePhaseId, setExpandedNotePhaseId] = useState(null);
   const [expandedDevId, setExpandedDevId] = useState(null);
 
+  // Admin Remarks Modal state
+  const [isRemarksModalOpen, setIsRemarksModalOpen] = useState(false);
+  const [remarksInput, setRemarksInput] = useState('');
+  const [isSavingRemarks, setIsSavingRemarks] = useState(false);
+
   useEffect(() => {
     fetchProjectData();
     fetchAllDevelopers();
@@ -165,6 +170,25 @@ const ProjectDetailsPage = () => {
       error(err.response?.data?.message || 'Failed to remove developer');
     } finally {
       setIsRemoving(false);
+    }
+  };
+
+  const handleSaveRemarks = async (e) => {
+    e.preventDefault();
+    setIsSavingRemarks(true);
+    try {
+      const res = await api.patch(`/projects/${id}/remarks`, {
+        adminRemarks: remarksInput,
+      });
+      if (res.data.success) {
+        success('Admin remarks updated successfully');
+        setIsRemarksModalOpen(false);
+        fetchProjectData();
+      }
+    } catch (err) {
+      error(err.response?.data?.message || 'Failed to update admin remarks');
+    } finally {
+      setIsSavingRemarks(false);
     }
   };
 
@@ -352,10 +376,35 @@ const ProjectDetailsPage = () => {
                   <TechStackPills techStack={project.techStack} max={6} size="xs" />
                 </div>
               )}
+
+              {/* Admin Remarks preview if set */}
+              {project.adminRemarks && (
+                <div
+                  onClick={() => {
+                    setRemarksInput(project.adminRemarks || '');
+                    setIsRemarksModalOpen(true);
+                  }}
+                  className="mt-2.5 p-2 rounded-xl bg-purple-50/80 border border-purple-200/90 text-purple-950 hover:bg-purple-100/90 transition-all cursor-pointer shadow-2xs group/rmk"
+                  title="Click to edit Admin Remarks"
+                >
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-700 flex items-center gap-1">
+                      <Sparkles className="h-3 w-3 text-purple-600" />
+                      Admin Remarks
+                    </span>
+                    <span className="text-[10px] font-bold text-purple-600 underline opacity-0 group-hover/rmk:opacity-100 transition-opacity">
+                      Edit
+                    </span>
+                  </div>
+                  <p className="text-xs text-purple-900 leading-relaxed font-mono">
+                    {project.adminRemarks}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 flex-wrap">
             {/* Compact Velocity Chip */}
             <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700">
               <span className="text-emerald-600 font-mono">
@@ -366,6 +415,18 @@ const ProjectDetailsPage = () => {
                 {project.completedPhases || 0}/{project.totalPhases || 0} Phases
               </span>
             </div>
+
+            <button
+              onClick={() => {
+                setRemarksInput(project.adminRemarks || '');
+                setIsRemarksModalOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 px-3 py-2 text-xs font-bold transition-all active:scale-95 shadow-soft-xs"
+              title="Add or Edit Admin Remarks"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-purple-600" />
+              <span>{project.adminRemarks ? 'Remarks' : '+ Remark'}</span>
+            </button>
 
             <button
               onClick={() => setIsAssignOpen(true)}
@@ -993,6 +1054,55 @@ const ProjectDetailsPage = () => {
         projectId={id}
         onPhasesCreated={() => fetchProjectData()}
       />
+
+      {/* Admin Remarks Modal */}
+      <Modal
+        isOpen={isRemarksModalOpen}
+        onClose={() => setIsRemarksModalOpen(false)}
+        title="Admin Remarks"
+        subtitle={`Update remarks for ${project.name}`}
+        maxWidth="md"
+      >
+        <form onSubmit={handleSaveRemarks} className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-purple-700 mb-1.5 flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-purple-600" />
+              <span>Project Admin Remarks</span>
+            </label>
+            <textarea
+              rows={4}
+              value={remarksInput}
+              onChange={(e) => setRemarksInput(e.target.value)}
+              placeholder="e.g. Client requested revisions on Phase 3. Delivery timeline extended to Friday..."
+              className="block w-full rounded-xl border border-purple-200 bg-purple-50/40 p-3 text-sm text-slate-900 placeholder-purple-300 focus:border-purple-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsRemarksModalOpen(false)}
+              className="rounded-xl border border-slate-300/80 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-soft-xs"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSavingRemarks}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-soft-md shadow-purple-500/25 hover:from-purple-500 hover:to-indigo-500 transition-all disabled:opacity-50"
+            >
+              {isSavingRemarks ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Saving Remarks...
+                </>
+              ) : (
+                'Save Admin Remarks'
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

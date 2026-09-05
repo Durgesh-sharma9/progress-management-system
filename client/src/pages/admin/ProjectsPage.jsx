@@ -168,6 +168,8 @@ const ProjectsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('All'); // 'All' | 'Standalone' | 'Group'
   const [statusFilter, setStatusFilter] = useState('All'); // 'All' | 'In Progress' | 'Completed'
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [techFilter, setTechFilter] = useState('All');
   const [sortBy, setSortBy] = useState('default'); // 'default' | 'progress-asc' | 'progress-desc' | 'name'
 
   // Create / Edit Modal state
@@ -180,6 +182,7 @@ const ProjectsPage = () => {
     projectType: 'Standalone', // 'Standalone' | 'Group'
     category: 'Web App',
     techStack: ['React', 'Node.js', 'MongoDB'],
+    adminRemarks: '',
     developers: [],
     startDate: new Date().toISOString().split('T')[0],
     phases: [...WEB_APP_DEFAULT_PHASES],
@@ -187,6 +190,12 @@ const ProjectsPage = () => {
   const [customTechInput, setCustomTechInput] = useState('');
   const [newPhaseInput, setNewPhaseInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Quick Admin Remarks Modal state
+  const [isRemarksModalOpen, setIsRemarksModalOpen] = useState(false);
+  const [projectForRemarks, setProjectForRemarks] = useState(null);
+  const [remarksInput, setRemarksInput] = useState('');
+  const [isSavingRemarks, setIsSavingRemarks] = useState(false);
 
   // Delete modal state
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -216,12 +225,15 @@ const ProjectsPage = () => {
 
   const fetchDevelopers = async () => {
     try {
+      setLoading(true);
       const res = await api.get('/users/developers');
       if (res.data.success) {
         setDevelopersList(res.data.data);
       }
     } catch (err) {
       console.error('Failed to fetch developers list:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -234,6 +246,7 @@ const ProjectsPage = () => {
       projectType: 'Standalone',
       category: 'Web App',
       techStack: ['React', 'Node.js', 'MongoDB'],
+      adminRemarks: '',
       developers: [],
       startDate: new Date().toISOString().split('T')[0],
       phases: getTemplateForCategory('Web App'),
@@ -256,6 +269,7 @@ const ProjectsPage = () => {
       projectType: inferredType,
       category: project.category || 'Web App',
       techStack: project.techStack || [],
+      adminRemarks: project.adminRemarks || '',
       developers: assignedDevIds,
       startDate: project.startDate
         ? new Date(project.startDate).toISOString().split('T')[0]
@@ -264,6 +278,33 @@ const ProjectsPage = () => {
     });
     setCustomTechInput('');
     setIsModalOpen(true);
+  };
+
+  const openRemarksModal = (project, e) => {
+    if (e) e.stopPropagation();
+    setProjectForRemarks(project);
+    setRemarksInput(project.adminRemarks || '');
+    setIsRemarksModalOpen(true);
+  };
+
+  const handleSaveRemarks = async (e) => {
+    e.preventDefault();
+    if (!projectForRemarks) return;
+    setIsSavingRemarks(true);
+    try {
+      const res = await api.patch(`/projects/${projectForRemarks._id}/remarks`, {
+        adminRemarks: remarksInput,
+      });
+      if (res.data.success) {
+        success('Admin remarks updated successfully');
+        setIsRemarksModalOpen(false);
+        fetchProjects();
+      }
+    } catch (err) {
+      error(err.response?.data?.message || 'Failed to update admin remarks');
+    } finally {
+      setIsSavingRemarks(false);
+    }
   };
 
   const handleCategoryChange = (newCat) => {
@@ -513,12 +554,47 @@ const ProjectsPage = () => {
     return isCompleted;
   }).length;
 
+  // Collect all unique categories and technologies across projects
+  const allCategoryOptions = React.useMemo(() => {
+    const list = [
+      'Web App',
+      'Android App',
+      'General Website',
+      'Backend API',
+      'Mobile App',
+      'AI / ML',
+      'E-Commerce',
+      'Full Stack',
+      'Desktop App',
+      'Other',
+    ];
+    projects.forEach((p) => {
+      if (p.category && !list.includes(p.category)) {
+        list.push(p.category);
+      }
+    });
+    return list;
+  }, [projects]);
+
+  const allTechOptions = React.useMemo(() => {
+    const set = new Set();
+    projects.forEach((p) => {
+      if (Array.isArray(p.techStack)) {
+        p.techStack.forEach((t) => {
+          if (t && t.trim()) set.add(t.trim());
+        });
+      }
+    });
+    return Array.from(set).sort();
+  }, [projects]);
+
   // Filter and Sort projects
   const filteredProjects = projects
     .filter((project) => {
       const matchesSearch =
         project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         project.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (project.adminRemarks && project.adminRemarks.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (project.techStack && project.techStack.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())));
 
       const pType =
@@ -536,7 +612,16 @@ const ProjectsPage = () => {
         (statusFilter === 'In Progress' && !isCompleted) ||
         (statusFilter === 'Completed' && isCompleted);
 
-      return matchesSearch && matchesType && matchesStatus;
+      const matchesCategory =
+        categoryFilter === 'All' ||
+        (project.category && project.category.toLowerCase() === categoryFilter.toLowerCase());
+
+      const matchesTech =
+        techFilter === 'All' ||
+        (Array.isArray(project.techStack) &&
+          project.techStack.some((t) => t.toLowerCase() === techFilter.toLowerCase()));
+
+      return matchesSearch && matchesType && matchesStatus && matchesCategory && matchesTech;
     })
     .sort((a, b) => {
       const progA = a.overallProgress || 0;
@@ -595,7 +680,7 @@ const ProjectsPage = () => {
           <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search projects by name, description, tech stack..."
+            placeholder="Search projects by name, description, tech stack, remarks..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-xl sm:rounded-2xl border border-slate-200/90 bg-white/80 py-2 sm:py-2.5 pl-9 pr-8 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20 shadow-soft-xs"
@@ -694,6 +779,67 @@ const ProjectsPage = () => {
             );
           })}
         </div>
+      </div>
+
+      {/* Category & Technology Filter Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-xl sm:rounded-2xl border border-slate-200/90 bg-slate-50/90 shadow-2xs">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 shrink-0 pr-1">
+            <Filter className="h-3.5 w-3.5 text-brand-600" />
+            <span className="text-[10px] uppercase font-extrabold tracking-wider text-slate-500">Filter By:</span>
+          </div>
+
+          {/* Category Dropdown Filter */}
+          <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2.5 py-1 text-xs shadow-2xs">
+            <Globe className="h-3 w-3 text-brand-600 shrink-0" />
+            <span className="text-[11px] font-bold text-slate-500">Category:</span>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="bg-transparent font-bold text-slate-800 focus:outline-none cursor-pointer pr-1 text-xs"
+            >
+              <option value="All">All Categories</option>
+              {allCategoryOptions.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Technology Dropdown Filter */}
+          <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2.5 py-1 text-xs shadow-2xs">
+            <Code2 className="h-3 w-3 text-brand-600 shrink-0" />
+            <span className="text-[11px] font-bold text-slate-500">Tech Stack:</span>
+            <select
+              value={techFilter}
+              onChange={(e) => setTechFilter(e.target.value)}
+              className="bg-transparent font-bold text-slate-800 focus:outline-none cursor-pointer pr-1 text-xs"
+            >
+              <option value="All">All Technologies</option>
+              {allTechOptions.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Active Filters Clear Button */}
+        {(categoryFilter !== 'All' || techFilter !== 'All' || typeFilter !== 'All' || statusFilter !== 'All') && (
+          <button
+            onClick={() => {
+              setCategoryFilter('All');
+              setTechFilter('All');
+              setTypeFilter('All');
+              setStatusFilter('All');
+            }}
+            className="text-[11px] font-bold text-rose-600 hover:text-rose-700 underline px-2 py-0.5 rounded-lg hover:bg-rose-50 transition-colors"
+          >
+            Reset All Filters
+          </button>
+        )}
       </div>
 
       {/* Quick Progress Sort Buttons */}
@@ -800,6 +946,17 @@ const ProjectsPage = () => {
                     {/* Quick Edit/Delete Actions */}
                     <div className="flex items-center gap-0.5 shrink-0">
                       <button
+                        onClick={(e) => openRemarksModal(project, e)}
+                        title={project.adminRemarks ? `Admin Remarks: ${project.adminRemarks}` : "Add Admin Remarks"}
+                        className={`p-1 rounded-lg transition-colors ${
+                          project.adminRemarks
+                            ? 'text-purple-600 hover:bg-purple-50'
+                            : 'text-slate-400 hover:text-purple-600 hover:bg-purple-50'
+                        }`}
+                      >
+                        <Sparkles className="h-3.5 w-3.5" />
+                      </button>
+                      <button
                         onClick={() => openEditModal(project)}
                         title="Edit Project"
                         className="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
@@ -818,9 +975,31 @@ const ProjectsPage = () => {
 
                   {/* Description */}
                   {project.description && (
-                    <p className="text-[11px] text-slate-500 line-clamp-1 mb-1.5 font-normal leading-relaxed">
+                    <p className="text-[11px] text-slate-500 line-clamp-1 mb-1 font-normal leading-relaxed">
                       {project.description}
                     </p>
+                  )}
+
+                  {/* Admin Remarks Pill if present */}
+                  {project.adminRemarks && (
+                    <div
+                      onClick={(e) => openRemarksModal(project, e)}
+                      className="my-1.5 p-2 rounded-xl bg-purple-50/80 border border-purple-200/90 text-purple-950 hover:bg-purple-100/90 transition-all cursor-pointer shadow-2xs group/rmk"
+                      title="Click to edit Admin Remarks"
+                    >
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className="text-[9px] font-extrabold uppercase tracking-wider text-purple-700 flex items-center gap-1">
+                          <Sparkles className="h-2.5 w-2.5 text-purple-600" />
+                          Admin Remark
+                        </span>
+                        <span className="text-[9px] font-bold text-purple-600 underline opacity-0 group-hover/rmk:opacity-100 transition-opacity">
+                          Edit
+                        </span>
+                      </div>
+                      <p className="line-clamp-2 text-purple-900 leading-relaxed font-mono text-[10px]">
+                        {project.adminRemarks}
+                      </p>
+                    </div>
                   )}
 
                   {/* Tech Stack Pills */}
@@ -1178,6 +1357,22 @@ const ProjectsPage = () => {
             />
           </div>
 
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-purple-700 mb-1 flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-purple-600" />
+              <span>Admin Remarks (Notes & Status Remarks)</span>
+            </label>
+            <textarea
+              rows={2}
+              value={formData.adminRemarks}
+              onChange={(e) =>
+                setFormData({ ...formData, adminRemarks: e.target.value })
+              }
+              placeholder="Add any internal admin remarks, client notes, or milestone comments..."
+              className="block w-full rounded-xl border border-purple-200/90 bg-purple-50/30 px-3.5 py-2 text-sm text-slate-900 placeholder-purple-300 transition-all focus:border-purple-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+            />
+          </div>
+
           {/* Assigned Developers Multi-Selection / Single selection */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
@@ -1468,6 +1663,55 @@ const ProjectsPage = () => {
                 'Create Project'
               ) : (
                 'Save Changes'
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Quick Admin Remarks Modal */}
+      <Modal
+        isOpen={isRemarksModalOpen}
+        onClose={() => setIsRemarksModalOpen(false)}
+        title="Admin Remarks"
+        subtitle={`Update remarks for ${projectForRemarks?.name || 'Project'}`}
+        maxWidth="md"
+      >
+        <form onSubmit={handleSaveRemarks} className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-purple-700 mb-1.5 flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-purple-600" />
+              <span>Project Admin Remarks</span>
+            </label>
+            <textarea
+              rows={4}
+              value={remarksInput}
+              onChange={(e) => setRemarksInput(e.target.value)}
+              placeholder="e.g. Client requested revisions on Phase 3. Delivery timeline extended to Friday..."
+              className="block w-full rounded-xl border border-purple-200 bg-purple-50/40 p-3 text-sm text-slate-900 placeholder-purple-300 focus:border-purple-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsRemarksModalOpen(false)}
+              className="rounded-xl border border-slate-300/80 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-soft-xs"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSavingRemarks}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-soft-md shadow-purple-500/25 hover:from-purple-500 hover:to-indigo-500 transition-all disabled:opacity-50"
+            >
+              {isSavingRemarks ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Saving Remarks...
+                </>
+              ) : (
+                'Save Admin Remarks'
               )}
             </button>
           </div>
