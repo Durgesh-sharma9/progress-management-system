@@ -256,6 +256,11 @@ const DeveloperAttendancePage = () => {
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
+  const devNow = new Date();
+  const devCurrYear = devNow.getFullYear();
+  const devCurrMonth = devNow.getMonth() + 1;
+  const isDevCurrentMonth = calendarYear === devCurrYear && calendarMonth === devCurrMonth;
+
   const handlePrevMonth = () => {
     if (calendarMonth === 1) {
       setCalendarMonth(12);
@@ -266,6 +271,9 @@ const DeveloperAttendancePage = () => {
   };
 
   const handleNextMonth = () => {
+    if (calendarYear > devCurrYear || (calendarYear === devCurrYear && calendarMonth >= devCurrMonth)) {
+      return;
+    }
     if (calendarMonth === 12) {
       setCalendarMonth(1);
       setCalendarYear((prev) => prev + 1);
@@ -622,8 +630,9 @@ const DeveloperAttendancePage = () => {
               </h2>
               <button
                 onClick={handleNextMonth}
-                className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 transition-colors"
-                title="Next Month"
+                disabled={isDevCurrentMonth}
+                className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 transition-colors disabled:opacity-25 disabled:cursor-not-allowed"
+                title={isDevCurrentMonth ? 'Future months disabled' : 'Next Month'}
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
@@ -662,7 +671,7 @@ const DeveloperAttendancePage = () => {
               <div className="overflow-x-auto">
                 <div className="min-w-[580px] sm:min-w-0">
                   {/* Day of Week Headers */}
-                  <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50/80 text-center text-[11px] font-extrabold text-slate-600 py-2.5">
+                  <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50/80 text-center text-[10px] sm:text-xs font-extrabold text-slate-600 py-1.5 sm:py-2">
                     <span className="text-rose-600">Sun</span>
                     <span>Mon</span>
                     <span>Tue</span>
@@ -676,7 +685,7 @@ const DeveloperAttendancePage = () => {
                   <div className="grid grid-cols-7 divide-x divide-y divide-slate-100">
                     {/* Blank Leading Cells */}
                     {Array.from({ length: firstDayOfMonthWeekday }).map((_, idx) => (
-                      <div key={`blank-${idx}`} className="h-24 sm:h-28 bg-slate-50/30 p-1.5" />
+                      <div key={`blank-${idx}`} className="h-14 sm:h-18 md:h-20 bg-slate-50/30 p-1" />
                     ))}
 
                     {/* Month Days */}
@@ -696,7 +705,7 @@ const DeveloperAttendancePage = () => {
                                   setIsDayDetailsModalOpen(true);
                                 }
                           }
-                          className={`h-24 sm:h-28 p-1.5 sm:p-2 transition-all flex flex-col justify-between relative group ${
+                          className={`h-14 sm:h-18 md:h-20 p-1 sm:p-1.5 transition-all flex flex-col justify-between relative group ${
                             isFuture && !day.isHoliday
                               ? 'bg-slate-50/40 opacity-40 cursor-not-allowed select-none'
                               : 'cursor-pointer hover:bg-brand-50/30'
@@ -711,9 +720,9 @@ const DeveloperAttendancePage = () => {
                           } ${isToday ? 'ring-2 ring-brand-500 ring-inset shadow-soft-xs' : ''}`}
                         >
                           {/* Top Bar: Date Number + Holiday / Status Badge */}
-                          <div className="flex items-start justify-between">
+                          <div className="flex items-start justify-between gap-0.5">
                             <span
-                              className={`font-mono text-xs sm:text-sm font-extrabold h-6 w-6 rounded-lg flex items-center justify-center ${
+                              className={`font-mono text-[10px] sm:text-xs font-extrabold h-4 w-4 sm:h-5 sm:w-5 rounded flex items-center justify-center ${
                                 isToday
                                   ? 'bg-brand-600 text-white shadow-2xs'
                                   : day.isSunday

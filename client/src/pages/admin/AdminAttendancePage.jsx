@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import {
@@ -33,12 +33,20 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  BarChart3,
+  User,
+  TrendingUp,
 } from 'lucide-react';
+
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
 
 const AdminAttendancePage = () => {
   const { success, error } = useToast();
 
-  const [activeTab, setActiveTab] = useState('live'); // 'live' | 'calendar' | 'holidays' | 'settings'
+  const [activeTab, setActiveTab] = useState('live'); // 'live' | 'calendar' (Monthly Report) | 'holidays' | 'settings'
 
   // Live Today Overview State
   const [loading, setLoading] = useState(true);
@@ -50,7 +58,8 @@ const AdminAttendancePage = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [developerFilter, setDeveloperFilter] = useState('All');
 
-  // Calendar View State
+  // Monthly Report & Calendar State
+  const [selectedStaffId, setSelectedStaffId] = useState('All');
   const [calendarLoading, setCalendarLoading] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth() + 1);
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
@@ -337,7 +346,30 @@ const AdminAttendancePage = () => {
     }
   };
 
-  // Month navigation helpers
+  // Month navigation helpers & constraints
+  const now = new Date();
+  const currentYearNow = now.getFullYear();
+  const currentMonthNow = now.getMonth() + 1;
+  const isCurrentMonth =
+    calendarYear === currentYearNow && calendarMonth === currentMonthNow;
+
+  const availableMonths = useMemo(() => {
+    const list = [];
+    const tempDate = new Date(currentYearNow, currentMonthNow - 1, 1);
+    for (let i = 0; i < 24; i++) {
+      const y = tempDate.getFullYear();
+      const m = tempDate.getMonth() + 1;
+      list.push({
+        year: y,
+        month: m,
+        value: `${y}-${m}`,
+        label: `${MONTH_NAMES[m - 1]} ${y}${i === 0 ? ' (Current Month)' : ''}`,
+      });
+      tempDate.setMonth(tempDate.getMonth() - 1);
+    }
+    return list;
+  }, [currentYearNow, currentMonthNow]);
+
   const handlePrevMonth = () => {
     if (calendarMonth === 1) {
       setCalendarMonth(12);
@@ -348,6 +380,12 @@ const AdminAttendancePage = () => {
   };
 
   const handleNextMonth = () => {
+    if (
+      calendarYear > currentYearNow ||
+      (calendarYear === currentYearNow && calendarMonth >= currentMonthNow)
+    ) {
+      return;
+    }
     if (calendarMonth === 12) {
       setCalendarMonth(1);
       setCalendarYear((prev) => prev + 1);
@@ -355,6 +393,115 @@ const AdminAttendancePage = () => {
       setCalendarMonth((prev) => prev + 1);
     }
   };
+
+  const developersList = useMemo(() => {
+    if (calendarData?.developers && calendarData.developers.length > 0) {
+      return calendarData.developers;
+    }
+    if (attendanceData?.roster && attendanceData.roster.length > 0) {
+      return attendanceData.roster.map((r) => ({
+        _id: r.developer._id,
+        name: r.developer.name,
+        email: r.developer.email,
+      }));
+    }
+    return [];
+  }, [calendarData?.developers, attendanceData?.roster]);
+
+  const monthlyAnalytics = useMemo(() => {
+    const days = calendarData?.calendarDays || [];
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    // Past or current working days (not future, not Sunday, not Holiday)
+    const activeWorkingDays = days.filter(
+      (d) => d.date <= todayStr && !d.isSunday && !d.isHoliday
+    );
+    const totalWorkingDays = activeWorkingDays.length;
+    const holidaysCount = days.filter((d) => d.isHoliday).length;
+    const sundaysCount = days.filter((d) => d.isSunday).length;
+
+    if (selectedStaffId === 'All') {
+      const totalStaff = developersList.length || calendarData?.totalDevelopers || 0;
+
+      const staffBreakdown = developersList.map((dev) => {
+        const devIdStr = dev._id ? dev._id.toString() : '';
+        const devDays = activeWorkingDays.filter((d) =>
+          d.attendees?.some((a) => String(a.developerId) === devIdStr)
+        );
+        const presentCount = devDays.length;
+        const absentCount = Math.max(0, totalWorkingDays - presentCount);
+        const rate =
+          totalWorkingDays > 0 ? Math.round((presentCount / totalWorkingDays) * 100) : 0;
+        return {
+          ...dev,
+          presentCount,
+          absentCount,
+          rate,
+        };
+      });
+
+      const totalPossibleAttendance = totalStaff * totalWorkingDays;
+      const totalMarkedAttendance = staffBreakdown.reduce((sum, s) => sum + s.presentCount, 0);
+      const avgTeamRate =
+        totalPossibleAttendance > 0
+          ? Math.round((totalMarkedAttendance / totalPossibleAttendance) * 100)
+          : 0;
+
+      return {
+        mode: 'team',
+        totalStaff,
+        totalWorkingDays,
+        totalMarkedAttendance,
+        avgTeamRate,
+        holidaysCount,
+        sundaysCount,
+        staffBreakdown,
+      };
+    } else {
+      const selectedDev = developersList.find((d) => String(d._id) === String(selectedStaffId));
+      const devDays = activeWorkingDays.filter((d) =>
+        d.attendees?.some((a) => String(a.developerId) === String(selectedStaffId))
+      );
+      const presentCount = devDays.length;
+      const absentCount = Math.max(0, totalWorkingDays - presentCount);
+      const rate =
+        totalWorkingDays > 0 ? Math.round((presentCount / totalWorkingDays) * 100) : 0;
+
+      const punchIns = devDays
+        .map(
+          (d) =>
+            d.attendees?.find((a) => String(a.developerId) === String(selectedStaffId))
+              ?.punchInTime
+        )
+        .filter(Boolean);
+
+      let avgPunchIn = '--:--';
+      if (punchIns.length > 0) {
+        const totalMinutes = punchIns.reduce((acc, t) => {
+          const dt = new Date(t);
+          return acc + (dt.getHours() * 60 + dt.getMinutes());
+        }, 0);
+        const avgMins = Math.round(totalMinutes / punchIns.length);
+        const hrs = Math.floor(avgMins / 60);
+        const mins = avgMins % 60;
+        const ampm = hrs >= 12 ? 'PM' : 'AM';
+        const h12 = hrs % 12 || 12;
+        avgPunchIn = `${String(h12).padStart(2, '0')}:${String(mins).padStart(2, '0')} ${ampm}`;
+      }
+
+      return {
+        mode: 'staff',
+        staff: selectedDev || { name: 'Staff Member', email: '' },
+        totalWorkingDays,
+        presentCount,
+        absentCount,
+        rate,
+        avgPunchIn,
+        holidaysCount,
+        sundaysCount,
+      };
+    }
+  }, [calendarData, selectedStaffId, developersList]);
 
   const openDayDetails = (day) => {
     setSelectedDayDetails(day);
@@ -446,7 +593,7 @@ const AdminAttendancePage = () => {
               Attendance & Calendar Console
             </h1>
             <p className="text-xs text-slate-500">
-              Live Roster, Monthly Attendance Calendar, Holidays & Geofence Settings
+              Live Roster, Monthly Attendance Report & Analytics, Holidays & Geofence Settings
             </p>
           </div>
         </div>
@@ -472,8 +619,8 @@ const AdminAttendancePage = () => {
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <CalendarIcon className="h-3.5 w-3.5 text-purple-600" />
-            <span>Monthly Calendar</span>
+            <BarChart3 className="h-3.5 w-3.5 text-purple-600" />
+            <span>Monthly Report</span>
           </button>
           <button
             onClick={() => setActiveTab('holidays')}
@@ -736,193 +883,464 @@ const AdminAttendancePage = () => {
         </div>
       )}
 
-      {/* VIEW 2: MONTHLY ATTENDANCE CALENDAR */}
+      {/* VIEW 2: MONTHLY ATTENDANCE REPORT & ANALYTICS */}
       {activeTab === 'calendar' && (
         <div className="space-y-4">
-          {/* Month & Year Navigation Header */}
-          <div className="glass-card rounded-2xl p-4 bg-white border border-slate-200/90 shadow-soft-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handlePrevMonth}
-                className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 transition-colors"
-                title="Previous Month"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <h2 className="text-base sm:text-lg font-extrabold text-slate-900 font-sans tracking-tight min-w-[180px] text-center">
-                {monthNames[calendarMonth - 1]} {calendarYear}
-              </h2>
-              <button
-                onClick={handleNextMonth}
-                className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 transition-colors"
-                title="Next Month"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
+          {/* Top Control Bar: Staff Selector, Month/Year Picker & Actions */}
+          <div className="glass-card rounded-2xl p-3 sm:p-4 bg-white border border-slate-200/90 shadow-soft-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+            {/* Left Controls: Staff Filter + Month Picker */}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 flex-1">
+              {/* Staff Selector */}
+              <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1 text-xs">
+                <Users className="h-3.5 w-3.5 text-purple-600 shrink-0" />
+                <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">Staff:</span>
+                <select
+                  value={selectedStaffId}
+                  onChange={(e) => setSelectedStaffId(e.target.value)}
+                  className="bg-transparent text-xs font-bold text-slate-900 focus:outline-none cursor-pointer pr-1"
+                >
+                  <option value="All">👥 All Staff (Team Overview)</option>
+                  {developersList.map((dev) => (
+                    <option key={dev._id} value={dev._id}>
+                      👤 {dev.name} ({dev.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Month & Year Navigation + Dropdown (Previous Months & Current Month) */}
+              <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl p-0.5">
+                <button
+                  type="button"
+                  onClick={handlePrevMonth}
+                  className="p-1.5 rounded-lg hover:bg-white text-slate-700 transition-colors"
+                  title="Previous Month"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </button>
+
+                <select
+                  value={`${calendarYear}-${calendarMonth}`}
+                  onChange={(e) => {
+                    const [y, m] = e.target.value.split('-').map(Number);
+                    setCalendarYear(y);
+                    setCalendarMonth(m);
+                  }}
+                  className="bg-transparent text-xs font-bold text-slate-900 px-1 py-1 focus:outline-none cursor-pointer"
+                >
+                  {availableMonths.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+
+                <button
+                  type="button"
+                  onClick={handleNextMonth}
+                  disabled={isCurrentMonth}
+                  className="p-1.5 rounded-lg hover:bg-white text-slate-700 transition-colors disabled:opacity-25 disabled:cursor-not-allowed"
+                  title={isCurrentMonth ? "Future months disabled" : "Next Month"}
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* Right Actions */}
+            <div className="flex items-center gap-2 shrink-0">
               <button
+                type="button"
                 onClick={() => openAddHolidayModal()}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold shadow-soft-xs hover:from-purple-500 hover:to-pink-500 transition-all active:scale-95 shrink-0"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold shadow-soft-xs hover:from-purple-500 hover:to-pink-500 transition-all active:scale-95 shrink-0"
               >
                 <PartyPopper className="h-3.5 w-3.5" />
-                <span>+ Declare Holiday</span>
+                <span className="hidden xs:inline">+ Declare Holiday</span>
+                <span className="xs:hidden">+ Holiday</span>
               </button>
               <button
                 type="button"
                 onClick={fetchMonthlyCalendar}
                 disabled={calendarLoading}
                 className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 transition-colors"
-                title="Refresh Calendar"
+                title="Refresh Report"
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${calendarLoading ? 'animate-spin' : ''}`} />
               </button>
             </div>
           </div>
 
-          {/* Calendar Grid */}
+          {/* Monthly Attendance Analytics Section */}
+          {monthlyAnalytics.mode === 'staff' ? (
+            /* Case 1: Individual Staff Member Analytics */
+            <div className="space-y-3">
+              {/* Staff Banner */}
+              <div className="glass-card rounded-2xl p-3 sm:p-4 bg-gradient-to-r from-purple-50 via-white to-brand-50 border border-purple-200/80 shadow-soft-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-purple-600 text-white font-black text-sm flex items-center justify-center shadow-soft-xs shrink-0">
+                    {monthlyAnalytics.staff?.name?.charAt(0)?.toUpperCase() || 'S'}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm sm:text-base font-extrabold text-slate-900">
+                        {monthlyAnalytics.staff?.name}
+                      </h3>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                        Staff Report
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500">{monthlyAnalytics.staff?.email}</p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedStaffId('All')}
+                  className="text-xs font-bold text-purple-700 hover:text-purple-900 px-3 py-1.5 rounded-xl bg-white border border-purple-200 hover:bg-purple-50 transition-colors self-start sm:self-auto"
+                >
+                  ← Back to All Staff
+                </button>
+              </div>
+
+              {/* 4 Analytics Metric Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3.5">
+                <div className="glass-card rounded-2xl p-3 sm:p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
+                  <p className="text-[10px] font-bold uppercase text-emerald-600">Present Days</p>
+                  <p className="text-lg sm:text-2xl font-extrabold text-emerald-600 font-mono mt-0.5">
+                    {monthlyAnalytics.presentCount} <span className="text-xs text-slate-400 font-sans font-normal">/ {monthlyAnalytics.totalWorkingDays}</span>
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Working Days</p>
+                </div>
+
+                <div className="glass-card rounded-2xl p-3 sm:p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
+                  <p className="text-[10px] font-bold uppercase text-rose-600">Absent Days</p>
+                  <p className="text-lg sm:text-2xl font-extrabold text-rose-600 font-mono mt-0.5">
+                    {monthlyAnalytics.absentCount}
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Unmarked days</p>
+                </div>
+
+                <div className="glass-card rounded-2xl p-3 sm:p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
+                  <p className="text-[10px] font-bold uppercase text-purple-600">Attendance Rate</p>
+                  <p className="text-lg sm:text-2xl font-extrabold text-purple-700 font-mono mt-0.5">
+                    {monthlyAnalytics.rate}%
+                  </p>
+                  <div className="w-full bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        monthlyAnalytics.rate >= 80 ? 'bg-emerald-500' : monthlyAnalytics.rate >= 50 ? 'bg-amber-500' : 'bg-rose-500'
+                      }`}
+                      style={{ width: `${Math.min(100, monthlyAnalytics.rate)}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="glass-card rounded-2xl p-3 sm:p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
+                  <p className="text-[10px] font-bold uppercase text-indigo-600">Avg In-Time</p>
+                  <p className="text-base sm:text-xl font-extrabold text-indigo-700 font-mono mt-0.5 truncate">
+                    {monthlyAnalytics.avgPunchIn}
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Morning punch-in</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Case 2: All Staff Team Analytics & Staff Breakdown */
+            <div className="space-y-3">
+              {/* 4 Team Metric Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3.5">
+                <div className="glass-card rounded-2xl p-3 sm:p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
+                  <p className="text-[10px] font-bold uppercase text-slate-400">Total Staff</p>
+                  <p className="text-lg sm:text-2xl font-extrabold text-slate-900 font-mono mt-0.5">
+                    {monthlyAnalytics.totalStaff}
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Engineers</p>
+                </div>
+
+                <div className="glass-card rounded-2xl p-3 sm:p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
+                  <p className="text-[10px] font-bold uppercase text-slate-500">Working Days</p>
+                  <p className="text-lg sm:text-2xl font-extrabold text-slate-800 font-mono mt-0.5">
+                    {monthlyAnalytics.totalWorkingDays}
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">This Month</p>
+                </div>
+
+                <div className="glass-card rounded-2xl p-3 sm:p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
+                  <p className="text-[10px] font-bold uppercase text-purple-600">Team Rate</p>
+                  <p className="text-lg sm:text-2xl font-extrabold text-purple-700 font-mono mt-0.5">
+                    {monthlyAnalytics.avgTeamRate}%
+                  </p>
+                  <div className="w-full bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-purple-600 transition-all"
+                      style={{ width: `${Math.min(100, monthlyAnalytics.avgTeamRate)}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="glass-card rounded-2xl p-3 sm:p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
+                  <p className="text-[10px] font-bold uppercase text-pink-600">Holidays & Off</p>
+                  <p className="text-lg sm:text-2xl font-extrabold text-pink-700 font-mono mt-0.5">
+                    {monthlyAnalytics.holidaysCount + monthlyAnalytics.sundaysCount}
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">
+                    {monthlyAnalytics.holidaysCount} Hol. + {monthlyAnalytics.sundaysCount} Sun.
+                  </p>
+                </div>
+              </div>
+
+              {/* Staff Monthly Breakdown Table */}
+              {monthlyAnalytics.staffBreakdown?.length > 0 && (
+                <div className="glass-card rounded-2xl bg-white border border-slate-200/90 shadow-soft-xs overflow-hidden">
+                  <div className="p-3 sm:p-3.5 border-b border-slate-100 flex items-center justify-between">
+                    <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 flex items-center gap-1.5">
+                      <TrendingUp className="h-4 w-4 text-purple-600" />
+                      <span>Staff Attendance Performance ({MONTH_NAMES[calendarMonth - 1]} {calendarYear})</span>
+                    </h3>
+                    <span className="text-[11px] text-slate-400">
+                      Tap staff to view individual calendar
+                    </span>
+                  </div>
+
+                  <div className="divide-y divide-slate-100">
+                    {monthlyAnalytics.staffBreakdown.map((dev) => (
+                      <div
+                        key={dev._id}
+                        onClick={() => setSelectedStaffId(dev._id)}
+                        className="p-3 sm:p-3.5 flex items-center justify-between gap-3 hover:bg-purple-50/40 cursor-pointer transition-colors"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="h-8 w-8 rounded-lg bg-purple-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                            {dev.name?.charAt(0)?.toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-900 truncate hover:text-purple-700">
+                              {dev.name}
+                            </p>
+                            <p className="text-[10px] text-slate-400 truncate">{dev.email}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 shrink-0">
+                          <div className="text-right">
+                            <span className="text-xs font-extrabold font-mono text-slate-800">
+                              {dev.presentCount}/{monthlyAnalytics.totalWorkingDays} Days
+                            </span>
+                            <div className="flex items-center gap-1 justify-end mt-0.5">
+                              <span
+                                className={`text-[10px] font-extrabold px-1.5 py-0.2 rounded-md ${
+                                  dev.rate >= 80
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : dev.rate >= 50
+                                    ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                                    : 'bg-rose-50 text-rose-700 border border-rose-200'
+                                }`}
+                              >
+                                {dev.rate}%
+                              </span>
+                            </div>
+                          </div>
+
+                          <span className="text-xs text-purple-600 font-bold hidden sm:inline">
+                            View Calendar →
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Calendar Section with Compact, Mobile-Responsive Design */}
           {calendarLoading ? (
-            <div className="py-16 flex flex-col items-center justify-center gap-2 bg-white rounded-2xl border border-slate-200">
-              <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+            <div className="py-12 flex flex-col items-center justify-center gap-2 bg-white rounded-2xl border border-slate-200">
+              <Loader2 className="h-7 w-7 animate-spin text-purple-600" />
               <p className="text-xs text-slate-400">Loading attendance calendar...</p>
             </div>
           ) : (
             <div className="glass-card rounded-2xl bg-white border border-slate-200/90 shadow-soft-xs overflow-hidden">
-              <div className="overflow-x-auto">
-                <div className="min-w-[580px] sm:min-w-0">
-                  {/* Day of Week Headers */}
-                  <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50/80 text-center text-[11px] font-extrabold text-slate-600 py-2.5">
-                    <span className="text-rose-600">Sun</span>
-                    <span>Mon</span>
-                    <span>Tue</span>
-                    <span>Wed</span>
-                    <span>Thu</span>
-                    <span>Fri</span>
-                    <span className="text-indigo-600">Sat</span>
-                  </div>
+              {/* Calendar Section Header */}
+              <div className="px-3 sm:px-4 py-2.5 bg-slate-50/70 border-b border-slate-200/90 flex items-center justify-between">
+                <span className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+                  <CalendarIcon className="h-3.5 w-3.5 text-purple-600" />
+                  {selectedStaffId === 'All'
+                    ? `Team Monthly Calendar (${MONTH_NAMES[calendarMonth - 1]} ${calendarYear})`
+                    : `${monthlyAnalytics.staff?.name}'s Attendance Calendar`}
+                </span>
+                {selectedStaffId !== 'All' && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedStaffId('All')}
+                    className="text-[11px] font-bold text-purple-700 hover:text-purple-900"
+                  >
+                    View All Staff
+                  </button>
+                )}
+              </div>
 
-                  {/* Day Cells Grid */}
-                  <div className="grid grid-cols-7 divide-x divide-y divide-slate-100">
-                    {/* Blank Leading Cells */}
-                    {Array.from({ length: firstDayOfMonthWeekday }).map((_, idx) => (
-                      <div key={`blank-${idx}`} className="h-24 sm:h-28 bg-slate-50/30 p-1.5" />
-                    ))}
+              {/* Day of Week Headers */}
+              <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50/90 text-center text-[10px] sm:text-xs font-extrabold text-slate-600 py-1.5 sm:py-2">
+                <span className="text-rose-600">Sun</span>
+                <span>Mon</span>
+                <span>Tue</span>
+                <span>Wed</span>
+                <span>Thu</span>
+                <span>Fri</span>
+                <span className="text-indigo-600">Sat</span>
+              </div>
 
-                    {/* Days of the Month */}
-                    {calendarData?.calendarDays?.map((day) => {
-                      const todayStr = new Date().toISOString().split('T')[0];
-                      const isToday = day.date === todayStr;
-                      const isFuture = day.date > todayStr;
+              {/* Compact Day Cells Grid */}
+              <div className="grid grid-cols-7 divide-x divide-y divide-slate-100">
+                {/* Blank Leading Cells */}
+                {Array.from({ length: firstDayOfMonthWeekday }).map((_, idx) => (
+                  <div key={`blank-${idx}`} className="h-14 sm:h-18 md:h-20 bg-slate-50/30 p-1" />
+                ))}
 
-                      return (
-                        <div
-                          key={day.date}
-                          onClick={isFuture && !day.isHoliday ? undefined : () => openDayDetails(day)}
-                          className={`h-24 sm:h-28 p-1.5 sm:p-2 transition-all flex flex-col justify-between relative group ${
-                            isFuture && !day.isHoliday
-                              ? 'bg-slate-50/40 opacity-40 cursor-not-allowed select-none'
-                              : 'cursor-pointer hover:bg-purple-50/40'
-                          } ${
-                            day.isHoliday
-                              ? 'bg-purple-50/60'
+                {/* Days of the Month */}
+                {calendarData?.calendarDays?.map((day) => {
+                  const todayStr = new Date().toISOString().split('T')[0];
+                  const isToday = day.date === todayStr;
+                  const isFuture = day.date > todayStr;
+
+                  // Find staff attendee if a specific staff member is selected
+                  const staffAttendee =
+                    selectedStaffId !== 'All'
+                      ? day.attendees?.find(
+                          (a) => String(a.developerId) === String(selectedStaffId)
+                        )
+                      : null;
+                  const isStaffPresent = Boolean(staffAttendee);
+
+                  return (
+                    <div
+                      key={day.date}
+                      onClick={isFuture && !day.isHoliday ? undefined : () => openDayDetails(day)}
+                      className={`h-14 sm:h-18 md:h-20 p-1 sm:p-1.5 transition-all flex flex-col justify-between relative group ${
+                        isFuture && !day.isHoliday
+                          ? 'bg-slate-50/40 opacity-40 cursor-not-allowed select-none'
+                          : 'cursor-pointer hover:bg-purple-50/40'
+                      } ${
+                        day.isHoliday
+                          ? 'bg-purple-50/60'
+                          : selectedStaffId !== 'All' && !isFuture && !day.isSunday
+                          ? isStaffPresent
+                            ? 'bg-emerald-50/40'
+                            : 'bg-rose-50/30'
+                          : day.isSunday
+                          ? 'bg-rose-50/20'
+                          : 'bg-white'
+                      } ${isToday ? 'ring-2 ring-brand-500 ring-inset shadow-soft-xs' : ''}`}
+                    >
+                      {/* Top bar: Day number & Holiday Badge */}
+                      <div className="flex items-start justify-between gap-0.5">
+                        <span
+                          className={`font-mono text-[10px] sm:text-xs font-extrabold h-4 w-4 sm:h-5 sm:w-5 rounded flex items-center justify-center ${
+                            isToday
+                              ? 'bg-brand-600 text-white shadow-2xs'
                               : day.isSunday
-                              ? 'bg-rose-50/20'
-                              : 'bg-white'
-                          } ${isToday ? 'ring-2 ring-brand-500 ring-inset shadow-soft-xs' : ''}`}
+                              ? 'text-rose-600'
+                              : isFuture
+                              ? 'text-slate-400'
+                              : 'text-slate-800'
+                          }`}
                         >
-                          {/* Top bar: Day number & Holiday / Rate */}
-                          <div className="flex items-start justify-between">
-                            <span
-                              className={`font-mono text-xs sm:text-sm font-extrabold h-6 w-6 rounded-lg flex items-center justify-center ${
-                                isToday
-                                  ? 'bg-brand-600 text-white shadow-2xs'
-                                  : day.isSunday
-                                  ? 'text-rose-600'
-                                  : isFuture
-                                  ? 'text-slate-400'
-                                  : 'text-slate-800'
-                              }`}
-                            >
-                              {day.dayNumber}
+                          {day.dayNumber}
+                        </span>
+
+                        {day.isHoliday && (
+                          <span
+                            className="text-[8px] sm:text-[9px] font-bold px-1 py-0.2 rounded bg-purple-100 text-purple-800 border border-purple-200 truncate max-w-[50px] sm:max-w-[80px]"
+                            title={day.holiday?.title}
+                          >
+                            🎉 {day.holiday?.title}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Middle: Status Display (Staff specific OR Team overall) */}
+                      <div className="my-auto overflow-hidden">
+                        {day.isHoliday ? (
+                          <span className="text-[8px] sm:text-[9px] font-bold text-purple-700 hidden sm:block">
+                            Holiday
+                          </span>
+                        ) : isFuture ? (
+                          <span className="text-[8px] sm:text-[9px] text-slate-400 italic">
+                            {day.isSunday ? 'Off' : 'Upcoming'}
+                          </span>
+                        ) : day.isSunday ? (
+                          <span className="text-[8px] sm:text-[9px] text-slate-400 italic">
+                            Weekly Off
+                          </span>
+                        ) : selectedStaffId !== 'All' ? (
+                          /* Individual Staff Status */
+                          isStaffPresent ? (
+                            <span className="inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] font-bold px-1 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-200 truncate max-w-full">
+                              <CheckCircle2 className="h-2 w-2 sm:h-2.5 sm:w-2.5 text-emerald-600 shrink-0" />
+                              <span className="truncate">
+                                {staffAttendee.punchInTime
+                                  ? new Date(staffAttendee.punchInTime).toLocaleTimeString([], {
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                    })
+                                  : 'Present'}
+                              </span>
                             </span>
-
-                            {/* Holiday Badge */}
-                            {day.isHoliday && (
+                          ) : (
+                            <span className="inline-flex items-center text-[8px] sm:text-[9px] font-bold px-1 py-0.2 rounded bg-rose-100 text-rose-700">
+                              Absent
+                            </span>
+                          )
+                        ) : (
+                          /* Team Overview Status */
+                          day.presentCount > 0 ? (
+                            <div className="space-y-0.5">
                               <span
-                                className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-purple-100 text-purple-800 border border-purple-200 truncate max-w-[70px] sm:max-w-[100px] flex items-center gap-0.5"
-                                title={day.holiday?.title}
-                              >
-                                🎉 {day.holiday?.title}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Middle: Attendance summary stats */}
-                          {day.isHoliday ? (
-                            <div className="my-auto">
-                              <span className="text-[9px] font-bold text-purple-700 block">
-                                Declared Holiday
-                              </span>
-                            </div>
-                          ) : isFuture ? (
-                            <div className="my-auto">
-                              <span className="text-[9px] text-slate-400 italic">
-                                {day.isSunday ? 'Weekly Off' : 'Upcoming'}
-                              </span>
-                            </div>
-                          ) : day.presentCount > 0 ? (
-                            <div className="space-y-0.5 my-auto">
-                              <span
-                                className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.2 rounded-md ${
+                                className={`inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] font-bold px-1 py-0.2 rounded ${
                                   day.presentRate >= 80
                                     ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                                     : 'bg-amber-50 text-amber-800 border border-amber-200'
                                 }`}
                               >
-                                <CheckCircle2 className="h-2.5 w-2.5" />
-                                <span>
-                                  {day.presentCount}/{day.totalDevelopers} ({day.presentRate}%)
-                                </span>
+                                <span>{day.presentCount}/{day.totalDevelopers}</span>
                               </span>
 
-                              {/* Attendee Avatar Initial Circles */}
-                              <div className="hidden sm:flex items-center gap-0.5 overflow-hidden">
-                                {day.attendees.slice(0, 3).map((att, i) => (
+                              {/* Attendee Avatar Initial Circles on sm+ */}
+                              <div className="hidden md:flex items-center gap-0.5 overflow-hidden">
+                                {day.attendees.slice(0, 2).map((att, i) => (
                                   <span
                                     key={i}
-                                    className="h-4 w-4 rounded-full bg-emerald-600 text-[8px] font-bold text-white flex items-center justify-center shrink-0"
+                                    className="h-3.5 w-3.5 rounded-full bg-emerald-600 text-[7px] font-bold text-white flex items-center justify-center shrink-0"
                                     title={`${att.developerName}`}
                                   >
                                     {att.developerName?.charAt(0)}
                                   </span>
                                 ))}
-                                {day.attendees.length > 3 && (
-                                  <span className="text-[8px] text-slate-400 font-bold">
-                                    +{day.attendees.length - 3}
+                                {day.attendees.length > 2 && (
+                                  <span className="text-[7px] text-slate-400 font-bold">
+                                    +{day.attendees.length - 2}
                                   </span>
                                 )}
                               </div>
                             </div>
                           ) : (
-                            <div className="my-auto">
-                              <span className="text-[9px] text-slate-400 italic">
-                                {day.isSunday ? 'Weekly Off' : '0 Marked'}
-                              </span>
-                            </div>
-                          )}
+                            <span className="text-[8px] sm:text-[9px] text-slate-400 italic">
+                              0 Marked
+                            </span>
+                          )
+                        )}
+                      </div>
 
-                          {/* Bottom action: Details on hover / click (No repetitive +Holiday button) */}
-                          <div className="flex items-center justify-end text-[9px] text-slate-400 group-hover:text-purple-600 transition-colors pt-0.5">
-                            {(!isFuture || day.isHoliday) && (
-                              <span className="text-[9px] text-slate-400 hover:text-purple-700">Details →</span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                      {/* Bottom action: Details hint on hover */}
+                      <div className="flex items-center justify-end text-[8px] sm:text-[9px] text-slate-400 group-hover:text-purple-600 transition-colors">
+                        {(!isFuture || day.isHoliday) && (
+                          <span className="hidden sm:inline">Details →</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

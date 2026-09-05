@@ -479,7 +479,7 @@ exports.getAdminMonthlyCalendar = async (req, res, next) => {
       const holiday = holidayMap.get(dateStr) || null;
       const dayRecords = attendanceByDateMap.get(dateStr) || [];
 
-      const presentRecords = dayRecords.filter((r) => r.status === 'Present' && r.punchIn?.time);
+      const presentRecords = dayRecords.filter((r) => r.status !== 'Absent' && r.punchIn?.time);
       const presentCount = presentRecords.length;
       const absentCount = Math.max(0, totalDevelopers - presentCount);
       const presentRate = totalDevelopers > 0 ? Math.round((presentCount / totalDevelopers) * 100) : 0;
@@ -496,10 +496,19 @@ exports.getAdminMonthlyCalendar = async (req, res, next) => {
         absentCount,
         presentRate,
         attendees: presentRecords.map((r) => ({
-          developerId: r.developer?._id,
+          _id: r._id,
+          developerId: r.developer?._id ? r.developer._id.toString() : null,
           developerName: r.developer?.name,
+          developerEmail: r.developer?.email,
+          status: r.status,
           punchInTime: r.punchIn?.time,
+          punchOutTime: r.punchOut?.time,
           distanceMeters: r.punchIn?.distanceMeters,
+          deviceInfo: r.punchIn?.deviceInfo,
+          address: r.punchIn?.address,
+          totalWorkingMinutes: r.totalWorkingMinutes,
+          isManualOverride: r.isManualOverride,
+          adminNotes: r.adminNotes,
         })),
       });
     }
@@ -510,6 +519,11 @@ exports.getAdminMonthlyCalendar = async (req, res, next) => {
         year,
         month,
         totalDevelopers,
+        developers: developers.map((d) => ({
+          _id: d._id,
+          name: d.name,
+          email: d.email,
+        })),
         calendarDays,
         holidays,
       },
