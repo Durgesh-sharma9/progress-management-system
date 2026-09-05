@@ -681,16 +681,26 @@ const DeveloperAttendancePage = () => {
 
                     {/* Month Days */}
                     {calendarData?.calendarDays?.map((day) => {
-                      const isToday = day.date === new Date().toISOString().split('T')[0];
+                      const todayStr = new Date().toISOString().split('T')[0];
+                      const isToday = day.date === todayStr;
+                      const isFuture = day.date > todayStr;
 
                       return (
                         <div
                           key={day.date}
-                          onClick={() => {
-                            setSelectedDayDetails(day);
-                            setIsDayDetailsModalOpen(true);
-                          }}
-                          className={`h-24 sm:h-28 p-1.5 sm:p-2 transition-all flex flex-col justify-between cursor-pointer hover:bg-brand-50/30 relative group ${
+                          onClick={
+                            isFuture && !day.isHoliday
+                              ? undefined
+                              : () => {
+                                  setSelectedDayDetails(day);
+                                  setIsDayDetailsModalOpen(true);
+                                }
+                          }
+                          className={`h-24 sm:h-28 p-1.5 sm:p-2 transition-all flex flex-col justify-between relative group ${
+                            isFuture && !day.isHoliday
+                              ? 'bg-slate-50/40 opacity-40 cursor-not-allowed select-none'
+                              : 'cursor-pointer hover:bg-brand-50/30'
+                          } ${
                             day.isHoliday
                               ? 'bg-purple-50/50'
                               : day.isMarked
@@ -698,7 +708,7 @@ const DeveloperAttendancePage = () => {
                               : day.isSunday
                               ? 'bg-rose-50/20'
                               : 'bg-white'
-                          } ${isToday ? 'ring-2 ring-brand-500 ring-inset' : ''}`}
+                          } ${isToday ? 'ring-2 ring-brand-500 ring-inset shadow-soft-xs' : ''}`}
                         >
                           {/* Top Bar: Date Number + Holiday / Status Badge */}
                           <div className="flex items-start justify-between">
@@ -708,6 +718,8 @@ const DeveloperAttendancePage = () => {
                                   ? 'bg-brand-600 text-white shadow-2xs'
                                   : day.isSunday
                                   ? 'text-rose-600'
+                                  : isFuture
+                                  ? 'text-slate-400'
                                   : 'text-slate-800'
                               }`}
                             >
@@ -729,6 +741,10 @@ const DeveloperAttendancePage = () => {
                             {day.isHoliday ? (
                               <span className="text-[9px] font-bold text-purple-700">
                                 Official Holiday
+                              </span>
+                            ) : isFuture ? (
+                              <span className="text-[9px] text-slate-400 italic">
+                                {day.isSunday ? 'Weekly Off' : 'Upcoming'}
                               </span>
                             ) : day.isMarked ? (
                               <div className="space-y-0.5">
@@ -753,9 +769,11 @@ const DeveloperAttendancePage = () => {
 
                           {/* Bottom Hint */}
                           <div className="text-right">
-                            <span className="text-[9px] text-slate-400 group-hover:text-brand-600 transition-colors">
-                              Details →
-                            </span>
+                            {(!isFuture || day.isHoliday) && (
+                              <span className="text-[9px] text-slate-400 group-hover:text-brand-600 transition-colors">
+                                Details →
+                              </span>
+                            )}
                           </div>
                         </div>
                       );

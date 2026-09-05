@@ -575,8 +575,13 @@ const AdminAttendancePage = () => {
                 <CalendarIcon className="h-3.5 w-3.5 text-slate-500" />
                 <input
                   type="date"
+                  max={new Date().toISOString().split('T')[0]}
                   value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const maxVal = new Date().toISOString().split('T')[0];
+                    setSelectedDate(val > maxVal ? maxVal : val);
+                  }}
                   className="bg-transparent text-xs font-mono font-bold text-slate-800 focus:outline-none"
                 />
               </div>
@@ -806,20 +811,25 @@ const AdminAttendancePage = () => {
 
                     {/* Days of the Month */}
                     {calendarData?.calendarDays?.map((day) => {
-                      const isToday =
-                        day.date === new Date().toISOString().split('T')[0];
+                      const todayStr = new Date().toISOString().split('T')[0];
+                      const isToday = day.date === todayStr;
+                      const isFuture = day.date > todayStr;
 
                       return (
                         <div
                           key={day.date}
-                          onClick={() => openDayDetails(day)}
-                          className={`h-24 sm:h-28 p-1.5 sm:p-2 transition-all flex flex-col justify-between cursor-pointer hover:bg-purple-50/40 relative group ${
+                          onClick={isFuture && !day.isHoliday ? undefined : () => openDayDetails(day)}
+                          className={`h-24 sm:h-28 p-1.5 sm:p-2 transition-all flex flex-col justify-between relative group ${
+                            isFuture && !day.isHoliday
+                              ? 'bg-slate-50/40 opacity-40 cursor-not-allowed select-none'
+                              : 'cursor-pointer hover:bg-purple-50/40'
+                          } ${
                             day.isHoliday
-                              ? 'bg-purple-50/50'
+                              ? 'bg-purple-50/60'
                               : day.isSunday
                               ? 'bg-rose-50/20'
                               : 'bg-white'
-                          } ${isToday ? 'ring-2 ring-brand-500 ring-inset' : ''}`}
+                          } ${isToday ? 'ring-2 ring-brand-500 ring-inset shadow-soft-xs' : ''}`}
                         >
                           {/* Top bar: Day number & Holiday / Rate */}
                           <div className="flex items-start justify-between">
@@ -829,6 +839,8 @@ const AdminAttendancePage = () => {
                                   ? 'bg-brand-600 text-white shadow-2xs'
                                   : day.isSunday
                                   ? 'text-rose-600'
+                                  : isFuture
+                                  ? 'text-slate-400'
                                   : 'text-slate-800'
                               }`}
                             >
@@ -847,63 +859,64 @@ const AdminAttendancePage = () => {
                           </div>
 
                           {/* Middle: Attendance summary stats */}
-                          {!day.isHoliday && (
+                          {day.isHoliday ? (
                             <div className="my-auto">
-                              {day.presentCount > 0 ? (
-                                <div className="space-y-0.5">
-                                  <span
-                                    className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.2 rounded-md ${
-                                      day.presentRate >= 80
-                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                        : 'bg-amber-50 text-amber-800 border border-amber-200'
-                                    }`}
-                                  >
-                                    <CheckCircle2 className="h-2.5 w-2.5" />
-                                    <span>
-                                      {day.presentCount}/{day.totalDevelopers} ({day.presentRate}%)
-                                    </span>
-                                  </span>
-
-                                  {/* Attendee Avatar Initial Circles */}
-                                  <div className="hidden sm:flex items-center gap-0.5 overflow-hidden">
-                                    {day.attendees.slice(0, 3).map((att, i) => (
-                                      <span
-                                        key={i}
-                                        className="h-4 w-4 rounded-full bg-emerald-600 text-[8px] font-bold text-white flex items-center justify-center shrink-0"
-                                        title={`${att.developerName}`}
-                                      >
-                                        {att.developerName?.charAt(0)}
-                                      </span>
-                                    ))}
-                                    {day.attendees.length > 3 && (
-                                      <span className="text-[8px] text-slate-400 font-bold">
-                                        +{day.attendees.length - 3}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              ) : (
-                                <span className="text-[9px] text-slate-400 italic">
-                                  {day.isSunday ? 'Weekly Off' : '0 Marked'}
+                              <span className="text-[9px] font-bold text-purple-700 block">
+                                Declared Holiday
+                              </span>
+                            </div>
+                          ) : isFuture ? (
+                            <div className="my-auto">
+                              <span className="text-[9px] text-slate-400 italic">
+                                {day.isSunday ? 'Weekly Off' : 'Upcoming'}
+                              </span>
+                            </div>
+                          ) : day.presentCount > 0 ? (
+                            <div className="space-y-0.5 my-auto">
+                              <span
+                                className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.2 rounded-md ${
+                                  day.presentRate >= 80
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : 'bg-amber-50 text-amber-800 border border-amber-200'
+                                }`}
+                              >
+                                <CheckCircle2 className="h-2.5 w-2.5" />
+                                <span>
+                                  {day.presentCount}/{day.totalDevelopers} ({day.presentRate}%)
                                 </span>
-                              )}
+                              </span>
+
+                              {/* Attendee Avatar Initial Circles */}
+                              <div className="hidden sm:flex items-center gap-0.5 overflow-hidden">
+                                {day.attendees.slice(0, 3).map((att, i) => (
+                                  <span
+                                    key={i}
+                                    className="h-4 w-4 rounded-full bg-emerald-600 text-[8px] font-bold text-white flex items-center justify-center shrink-0"
+                                    title={`${att.developerName}`}
+                                  >
+                                    {att.developerName?.charAt(0)}
+                                  </span>
+                                ))}
+                                {day.attendees.length > 3 && (
+                                  <span className="text-[8px] text-slate-400 font-bold">
+                                    +{day.attendees.length - 3}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="my-auto">
+                              <span className="text-[9px] text-slate-400 italic">
+                                {day.isSunday ? 'Weekly Off' : '0 Marked'}
+                              </span>
                             </div>
                           )}
 
-                          {/* Bottom action: Quick Add Holiday */}
-                          <div className="flex items-center justify-between opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity pt-0.5">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openAddHolidayModal(day.date);
-                              }}
-                              className="text-[9px] font-bold text-purple-700 hover:text-purple-900 bg-purple-100/90 hover:bg-purple-200/90 px-1.5 py-0.5 rounded transition-all"
-                              title="Declare Holiday on this day"
-                            >
-                              + Holiday
-                            </button>
-                            <span className="text-[9px] text-slate-400 hover:text-slate-600">Details</span>
+                          {/* Bottom action: Details on hover / click (No repetitive +Holiday button) */}
+                          <div className="flex items-center justify-end text-[9px] text-slate-400 group-hover:text-purple-600 transition-colors pt-0.5">
+                            {(!isFuture || day.isHoliday) && (
+                              <span className="text-[9px] text-slate-400 hover:text-purple-700">Details →</span>
+                            )}
                           </div>
                         </div>
                       );
