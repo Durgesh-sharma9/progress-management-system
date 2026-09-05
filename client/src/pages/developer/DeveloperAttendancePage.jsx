@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import Modal from '../../components/common/Modal';
+import RocketLoader from '../../components/common/RocketLoader';
 import {
   getCurrentGPSLocation,
   calculateDistanceInMeters,
@@ -659,9 +660,12 @@ const DeveloperAttendancePage = () => {
 
           {/* Calendar Grid */}
           {calendarLoading ? (
-            <div className="py-16 flex flex-col items-center justify-center gap-2 bg-white rounded-2xl border border-slate-200">
-              <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
-              <p className="text-xs text-slate-400">Loading your attendance calendar...</p>
+            <div className="py-16 flex items-center justify-center bg-white rounded-2xl border border-slate-200">
+              <RocketLoader
+                size="md"
+                text="Loading your attendance calendar..."
+                subtitle="Fetching your punch-in history"
+              />
             </div>
           ) : (
             <div className="glass-card rounded-2xl bg-white border border-slate-200/90 shadow-soft-xs overflow-hidden">

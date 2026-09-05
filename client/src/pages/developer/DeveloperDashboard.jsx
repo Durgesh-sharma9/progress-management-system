@@ -8,6 +8,7 @@ import ProjectTypeBadge from '../../components/common/ProjectTypeBadge';
 import ProjectCategoryBadge from '../../components/common/ProjectCategoryBadge';
 import TechStackPills from '../../components/common/TechStackPills';
 import EmptyState from '../../components/common/EmptyState';
+import RocketLoader from '../../components/common/RocketLoader';
 import {
   FolderGit2,
   CheckCircle2,
@@ -110,10 +111,7 @@ const DeveloperDashboard = () => {
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
-          <p className="text-xs font-semibold text-slate-400">Loading your workspace...</p>
-        </div>
+        <RocketLoader size="lg" text="Loading your workspace..." subtitle="Fetching today's assignments" />
       </div>
     );
   }

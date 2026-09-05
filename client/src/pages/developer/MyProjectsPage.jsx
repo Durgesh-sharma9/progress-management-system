@@ -7,6 +7,7 @@ import ProjectTypeBadge from '../../components/common/ProjectTypeBadge';
 import ProjectCategoryBadge from '../../components/common/ProjectCategoryBadge';
 import TechStackPills from '../../components/common/TechStackPills';
 import EmptyState from '../../components/common/EmptyState';
+import RocketLoader from '../../components/common/RocketLoader';
 import {
   FolderGit2,
   Search,
@@ -363,10 +364,7 @@ const MyProjectsPage = () => {
       {/* Projects Grid */}
       {loading ? (
         <div className="flex h-64 items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
-            <p className="text-xs font-semibold text-slate-400">Loading assigned projects...</p>
-          </div>
+          <RocketLoader size="lg" text="Loading assigned projects..." subtitle="Fetching repositories" />
         </div>
       ) : filteredProjects.length === 0 ? (
         <EmptyState

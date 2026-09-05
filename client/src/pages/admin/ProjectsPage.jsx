@@ -9,6 +9,7 @@ import TechStackPills from '../../components/common/TechStackPills';
 import Modal from '../../components/common/Modal';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import EmptyState from '../../components/common/EmptyState';
+import RocketLoader from '../../components/common/RocketLoader';
 import { getLocalDateString } from '../../utils/dateUtils';
 import {
   FolderGit2,
@@ -877,10 +878,7 @@ const ProjectsPage = () => {
       {/* Projects Grid */}
       {loading ? (
         <div className="flex h-64 items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
-            <p className="text-xs font-semibold text-slate-400">Loading projects...</p>
-          </div>
+          <RocketLoader size="lg" text="Loading projects..." subtitle="Fetching active client projects" />
         </div>
       ) : filteredProjects.length === 0 ? (
         <EmptyState

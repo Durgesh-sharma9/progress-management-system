@@ -13,6 +13,7 @@ import CompletePhaseModal from '../../components/common/CompletePhaseModal';
 import EmptyState from '../../components/common/EmptyState';
 import ProjectTreeGraph from '../../components/common/ProjectTreeGraph';
 import ProjectAnalytics from '../../components/common/ProjectAnalytics';
+import RocketLoader from '../../components/common/RocketLoader';
 import {
   ArrowLeft,
   Plus,
@@ -327,10 +328,7 @@ const ProjectWorkspacePage = () => {
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
-          <p className="text-xs font-semibold text-slate-400">Loading workspace...</p>
-        </div>
+        <RocketLoader size="lg" text="Loading workspace..." subtitle="Fetching phases and team progress" />
       </div>
     );
   }

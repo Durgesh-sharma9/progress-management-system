@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import EmptyState from '../../components/common/EmptyState';
 import CompletePhaseModal from '../../components/common/CompletePhaseModal';
 import PhaseNotesModal from '../../components/common/PhaseNotesModal';
+import RocketLoader from '../../components/common/RocketLoader';
 import {
   CheckSquare,
   Square,
@@ -234,10 +235,7 @@ const MyTasksPage = () => {
       {/* Phases Checklist */}
       {loading ? (
         <div className="flex h-64 items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <Loader2 className="h-8 w-8 animate-spin text-brand-600" />
-            <p className="text-xs font-semibold text-slate-400">Loading your deliverables...</p>
-          </div>
+          <RocketLoader size="lg" text="Loading your deliverables..." subtitle="Fetching phase checklists" />
         </div>
       ) : filteredPhases.length === 0 ? (
         <EmptyState

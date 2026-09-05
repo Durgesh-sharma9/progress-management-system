@@ -6,6 +6,7 @@ import {
   formatDistance,
 } from '../../utils/geoUtils';
 import Modal from '../../components/common/Modal';
+import RocketLoader from '../../components/common/RocketLoader';
 import {
   Users,
   MapPin,
@@ -757,9 +758,8 @@ const AdminAttendancePage = () => {
 
           {/* Roster Cards */}
           {loading ? (
-            <div className="py-12 flex flex-col items-center justify-center gap-2 bg-white rounded-2xl border border-slate-200">
-              <Loader2 className="h-6 w-6 animate-spin text-brand-600" />
-              <p className="text-xs text-slate-400">Loading live attendance roster...</p>
+            <div className="py-12 flex items-center justify-center bg-white rounded-2xl border border-slate-200">
+              <RocketLoader size="md" text="Loading live roster..." subtitle="Syncing team check-in records" />
             </div>
           ) : filteredRoster.length === 0 ? (
             <div className="py-12 text-center bg-white rounded-2xl border border-slate-200 p-6">
@@ -1145,9 +1145,12 @@ const AdminAttendancePage = () => {
 
           {/* Calendar Section with Compact, Mobile-Responsive Design */}
           {calendarLoading ? (
-            <div className="py-12 flex flex-col items-center justify-center gap-2 bg-white rounded-2xl border border-slate-200">
-              <Loader2 className="h-7 w-7 animate-spin text-purple-600" />
-              <p className="text-xs text-slate-400">Loading attendance calendar...</p>
+            <div className="py-12 flex items-center justify-center bg-white rounded-2xl border border-slate-200">
+              <RocketLoader
+                size="md"
+                text="Loading attendance calendar..."
+                subtitle={`Preparing ${MONTH_NAMES[calendarMonth - 1]} ${calendarYear} records`}
+              />
             </div>
           ) : (
             <div className="glass-card rounded-2xl bg-white border border-slate-200/90 shadow-soft-xs overflow-hidden">
