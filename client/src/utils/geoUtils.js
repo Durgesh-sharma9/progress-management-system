@@ -30,8 +30,8 @@ export const getCurrentGPSLocation = () => {
       },
       {
         enableHighAccuracy: true,
-        timeout: 12000,
-        maximumAge: 10000,
+        timeout: 15000,
+        maximumAge: 0,
       }
     );
   });

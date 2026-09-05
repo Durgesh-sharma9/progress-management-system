@@ -423,7 +423,7 @@ const AdminAttendancePage = () => {
     return matchesSearch && matchesStatus && matchesDev;
   });
 
-  const radiusPresets = [50, 100, 200, 500, 1000];
+  const radiusPresets = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 25000, 50000, 100000, 200000];
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -1145,38 +1145,65 @@ const AdminAttendancePage = () => {
               </div>
 
               {/* Preset Buttons */}
-              <div className="flex flex-wrap items-center gap-2 mb-3">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-3">
                 {radiusPresets.map((r) => (
                   <button
                     key={r}
                     type="button"
                     onClick={() => setConfigForm({ ...configForm, radiusMeters: r })}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                    className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all border ${
                       configForm.radiusMeters === r
                         ? 'bg-slate-900 text-white border-slate-900 shadow-soft-xs'
                         : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
                     }`}
                   >
-                    {r < 1000 ? `${r} Meters` : `${r / 1000} KM`}
+                    {r < 1000 ? `${r}m` : `${r / 1000} KM`}
                   </button>
                 ))}
               </div>
 
-              {/* Range Slider */}
-              <input
-                type="range"
-                min="20"
-                max="1000"
-                step="10"
-                value={configForm.radiusMeters}
-                onChange={(e) =>
-                  setConfigForm({
-                    ...configForm,
-                    radiusMeters: parseInt(e.target.value, 10),
-                  })
-                }
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-600"
-              />
+              {/* Custom Input & Range Slider */}
+              <div className="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <label className="text-xs font-bold text-slate-700">
+                    Custom Radius (in Meters):
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="10"
+                      max="500000"
+                      step="50"
+                      value={configForm.radiusMeters}
+                      onChange={(e) =>
+                        setConfigForm({
+                          ...configForm,
+                          radiusMeters: Math.max(10, parseInt(e.target.value, 10) || 100),
+                        })
+                      }
+                      className="w-28 px-2.5 py-1 rounded-lg border border-slate-300 bg-white font-mono font-bold text-xs text-slate-900 focus:outline-none focus:border-brand-500"
+                    />
+                    <span className="text-xs font-mono font-bold text-brand-600">
+                      = {formatDistance(configForm.radiusMeters)}
+                    </span>
+                  </div>
+                </div>
+
+                <input
+                  type="range"
+                  min="50"
+                  max="100000"
+                  step="50"
+                  value={Math.min(configForm.radiusMeters, 100000)}
+                  onChange={(e) =>
+                    setConfigForm({
+                      ...configForm,
+                      radiusMeters: parseInt(e.target.value, 10),
+                    })
+                  }
+                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-600"
+                />
+              </div>
             </div>
 
             {/* Save Button */}

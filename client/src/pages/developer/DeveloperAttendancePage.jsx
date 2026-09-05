@@ -423,12 +423,16 @@ const DeveloperAttendancePage = () => {
                       className={`flex items-center justify-between p-2.5 rounded-xl border ${
                         isInsideGeofence
                           ? 'bg-emerald-50/90 border-emerald-200 text-emerald-900'
+                          : workspace?.geofenceEnabled === false
+                          ? 'bg-blue-50/90 border-blue-200 text-blue-900'
                           : 'bg-amber-50/90 border-amber-200 text-amber-900'
                       }`}
                     >
                       <div className="flex items-center gap-2">
                         {isInsideGeofence ? (
                           <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" />
+                        ) : workspace?.geofenceEnabled === false ? (
+                          <ShieldCheck className="h-5 w-5 text-blue-600 shrink-0" />
                         ) : (
                           <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
                         )}
@@ -436,11 +440,13 @@ const DeveloperAttendancePage = () => {
                           <p className="text-xs font-bold">
                             {isInsideGeofence
                               ? 'Inside Workspace Geofence'
+                              : workspace?.geofenceEnabled === false
+                              ? 'Geofence Optional (Marking Allowed)'
                               : 'Outside Allowed Workspace Zone'}
                           </p>
                           <p className="text-[11px] opacity-80">
                             {formatDistance(distanceToOffice)} away from{' '}
-                            <span className="font-semibold">{workspace?.name || 'Office'}</span> (Max: {formatDistance(workspace?.radiusMeters || 100)})
+                            <span className="font-semibold">{workspace?.workspaceName || workspace?.name || 'Office'}</span> (Allowed Radius: {formatDistance(workspace?.radiusMeters || 100)})
                           </p>
                         </div>
                       </div>
@@ -465,7 +471,7 @@ const DeveloperAttendancePage = () => {
                 {!isMarkedToday ? (
                   <button
                     onClick={handleMarkAttendance}
-                    disabled={isMarking || gpsLoading || (workspace?.geofenceEnabled && !isInsideGeofence)}
+                    disabled={isMarking || gpsLoading || (workspace?.geofenceEnabled !== false && !isInsideGeofence)}
                     className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-sm sm:text-base shadow-soft-lg shadow-emerald-500/25 transition-all active:scale-98 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
                   >
                     {isMarking ? (
@@ -493,7 +499,7 @@ const DeveloperAttendancePage = () => {
                   </div>
                 )}
 
-                {workspace?.geofenceEnabled && !isMarkedToday && !isInsideGeofence && (
+                {workspace?.geofenceEnabled !== false && !isMarkedToday && !isInsideGeofence && (
                   <p className="text-[11px] text-amber-700 mt-2 flex items-center justify-center gap-1">
                     <Info className="h-3.5 w-3.5" />
                     You must be within {formatDistance(workspace?.radiusMeters || 100)} of the workspace to mark attendance.
