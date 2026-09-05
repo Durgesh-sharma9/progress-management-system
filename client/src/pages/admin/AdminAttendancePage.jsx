@@ -117,14 +117,37 @@ const AdminAttendancePage = () => {
     }
   };
 
-  const generateFallbackCalendarDays = (year, month, devsCount = 0) => {
+  const generateFallbackCalendarDays = (year, month, devsCount = 0, currentRoster = []) => {
     const daysInMonth = new Date(year, month, 0).getDate();
     const monthPadded = String(month).padStart(2, '0');
+    const todayStr = new Date().toISOString().split('T')[0];
     const days = [];
+
     for (let d = 1; d <= daysInMonth; d++) {
       const dayPadded = String(d).padStart(2, '0');
       const dateStr = `${year}-${monthPadded}-${dayPadded}`;
       const dayOfWeek = new Date(year, month - 1, d).getDay();
+
+      let presentCount = 0;
+      let attendees = [];
+
+      if (dateStr === todayStr && currentRoster && currentRoster.length > 0) {
+        const presentList = currentRoster.filter(
+          (r) => r.status === 'Present' && r.punchIn?.time
+        );
+        presentCount = presentList.length;
+        attendees = presentList.map((r) => ({
+          developerId: r.developer?._id,
+          developerName: r.developer?.name,
+          punchInTime: r.punchIn?.time,
+          distanceMeters: r.punchIn?.distanceMeters,
+        }));
+      }
+
+      const effectiveDevs = devsCount || (currentRoster ? currentRoster.length : 0);
+      const presentRate =
+        effectiveDevs > 0 ? Math.round((presentCount / effectiveDevs) * 100) : 0;
+
       days.push({
         date: dateStr,
         dayNumber: d,
@@ -132,17 +155,18 @@ const AdminAttendancePage = () => {
         isSunday: dayOfWeek === 0,
         isHoliday: false,
         holiday: null,
-        totalDevelopers: devsCount,
-        presentCount: 0,
-        absentCount: devsCount,
-        presentRate: 0,
-        attendees: [],
+        totalDevelopers: effectiveDevs,
+        presentCount,
+        absentCount: Math.max(0, effectiveDevs - presentCount),
+        presentRate,
+        attendees,
       });
     }
+
     return {
       year,
       month,
-      totalDevelopers: devsCount,
+      totalDevelopers: devsCount || (currentRoster ? currentRoster.length : 0),
       calendarDays: days,
       holidays: [],
     };
@@ -151,6 +175,27 @@ const AdminAttendancePage = () => {
   const [calendarData, setCalendarData] = useState(() =>
     generateFallbackCalendarDays(new Date().getFullYear(), new Date().getMonth() + 1)
   );
+
+  const [isClearingAll, setIsClearingAll] = useState(false);
+
+  const handleClearAllAttendance = async () => {
+    if (!window.confirm('Are you sure you want to clear/delete ALL attendance records from the database? This cannot be undone.')) {
+      return;
+    }
+    setIsClearingAll(true);
+    try {
+      const res = await api.delete('/attendance/admin/clear-all');
+      if (res.data.success) {
+        success(res.data.message || 'All attendance records have been cleared.');
+        fetchOverview();
+        fetchMonthlyCalendar();
+      }
+    } catch (err) {
+      error(err.response?.data?.message || 'Failed to clear attendance records');
+    } finally {
+      setIsClearingAll(false);
+    }
+  };
 
   const fetchMonthlyCalendar = async () => {
     try {
@@ -163,10 +208,11 @@ const AdminAttendancePage = () => {
       }
     } catch (err) {
       console.warn('Backend calendar route warming up, using fallback calendar data:', err);
-      // Construct fallback month grid so admin always sees the calendar grid
+      // Construct fallback month grid with current live roster overlay
       setCalendarData((prev) => {
         const devs = attendanceData?.summary?.totalDevelopers || prev?.totalDevelopers || 0;
-        return generateFallbackCalendarDays(calendarYear, calendarMonth, devs);
+        const roster = attendanceData?.roster || [];
+        return generateFallbackCalendarDays(calendarYear, calendarMonth, devs, roster);
       });
     } finally {
       setCalendarLoading(false);
@@ -1134,11 +1180,30 @@ const AdminAttendancePage = () => {
             </div>
 
             {/* Save Button */}
-            <div className="pt-4 border-t border-slate-200 flex justify-end">
+            <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={handleClearAllAttendance}
+                disabled={isClearingAll}
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-all disabled:opacity-50 active:scale-95"
+              >
+                {isClearingAll ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Clearing Records...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4 text-rose-600" />
+                    <span>Clear All Attendance Records</span>
+                  </>
+                )}
+              </button>
+
               <button
                 type="submit"
                 disabled={isSavingConfig}
-                className="inline-flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-soft-md shadow-purple-500/25 transition-all disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-1.5 px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-soft-md shadow-purple-500/25 transition-all disabled:opacity-50"
               >
                 {isSavingConfig ? (
                   <>

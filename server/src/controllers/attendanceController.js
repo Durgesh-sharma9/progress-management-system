@@ -577,3 +577,20 @@ exports.adminManualAttendanceUpdate = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Clear All Attendance Records from Database
+// @route   DELETE /api/attendance/admin/clear-all
+// @access  Private (Admin only)
+exports.clearAllAttendance = async (req, res, next) => {
+  try {
+    const result = await Attendance.deleteMany({});
+    res.status(200).json({
+      success: true,
+      message: `Cleared ${result.deletedCount} attendance records from database.`,
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
