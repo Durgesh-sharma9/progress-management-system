@@ -1,5 +1,6 @@
 const Attendance = require('../models/Attendance');
 const WorkspaceConfig = require('../models/WorkspaceConfig');
+const Holiday = require('../models/Holiday');
 const User = require('../models/User');
 const { calculateDistanceInMeters, formatDistance } = require('../utils/geoUtils');
 
@@ -189,7 +190,7 @@ exports.punchOut = async (req, res, next) => {
   }
 };
 
-// @desc    Get Today's Attendance State for logged-in user
+// @desc    Get Today's Attendance State for logged-in user (including holiday check)
 // @route   GET /api/attendance/today
 // @access  Private (Developer & Admin)
 exports.getMyAttendanceToday = async (req, res, next) => {
@@ -197,15 +198,17 @@ exports.getMyAttendanceToday = async (req, res, next) => {
     const today = getTodayDateString();
     const developerId = req.user._id;
 
-    const [attendance, config] = await Promise.all([
+    const [attendance, config, holiday] = await Promise.all([
       Attendance.findOne({ developer: developerId, date: today }),
       getOrCreateWorkspaceConfig(),
+      Holiday.findOne({ date: today }),
     ]);
 
     res.status(200).json({
       success: true,
       data: {
         attendance: attendance || null,
+        holiday: holiday || null,
         workspace: {
           name: config.workspaceName,
           address: config.address,
@@ -229,25 +232,34 @@ exports.getMyAttendanceHistory = async (req, res, next) => {
     const { month, year, startDate, endDate } = req.query;
 
     let query = { developer: developerId };
+    let holidayQuery = {};
 
     if (startDate && endDate) {
       query.date = { $gte: startDate, $lte: endDate };
+      holidayQuery.date = { $gte: startDate, $lte: endDate };
     } else if (month && year) {
       const monthPadded = String(month).padStart(2, '0');
       const prefix = `${year}-${monthPadded}`;
       query.date = { $regex: `^${prefix}` };
+      holidayQuery.date = { $regex: `^${prefix}` };
     }
 
-    const records = await Attendance.find(query).sort({ date: -1 });
+    const [records, holidays] = await Promise.all([
+      Attendance.find(query).sort({ date: -1 }),
+      Holiday.find(holidayQuery).sort({ date: 1 }),
+    ]);
+
     const totalPresent = records.filter((r) => r.status === 'Present').length;
 
     res.status(200).json({
       success: true,
       data: {
         records,
+        holidays,
         stats: {
           totalDays: records.length,
           totalPresent,
+          totalHolidays: holidays.length,
         },
       },
     });
@@ -264,9 +276,10 @@ exports.getAdminAttendanceOverview = async (req, res, next) => {
     const { date, developerId, status } = req.query;
     const targetDate = date || getTodayDateString();
 
-    const [developers, config] = await Promise.all([
+    const [developers, config, holiday] = await Promise.all([
       User.find({ role: 'developer' }).select('_id name email createdAt').sort({ name: 1 }),
       getOrCreateWorkspaceConfig(),
+      Holiday.findOne({ date: targetDate }),
     ]);
 
     let attendanceQuery = { date: targetDate };
@@ -331,6 +344,7 @@ exports.getAdminAttendanceOverview = async (req, res, next) => {
       data: {
         date: targetDate,
         workspace: config,
+        holiday: holiday || null,
         summary: {
           totalDevelopers,
           presentCount,
@@ -339,6 +353,176 @@ exports.getAdminAttendanceOverview = async (req, res, next) => {
         },
         roster,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Admin Monthly Calendar View (Grid of Days with attendance counts & holidays)
+// @route   GET /api/attendance/admin/monthly-calendar
+// @access  Private (Admin only)
+exports.getAdminMonthlyCalendar = async (req, res, next) => {
+  try {
+    const year = parseInt(req.query.year, 10) || new Date().getFullYear();
+    const month = parseInt(req.query.month, 10) || new Date().getMonth() + 1;
+
+    const monthPadded = String(month).padStart(2, '0');
+    const prefix = `${year}-${monthPadded}`;
+
+    const [developers, holidays, attendanceRecords] = await Promise.all([
+      User.find({ role: 'developer' }).select('_id name email'),
+      Holiday.find({ date: { $regex: `^${prefix}` } }).sort({ date: 1 }),
+      Attendance.find({ date: { $regex: `^${prefix}` } }).populate('developer', '_id name email'),
+    ]);
+
+    const totalDevelopers = developers.length;
+
+    // Create maps for quick lookup
+    const holidayMap = new Map();
+    holidays.forEach((h) => holidayMap.set(h.date, h));
+
+    const attendanceByDateMap = new Map();
+    attendanceRecords.forEach((att) => {
+      if (!attendanceByDateMap.has(att.date)) {
+        attendanceByDateMap.set(att.date, []);
+      }
+      attendanceByDateMap.get(att.date).push(att);
+    });
+
+    // Compute number of days in this month
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const calendarDays = [];
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dayPadded = String(d).padStart(2, '0');
+      const dateStr = `${year}-${monthPadded}-${dayPadded}`;
+      const dayOfWeek = new Date(year, month - 1, d).getDay(); // 0 = Sun, 6 = Sat
+
+      const holiday = holidayMap.get(dateStr) || null;
+      const dayRecords = attendanceByDateMap.get(dateStr) || [];
+
+      const presentRecords = dayRecords.filter((r) => r.status === 'Present' && r.punchIn?.time);
+      const presentCount = presentRecords.length;
+      const absentCount = Math.max(0, totalDevelopers - presentCount);
+      const presentRate = totalDevelopers > 0 ? Math.round((presentCount / totalDevelopers) * 100) : 0;
+
+      calendarDays.push({
+        date: dateStr,
+        dayNumber: d,
+        dayOfWeek,
+        isSunday: dayOfWeek === 0,
+        isHoliday: Boolean(holiday),
+        holiday: holiday,
+        totalDevelopers,
+        presentCount,
+        absentCount,
+        presentRate,
+        attendees: presentRecords.map((r) => ({
+          developerId: r.developer?._id,
+          developerName: r.developer?.name,
+          punchInTime: r.punchIn?.time,
+          distanceMeters: r.punchIn?.distanceMeters,
+        })),
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        year,
+        month,
+        totalDevelopers,
+        calendarDays,
+        holidays,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get All Holidays
+// @route   GET /api/attendance/holidays
+// @access  Private (Admin & Developer)
+exports.getHolidays = async (req, res, next) => {
+  try {
+    const { year, month } = req.query;
+    let query = {};
+    if (year && month) {
+      const monthPadded = String(month).padStart(2, '0');
+      query.date = { $regex: `^${year}-${monthPadded}` };
+    } else if (year) {
+      query.date = { $regex: `^${year}` };
+    }
+
+    const holidays = await Holiday.find(query).sort({ date: 1 });
+    res.status(200).json({
+      success: true,
+      data: holidays,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Create or Update a Holiday
+// @route   POST /api/attendance/holidays
+// @access  Private (Admin only)
+exports.createOrUpdateHoliday = async (req, res, next) => {
+  try {
+    const { date, title, description } = req.body;
+
+    if (!date || !title) {
+      return res.status(400).json({
+        success: false,
+        message: 'Date and Title are required to declare a holiday.',
+      });
+    }
+
+    let holiday = await Holiday.findOne({ date });
+    if (holiday) {
+      holiday.title = title.trim();
+      holiday.description = description ? description.trim() : '';
+      holiday.createdBy = req.user._id;
+      await holiday.save();
+    } else {
+      holiday = await Holiday.create({
+        date,
+        title: title.trim(),
+        description: description ? description.trim() : '',
+        createdBy: req.user._id,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Holiday "${title}" declared for ${date}`,
+      data: holiday,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete a Holiday
+// @route   DELETE /api/attendance/holidays/:id
+// @access  Private (Admin only)
+exports.deleteHoliday = async (req, res, next) => {
+  try {
+    const holiday = await Holiday.findById(req.params.id);
+    if (!holiday) {
+      return res.status(404).json({
+        success: false,
+        message: 'Holiday not found',
+      });
+    }
+
+    await holiday.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: 'Holiday removed successfully',
     });
   } catch (error) {
     next(error);

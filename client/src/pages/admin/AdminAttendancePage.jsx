@@ -13,7 +13,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Loader2,
-  Calendar,
+  Calendar as CalendarIcon,
   ShieldCheck,
   Building2,
   Compass,
@@ -27,12 +27,18 @@ import {
   RefreshCw,
   Info,
   Navigation,
+  Plus,
+  Trash2,
+  PartyPopper,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 
 const AdminAttendancePage = () => {
   const { success, error } = useToast();
 
-  const [activeTab, setActiveTab] = useState('live'); // 'live' | 'history' | 'settings'
+  const [activeTab, setActiveTab] = useState('live'); // 'live' | 'calendar' | 'holidays' | 'settings'
 
   // Live Today Overview State
   const [loading, setLoading] = useState(true);
@@ -43,6 +49,26 @@ const AdminAttendancePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [developerFilter, setDeveloperFilter] = useState('All');
+
+  // Calendar View State
+  const [calendarLoading, setCalendarLoading] = useState(false);
+  const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth() + 1);
+  const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
+  const [calendarData, setCalendarData] = useState(null);
+  const [selectedDayDetails, setSelectedDayDetails] = useState(null);
+  const [isDayDetailsModalOpen, setIsDayDetailsModalOpen] = useState(false);
+
+  // Holiday Management State
+  const [holidays, setHolidays] = useState([]);
+  const [isHolidayModalOpen, setIsHolidayModalOpen] = useState(false);
+  const [holidayFormData, setHolidayFormData] = useState({
+    date: new Date().toISOString().split('T')[0],
+    title: '',
+    description: '',
+  });
+  const [isSavingHoliday, setIsSavingHoliday] = useState(false);
+  const [holidayToDelete, setHolidayToDelete] = useState(null);
+  const [isDeletingHoliday, setIsDeletingHoliday] = useState(false);
 
   // Workspace Geofence Settings State
   const [configLoading, setConfigLoading] = useState(false);
@@ -70,6 +96,14 @@ const AdminAttendancePage = () => {
     fetchConfig();
   }, [selectedDate]);
 
+  useEffect(() => {
+    if (activeTab === 'calendar') {
+      fetchMonthlyCalendar();
+    } else if (activeTab === 'holidays') {
+      fetchHolidaysList();
+    }
+  }, [activeTab, calendarMonth, calendarYear]);
+
   const fetchOverview = async () => {
     try {
       setLoading(true);
@@ -81,6 +115,33 @@ const AdminAttendancePage = () => {
       error('Failed to load attendance overview');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMonthlyCalendar = async () => {
+    try {
+      setCalendarLoading(true);
+      const res = await api.get(
+        `/attendance/admin/monthly-calendar?year=${calendarYear}&month=${calendarMonth}`
+      );
+      if (res.data.success) {
+        setCalendarData(res.data.data);
+      }
+    } catch (err) {
+      error('Failed to load monthly attendance calendar');
+    } finally {
+      setCalendarLoading(false);
+    }
+  };
+
+  const fetchHolidaysList = async () => {
+    try {
+      const res = await api.get(`/attendance/holidays?year=${calendarYear}`);
+      if (res.data.success) {
+        setHolidays(res.data.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch holidays:', err);
     }
   };
 
@@ -137,6 +198,82 @@ const AdminAttendancePage = () => {
     } finally {
       setIsSavingConfig(false);
     }
+  };
+
+  // Holiday Actions
+  const openAddHolidayModal = (prefillDate = null) => {
+    setHolidayFormData({
+      date: prefillDate || new Date().toISOString().split('T')[0],
+      title: '',
+      description: '',
+    });
+    setIsHolidayModalOpen(true);
+  };
+
+  const handleSaveHoliday = async (e) => {
+    e.preventDefault();
+    if (!holidayFormData.date || !holidayFormData.title.trim()) {
+      error('Please provide both date and holiday name');
+      return;
+    }
+
+    setIsSavingHoliday(true);
+    try {
+      const res = await api.post('/attendance/holidays', holidayFormData);
+      if (res.data.success) {
+        success(res.data.message || 'Holiday saved successfully');
+        setIsHolidayModalOpen(false);
+        if (activeTab === 'calendar') fetchMonthlyCalendar();
+        if (activeTab === 'holidays') fetchHolidaysList();
+        fetchOverview();
+      }
+    } catch (err) {
+      error(err.response?.data?.message || 'Failed to save holiday');
+    } finally {
+      setIsSavingHoliday(false);
+    }
+  };
+
+  const handleDeleteHoliday = async (holidayId) => {
+    if (!window.confirm('Are you sure you want to remove this holiday?')) return;
+    setIsDeletingHoliday(true);
+    try {
+      const res = await api.delete(`/attendance/holidays/${holidayId}`);
+      if (res.data.success) {
+        success('Holiday removed');
+        if (activeTab === 'calendar') fetchMonthlyCalendar();
+        if (activeTab === 'holidays') fetchHolidaysList();
+        fetchOverview();
+      }
+    } catch (err) {
+      error('Failed to remove holiday');
+    } finally {
+      setIsDeletingHoliday(false);
+    }
+  };
+
+  // Month navigation helpers
+  const handlePrevMonth = () => {
+    if (calendarMonth === 1) {
+      setCalendarMonth(12);
+      setCalendarYear((prev) => prev - 1);
+    } else {
+      setCalendarMonth((prev) => prev - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (calendarMonth === 12) {
+      setCalendarMonth(1);
+      setCalendarYear((prev) => prev + 1);
+    } else {
+      setCalendarMonth((prev) => prev + 1);
+    }
+  };
+
+  const openDayDetails = (day) => {
+    setSelectedDayDetails(day);
+    setIsDayDetailsModalOpen(true);
   };
 
   const openOverrideModal = (item) => {
@@ -203,6 +340,14 @@ const AdminAttendancePage = () => {
 
   const radiusPresets = [50, 100, 200, 500, 1000];
 
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  // Compute blank leading days for calendar grid
+  const firstDayOfMonthWeekday = new Date(calendarYear, calendarMonth - 1, 1).getDay(); // 0 = Sun
+
   return (
     <div className="space-y-4 sm:space-y-6 max-w-6xl mx-auto">
       {/* Top Header Card */}
@@ -213,10 +358,10 @@ const AdminAttendancePage = () => {
           </div>
           <div>
             <h1 className="text-lg sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-              Attendance Console
+              Attendance & Calendar Console
             </h1>
             <p className="text-xs text-slate-500">
-              Live GPS Developer Attendance & Workspace Location Settings
+              Live Roster, Monthly Attendance Calendar, Holidays & Geofence Settings
             </p>
           </div>
         </div>
@@ -232,18 +377,29 @@ const AdminAttendancePage = () => {
             }`}
           >
             <UserCheck className="h-3.5 w-3.5 text-brand-600" />
-            <span>Today's Live Roster</span>
+            <span>Today's Roster</span>
           </button>
           <button
-            onClick={() => setActiveTab('history')}
+            onClick={() => setActiveTab('calendar')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
-              activeTab === 'history'
+              activeTab === 'calendar'
                 ? 'bg-white text-slate-900 shadow-soft-xs'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Calendar className="h-3.5 w-3.5 text-brand-600" />
-            <span>Attendance Logs</span>
+            <CalendarIcon className="h-3.5 w-3.5 text-purple-600" />
+            <span>Monthly Calendar</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('holidays')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+              activeTab === 'holidays'
+                ? 'bg-white text-slate-900 shadow-soft-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <PartyPopper className="h-3.5 w-3.5 text-pink-600" />
+            <span>Holiday Management</span>
           </button>
           <button
             onClick={() => setActiveTab('settings')}
@@ -253,13 +409,14 @@ const AdminAttendancePage = () => {
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Sliders className="h-3.5 w-3.5 text-purple-600" />
+            <Sliders className="h-3.5 w-3.5 text-indigo-600" />
             <span>Workspace Geofence</span>
           </button>
         </div>
       </div>
 
-      {activeTab === 'live' || activeTab === 'history' ? (
+      {/* VIEW 1: TODAY'S LIVE ROSTER */}
+      {activeTab === 'live' && (
         <div className="space-y-4">
           {/* Quick Metrics Bar */}
           {attendanceData?.summary && (
@@ -291,6 +448,28 @@ const AdminAttendancePage = () => {
             </div>
           )}
 
+          {/* Holiday Alert Banner if Today is declared a Holiday */}
+          {attendanceData?.holiday && (
+            <div className="p-3.5 rounded-2xl bg-purple-50 border border-purple-200/90 flex items-center justify-between gap-3 text-purple-900 shadow-soft-xs">
+              <div className="flex items-center gap-2.5">
+                <PartyPopper className="h-5 w-5 text-purple-600 shrink-0" />
+                <div>
+                  <p className="text-xs font-extrabold">
+                    🎉 Declared Holiday: {attendanceData.holiday.title}
+                  </p>
+                  {attendanceData.holiday.description && (
+                    <p className="text-[11px] text-purple-700 mt-0.5">
+                      {attendanceData.holiday.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <span className="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full bg-purple-200/70 text-purple-800">
+                Official Holiday
+              </span>
+            </div>
+          )}
+
           {/* Filters Bar */}
           <div className="glass-card rounded-2xl p-3 sm:p-4 bg-white border border-slate-200/90 shadow-soft-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
             {/* Search */}
@@ -308,7 +487,7 @@ const AdminAttendancePage = () => {
             {/* Date Picker */}
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1">
-                <Calendar className="h-3.5 w-3.5 text-slate-500" />
+                <CalendarIcon className="h-3.5 w-3.5 text-slate-500" />
                 <input
                   type="date"
                   value={selectedDate}
@@ -465,8 +644,265 @@ const AdminAttendancePage = () => {
             </div>
           )}
         </div>
-      ) : (
-        /* Workspace Geofence Settings Tab */
+      )}
+
+      {/* VIEW 2: MONTHLY ATTENDANCE CALENDAR */}
+      {activeTab === 'calendar' && (
+        <div className="space-y-4">
+          {/* Month & Year Navigation Header */}
+          <div className="glass-card rounded-2xl p-4 bg-white border border-slate-200/90 shadow-soft-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handlePrevMonth}
+                className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 transition-colors"
+                title="Previous Month"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <h2 className="text-base sm:text-lg font-extrabold text-slate-900 font-sans tracking-tight min-w-[180px] text-center">
+                {monthNames[calendarMonth - 1]} {calendarYear}
+              </h2>
+              <button
+                onClick={handleNextMonth}
+                className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 transition-colors"
+                title="Next Month"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => openAddHolidayModal()}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold shadow-soft-xs hover:from-purple-500 hover:to-pink-500 transition-all active:scale-95 shrink-0"
+              >
+                <PartyPopper className="h-3.5 w-3.5" />
+                <span>+ Declare Holiday</span>
+              </button>
+              <button
+                type="button"
+                onClick={fetchMonthlyCalendar}
+                disabled={calendarLoading}
+                className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 transition-colors"
+                title="Refresh Calendar"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${calendarLoading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+          </div>
+
+          {/* Calendar Grid */}
+          {calendarLoading ? (
+            <div className="py-16 flex flex-col items-center justify-center gap-2 bg-white rounded-2xl border border-slate-200">
+              <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+              <p className="text-xs text-slate-400">Loading attendance calendar...</p>
+            </div>
+          ) : (
+            <div className="glass-card rounded-2xl bg-white border border-slate-200/90 shadow-soft-xs overflow-hidden">
+              {/* Day of Week Headers */}
+              <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50/80 text-center text-[11px] font-extrabold text-slate-600 py-2.5">
+                <span className="text-rose-600">Sun</span>
+                <span>Mon</span>
+                <span>Tue</span>
+                <span>Wed</span>
+                <span>Thu</span>
+                <span>Fri</span>
+                <span className="text-indigo-600">Sat</span>
+              </div>
+
+              {/* Day Cells Grid */}
+              <div className="grid grid-cols-7 divide-x divide-y divide-slate-100">
+                {/* Blank Leading Cells */}
+                {Array.from({ length: firstDayOfMonthWeekday }).map((_, idx) => (
+                  <div key={`blank-${idx}`} className="h-24 sm:h-28 bg-slate-50/30 p-1.5" />
+                ))}
+
+                {/* Days of the Month */}
+                {calendarData?.calendarDays?.map((day) => {
+                  const isToday =
+                    day.date === new Date().toISOString().split('T')[0];
+
+                  return (
+                    <div
+                      key={day.date}
+                      onClick={() => openDayDetails(day)}
+                      className={`h-24 sm:h-28 p-1.5 sm:p-2 transition-all flex flex-col justify-between cursor-pointer hover:bg-purple-50/40 relative group ${
+                        day.isHoliday
+                          ? 'bg-purple-50/50'
+                          : day.isSunday
+                          ? 'bg-rose-50/20'
+                          : 'bg-white'
+                      } ${isToday ? 'ring-2 ring-brand-500 ring-inset' : ''}`}
+                    >
+                      {/* Top bar: Day number & Holiday / Rate */}
+                      <div className="flex items-start justify-between">
+                        <span
+                          className={`font-mono text-xs sm:text-sm font-extrabold h-6 w-6 rounded-lg flex items-center justify-center ${
+                            isToday
+                              ? 'bg-brand-600 text-white shadow-2xs'
+                              : day.isSunday
+                              ? 'text-rose-600'
+                              : 'text-slate-800'
+                          }`}
+                        >
+                          {day.dayNumber}
+                        </span>
+
+                        {/* Holiday Badge */}
+                        {day.isHoliday && (
+                          <span
+                            className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-purple-100 text-purple-800 border border-purple-200 truncate max-w-[70px] sm:max-w-[100px] flex items-center gap-0.5"
+                            title={day.holiday?.title}
+                          >
+                            🎉 {day.holiday?.title}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Middle: Attendance summary stats */}
+                      {!day.isHoliday && (
+                        <div className="my-auto">
+                          {day.presentCount > 0 ? (
+                            <div className="space-y-0.5">
+                              <span
+                                className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.2 rounded-md ${
+                                  day.presentRate >= 80
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                    : 'bg-amber-50 text-amber-800 border border-amber-200'
+                                }`}
+                              >
+                                <CheckCircle2 className="h-2.5 w-2.5" />
+                                <span>
+                                  {day.presentCount}/{day.totalDevelopers} ({day.presentRate}%)
+                                </span>
+                              </span>
+
+                              {/* Attendee Avatar Initial Circles */}
+                              <div className="hidden sm:flex items-center gap-0.5 overflow-hidden">
+                                {day.attendees.slice(0, 3).map((att, i) => (
+                                  <span
+                                    key={i}
+                                    className="h-4 w-4 rounded-full bg-emerald-600 text-[8px] font-bold text-white flex items-center justify-center shrink-0"
+                                    title={`${att.developerName}`}
+                                  >
+                                    {att.developerName?.charAt(0)}
+                                  </span>
+                                ))}
+                                {day.attendees.length > 3 && (
+                                  <span className="text-[8px] text-slate-400 font-bold">
+                                    +{day.attendees.length - 3}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-[9px] text-slate-400 italic">
+                              {day.isSunday ? 'Weekly Off' : '0 Marked'}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Bottom hover action: Quick Add Holiday */}
+                      <div className="flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openAddHolidayModal(day.date);
+                          }}
+                          className="text-[9px] font-bold text-purple-700 hover:text-purple-900 bg-purple-100/90 px-1.5 py-0.5 rounded transition-all"
+                          title="Declare Holiday on this day"
+                        >
+                          + Holiday
+                        </button>
+                        <span className="text-[9px] text-slate-400 underline">Details</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* VIEW 3: HOLIDAY MANAGEMENT LIST */}
+      {activeTab === 'holidays' && (
+        <div className="space-y-4">
+          <div className="glass-card rounded-2xl p-4 bg-white border border-slate-200/90 shadow-soft-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base sm:text-lg font-extrabold text-slate-900">
+                Company Holidays ({calendarYear})
+              </h2>
+              <p className="text-xs text-slate-500">
+                Manage declared public holidays, festival leaves, and office off-days.
+              </p>
+            </div>
+
+            <button
+              onClick={() => openAddHolidayModal()}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold shadow-soft-xs hover:from-purple-500 hover:to-pink-500 transition-all active:scale-95 shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Add New Holiday</span>
+            </button>
+          </div>
+
+          {holidays.length === 0 ? (
+            <div className="py-16 text-center bg-white rounded-2xl border border-slate-200 p-6">
+              <PartyPopper className="h-10 w-10 text-purple-300 mx-auto mb-2" />
+              <p className="text-sm font-bold text-slate-800">No holidays declared yet for {calendarYear}</p>
+              <p className="text-xs text-slate-400 mt-1">
+                Click "+ Add New Holiday" to declare a holiday on the calendar.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {holidays.map((h) => (
+                <div
+                  key={h._id}
+                  className="glass-card rounded-2xl p-4 bg-white border border-purple-200/80 shadow-soft-xs flex flex-col justify-between hover:shadow-soft-md transition-all"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-mono text-xs font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-lg border border-purple-200">
+                        {h.date}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteHoliday(h._id)}
+                        className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                        title="Delete Holiday"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+
+                    <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
+                      <PartyPopper className="h-4 w-4 text-purple-600 shrink-0" />
+                      <span>{h.title}</span>
+                    </h3>
+
+                    {h.description && (
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                        {h.description}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 mt-3 flex items-center justify-between text-[10px] text-slate-400">
+                    <span>{new Date(h.date).toLocaleDateString('en-US', { weekday: 'long' })}</span>
+                    <span className="font-semibold text-purple-600">Declared Holiday</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* VIEW 4: WORKSPACE GEOFENCE SETTINGS */}
+      {activeTab === 'settings' && (
         <div className="glass-card rounded-2xl p-5 sm:p-7 bg-white border border-slate-200/90 shadow-soft-md space-y-6">
           <div className="flex items-center justify-between pb-4 border-b border-slate-200">
             <div>
@@ -674,6 +1110,152 @@ const AdminAttendancePage = () => {
           </form>
         </div>
       )}
+
+      {/* Day Details Inspection Modal */}
+      <Modal
+        isOpen={isDayDetailsModalOpen}
+        onClose={() => setIsDayDetailsModalOpen(false)}
+        title={`Attendance on ${selectedDayDetails?.date || ''}`}
+        subtitle={
+          selectedDayDetails?.isHoliday
+            ? `🎉 Declared Holiday: ${selectedDayDetails.holiday?.title}`
+            : `${selectedDayDetails?.presentCount || 0}/${selectedDayDetails?.totalDevelopers || 0} Engineers Present (${selectedDayDetails?.presentRate || 0}%)`
+        }
+        maxWidth="md"
+      >
+        <div className="space-y-3">
+          {selectedDayDetails?.isHoliday && (
+            <div className="p-3 rounded-xl bg-purple-50 border border-purple-200 text-purple-900 text-xs">
+              <p className="font-bold flex items-center gap-1.5">
+                <PartyPopper className="h-4 w-4 text-purple-600" />
+                <span>Holiday: {selectedDayDetails.holiday?.title}</span>
+              </p>
+              {selectedDayDetails.holiday?.description && (
+                <p className="text-purple-700 mt-1">{selectedDayDetails.holiday.description}</p>
+              )}
+            </div>
+          )}
+
+          <div className="space-y-2 max-h-72 overflow-y-auto">
+            {(!selectedDayDetails?.attendees || selectedDayDetails.attendees.length === 0) ? (
+              <p className="text-xs text-slate-400 italic text-center py-4">
+                No attendance records for this date.
+              </p>
+            ) : (
+              selectedDayDetails.attendees.map((att, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs"
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-lg bg-emerald-600 text-white font-bold flex items-center justify-center text-[10px]">
+                      {att.developerName?.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-900">{att.developerName}</p>
+                      <p className="text-[10px] text-slate-400">
+                        {att.distanceMeters !== undefined ? `${formatDistance(att.distanceMeters)} from office` : 'Verified'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="font-mono text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px]">
+                    {new Date(att.punchInTime).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsDayDetailsModalOpen(false)}
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Declare Holiday Modal */}
+      <Modal
+        isOpen={isHolidayModalOpen}
+        onClose={() => setIsHolidayModalOpen(false)}
+        title="Declare Holiday"
+        subtitle="Mark a calendar date as a company holiday or festive leave."
+        maxWidth="md"
+      >
+        <form onSubmit={handleSaveHoliday} className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Holiday Date *
+            </label>
+            <input
+              type="date"
+              required
+              value={holidayFormData.date}
+              onChange={(e) => setHolidayFormData({ ...holidayFormData, date: e.target.value })}
+              className="block w-full rounded-xl border border-slate-300 bg-white p-2.5 text-xs font-mono font-bold text-slate-800 focus:border-purple-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Holiday Title / Name *
+            </label>
+            <input
+              type="text"
+              required
+              value={holidayFormData.title}
+              onChange={(e) => setHolidayFormData({ ...holidayFormData, title: e.target.value })}
+              placeholder="e.g. Diwali / Republic Day / Annual Outing"
+              className="block w-full rounded-xl border border-slate-300 bg-white p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:border-purple-500 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              Description (Optional)
+            </label>
+            <textarea
+              rows={2}
+              value={holidayFormData.description}
+              onChange={(e) => setHolidayFormData({ ...holidayFormData, description: e.target.value })}
+              placeholder="e.g. Office closed on occasion of Festival..."
+              className="block w-full rounded-xl border border-slate-300 bg-white p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:border-purple-500 focus:outline-none"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsHolidayModalOpen(false)}
+              className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSavingHoliday}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 text-xs font-bold text-white shadow-soft-xs hover:from-purple-500 hover:to-pink-500 transition-all disabled:opacity-50"
+            >
+              {isSavingHoliday ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Saving Holiday...
+                </>
+              ) : (
+                'Save Holiday'
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Manual Override Modal */}
       <Modal
