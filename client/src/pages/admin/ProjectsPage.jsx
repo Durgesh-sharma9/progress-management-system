@@ -726,19 +726,17 @@ const ProjectsPage = () => {
               <button
                 key={type.id}
                 onClick={() => setTypeFilter(type.id)}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all duration-200 ${
-                  active
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all duration-200 ${active
                     ? 'bg-slate-900 text-white shadow-sm'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-                }`}
+                  }`}
               >
                 <span>{type.label}</span>
                 <span
-                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
-                    active
+                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${active
                       ? 'bg-white/20 text-white'
                       : 'bg-slate-100 text-slate-700'
-                  }`}
+                    }`}
                 >
                   {type.count}
                 </span>
@@ -759,19 +757,17 @@ const ProjectsPage = () => {
               <button
                 key={status.id}
                 onClick={() => setStatusFilter(status.id)}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all duration-200 ${
-                  active
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all duration-200 ${active
                     ? (status.activeColor ? `${status.activeColor} shadow-sm` : 'bg-slate-900 text-white shadow-sm')
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
-                }`}
+                  }`}
               >
                 <span>{status.label}</span>
                 <span
-                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${
-                    active
+                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold ${active
                       ? 'bg-white/25 text-white'
                       : 'bg-slate-100 text-slate-700'
-                  }`}
+                    }`}
                 >
                   {status.count}
                 </span>
@@ -849,22 +845,20 @@ const ProjectsPage = () => {
         </span>
         <button
           onClick={() => setSortBy(sortBy === 'progress-asc' ? 'default' : 'progress-asc')}
-          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold border transition-all shrink-0 ${
-            sortBy === 'progress-asc'
+          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold border transition-all shrink-0 ${sortBy === 'progress-asc'
               ? 'bg-amber-50 text-amber-800 border-amber-300 shadow-2xs'
               : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-          }`}
+            }`}
         >
           <span>📈 Lowest to Highest (0% → 100%)</span>
           {sortBy === 'progress-asc' && <span className="text-amber-600 font-extrabold">✓</span>}
         </button>
         <button
           onClick={() => setSortBy(sortBy === 'progress-desc' ? 'default' : 'progress-desc')}
-          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold border transition-all shrink-0 ${
-            sortBy === 'progress-desc'
+          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold border transition-all shrink-0 ${sortBy === 'progress-desc'
               ? 'bg-indigo-50 text-indigo-800 border-indigo-300 shadow-2xs'
               : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-          }`}
+            }`}
         >
           <span>📉 Highest to Lowest (100% → 0%)</span>
           {sortBy === 'progress-desc' && <span className="text-indigo-600 font-extrabold">✓</span>}
@@ -948,11 +942,10 @@ const ProjectsPage = () => {
                       <button
                         onClick={(e) => openRemarksModal(project, e)}
                         title={project.adminRemarks ? `Admin Remarks: ${project.adminRemarks}` : "Add Admin Remarks"}
-                        className={`p-1 rounded-lg transition-colors ${
-                          project.adminRemarks
+                        className={`p-1 rounded-lg transition-colors ${project.adminRemarks
                             ? 'text-purple-600 hover:bg-purple-50'
                             : 'text-slate-400 hover:text-purple-600 hover:bg-purple-50'
-                        }`}
+                          }`}
                       >
                         <Sparkles className="h-3.5 w-3.5" />
                       </button>
@@ -1109,24 +1102,21 @@ const ProjectsPage = () => {
                   <div
                     key={cat.id}
                     onClick={() => handleCategoryChange(cat.id)}
-                    className={`p-2.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${
-                      isSelected
+                    className={`p-2.5 rounded-xl border-2 cursor-pointer transition-all flex flex-col justify-between ${isSelected
                         ? 'border-brand-500 bg-brand-50/70 shadow-soft-xs'
                         : 'border-slate-200 bg-white hover:border-slate-300'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <div
-                        className={`p-1.5 rounded-lg ${
-                          isSelected ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600'
-                        }`}
+                        className={`p-1.5 rounded-lg ${isSelected ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-600'
+                          }`}
                       >
                         <Icon className="h-3.5 w-3.5" />
                       </div>
                       <div
-                        className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${
-                          isSelected ? 'border-brand-600 bg-brand-600 text-white' : 'border-slate-300'
-                        }`}
+                        className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${isSelected ? 'border-brand-600 bg-brand-600 text-white' : 'border-slate-300'
+                          }`}
                       >
                         {isSelected && <div className="h-1 w-1 rounded-full bg-white" />}
                       </div>
@@ -1160,11 +1150,10 @@ const ProjectsPage = () => {
                     key={tech}
                     type="button"
                     onClick={() => toggleTechTag(tech)}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold font-mono transition-all border ${
-                      isSelected
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold font-mono transition-all border ${isSelected
                         ? 'bg-brand-600 text-white border-brand-600 shadow-soft-xs scale-102'
                         : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                    }`}
+                      }`}
                   >
                     <span>{tech}</span>
                     {isSelected ? <Check className="h-3 w-3 stroke-[3]" /> : <Plus className="h-2.5 w-2.5 text-slate-400" />}
@@ -1232,20 +1221,18 @@ const ProjectsPage = () => {
               {/* Standalone Card */}
               <div
                 onClick={() => handleTypeChange('Standalone')}
-                className={`p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between ${
-                  formData.projectType === 'Standalone'
+                className={`p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between ${formData.projectType === 'Standalone'
                     ? 'border-sky-500 bg-sky-50/70 shadow-soft-xs'
                     : 'border-slate-200 bg-white hover:border-slate-300'
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1.5">
                     <div
-                      className={`p-1 rounded-lg ${
-                        formData.projectType === 'Standalone'
+                      className={`p-1 rounded-lg ${formData.projectType === 'Standalone'
                           ? 'bg-sky-500 text-white'
                           : 'bg-slate-100 text-slate-600'
-                      }`}
+                        }`}
                     >
                       <User className="h-3.5 w-3.5" />
                     </div>
@@ -1254,11 +1241,10 @@ const ProjectsPage = () => {
                     </span>
                   </div>
                   <div
-                    className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${
-                      formData.projectType === 'Standalone'
+                    className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${formData.projectType === 'Standalone'
                         ? 'border-sky-600 bg-sky-600 text-white'
                         : 'border-slate-300'
-                    }`}
+                      }`}
                   >
                     {formData.projectType === 'Standalone' && (
                       <div className="h-1 w-1 rounded-full bg-white" />
@@ -1273,20 +1259,18 @@ const ProjectsPage = () => {
               {/* Group Card */}
               <div
                 onClick={() => handleTypeChange('Group')}
-                className={`p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between ${
-                  formData.projectType === 'Group'
+                className={`p-3 rounded-xl border-2 cursor-pointer transition-all duration-200 flex flex-col justify-between ${formData.projectType === 'Group'
                     ? 'border-purple-500 bg-purple-50/70 shadow-soft-xs'
                     : 'border-slate-200 bg-white hover:border-slate-300'
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1.5">
                     <div
-                      className={`p-1 rounded-lg ${
-                        formData.projectType === 'Group'
+                      className={`p-1 rounded-lg ${formData.projectType === 'Group'
                           ? 'bg-purple-600 text-white'
                           : 'bg-slate-100 text-slate-600'
-                      }`}
+                        }`}
                     >
                       <Users className="h-3.5 w-3.5" />
                     </div>
@@ -1295,11 +1279,10 @@ const ProjectsPage = () => {
                     </span>
                   </div>
                   <div
-                    className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${
-                      formData.projectType === 'Group'
+                    className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center ${formData.projectType === 'Group'
                         ? 'border-purple-600 bg-purple-600 text-white'
                         : 'border-slate-300'
-                    }`}
+                      }`}
                   >
                     {formData.projectType === 'Group' && (
                       <div className="h-1 w-1 rounded-full bg-white" />
@@ -1402,21 +1385,19 @@ const ProjectsPage = () => {
                     <div
                       key={dev._id}
                       onClick={() => toggleDeveloperSelection(dev._id)}
-                      className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all duration-150 ${
-                        isSelected
+                      className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all duration-150 ${isSelected
                           ? formData.projectType === 'Standalone'
                             ? 'bg-sky-50 border border-sky-300 text-sky-900 shadow-2xs'
                             : 'bg-brand-50 border border-brand-300 text-brand-900 shadow-2xs'
                           : 'bg-white border border-slate-200/80 text-slate-700 hover:border-slate-300 shadow-2xs'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         <div
-                          className={`h-7 w-7 rounded-lg text-white flex items-center justify-center text-xs font-bold shrink-0 ${
-                            formData.projectType === 'Standalone' && isSelected
+                          className={`h-7 w-7 rounded-lg text-white flex items-center justify-center text-xs font-bold shrink-0 ${formData.projectType === 'Standalone' && isSelected
                               ? 'bg-gradient-to-tr from-sky-600 to-blue-600'
                               : 'bg-gradient-to-tr from-brand-600 to-indigo-600'
-                          }`}
+                            }`}
                         >
                           {dev.name.charAt(0)}
                         </div>
@@ -1426,13 +1407,12 @@ const ProjectsPage = () => {
                         </div>
                       </div>
                       <div
-                        className={`h-4 w-4 rounded-md border flex items-center justify-center transition-all ${
-                          isSelected
+                        className={`h-4 w-4 rounded-md border flex items-center justify-center transition-all ${isSelected
                             ? formData.projectType === 'Standalone'
                               ? 'bg-sky-600 border-sky-600 text-white'
                               : 'bg-brand-600 border-brand-600 text-white'
                             : 'border-slate-300 bg-white'
-                        }`}
+                          }`}
                       >
                         {isSelected && <Check className="h-3 w-3" />}
                       </div>
@@ -1466,22 +1446,20 @@ const ProjectsPage = () => {
                   <button
                     type="button"
                     onClick={() => handleApplyTemplate('web')}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all ${
-                      formData.phases?.length === 17 && (typeof formData.phases[5] === 'string' ? formData.phases[5] : formData.phases[5]?.title) === 'Frontend Development'
+                    className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all ${formData.phases?.length === 17 && (typeof formData.phases[5] === 'string' ? formData.phases[5] : formData.phases[5]?.title) === 'Frontend Development'
                         ? 'bg-brand-600 text-white border-brand-600 shadow-2xs'
                         : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
+                      }`}
                   >
                     🌐 Web Template (17)
                   </button>
                   <button
                     type="button"
                     onClick={() => handleApplyTemplate('android')}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all ${
-                      formData.phases?.length === 19 && (typeof formData.phases[5] === 'string' ? formData.phases[5] : formData.phases[5]?.title) === 'Android UI Development'
+                    className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all ${formData.phases?.length === 19 && (typeof formData.phases[5] === 'string' ? formData.phases[5] : formData.phases[5]?.title) === 'Android UI Development'
                         ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
                         : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
+                      }`}
                   >
                     📱 Android Template (19)
                   </button>
