@@ -20,7 +20,6 @@ import {
   LogIn,
   RefreshCw,
   Info,
-  Sparkles,
 } from 'lucide-react';
 
 const DeveloperAttendancePage = () => {
@@ -254,17 +253,16 @@ const DeveloperAttendancePage = () => {
                 {isMarkedToday ? (
                   <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    Attendance Marked • {attendance.status} (at{' '}
+                    Attendance Marked at{' '}
                     {new Date(attendance.punchIn.time).toLocaleTimeString([], {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
-                    )
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
                     <Clock className="h-3.5 w-3.5 text-amber-600" />
-                    Attendance Pending for Today
+                    Attendance Not Marked Yet
                   </span>
                 )}
               </div>
@@ -369,7 +367,13 @@ const DeveloperAttendancePage = () => {
                 ) : (
                   <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold text-center flex items-center justify-center gap-2 shadow-2xs">
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    <span>Today's Attendance is already marked!</span>
+                    <span>
+                      Attendance Marked at{' '}
+                      {new Date(attendance.punchIn.time).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
                   </div>
                 )}
 
@@ -407,20 +411,11 @@ const DeveloperAttendancePage = () => {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <div className="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
-                    <p className="text-[9px] text-slate-400 uppercase font-bold">Allowed Radius</p>
-                    <p className="font-mono font-bold text-slate-800 mt-0.5">
-                      {formatDistance(workspace?.radiusMeters || 100)}
-                    </p>
-                  </div>
-
-                  <div className="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
-                    <p className="text-[9px] text-slate-400 uppercase font-bold">Shift Start</p>
-                    <p className="font-mono font-bold text-slate-800 mt-0.5">
-                      {workspace?.workStartTime || '09:30 AM'}
-                    </p>
-                  </div>
+                <div className="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+                  <p className="text-[9px] text-slate-400 uppercase font-bold">Allowed Geofence Radius</p>
+                  <p className="font-mono font-bold text-slate-800 mt-0.5">
+                    {formatDistance(workspace?.radiusMeters || 100)}
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-1.5 text-[11px] text-emerald-700 bg-emerald-50/80 p-2 rounded-xl border border-emerald-200/70 font-medium">
@@ -436,25 +431,26 @@ const DeveloperAttendancePage = () => {
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                   <Clock className="h-4 w-4 text-brand-600" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800">
-                    Today's Check-in Record
+                    Today's Attendance Time
                   </h3>
                 </div>
 
                 <div className="space-y-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80">
+                  <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200/80">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[10px] font-bold text-emerald-800 uppercase flex items-center gap-1">
-                        <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Check-in Time
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> Marked At
                       </span>
-                      <span className="font-mono font-bold text-emerald-900">
+                      <span className="font-mono font-extrabold text-emerald-900 text-sm">
                         {new Date(attendance.punchIn.time).toLocaleTimeString([], {
                           hour: '2-digit',
                           minute: '2-digit',
+                          second: '2-digit',
                         })}
                       </span>
                     </div>
-                    <p className="text-[10px] text-emerald-700">
-                      Distance: {formatDistance(attendance.punchIn.distanceMeters)} from office
+                    <p className="text-[10px] text-emerald-700 mt-1">
+                      📍 {formatDistance(attendance.punchIn.distanceMeters)} from office
                     </p>
                   </div>
                 </div>
@@ -466,23 +462,17 @@ const DeveloperAttendancePage = () => {
         /* History & Logs Tab */
         <div className="space-y-4">
           {/* History Controls & Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="glass-card rounded-2xl p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
-              <p className="text-[10px] font-bold uppercase text-slate-400">Total Days Marked</p>
-              <p className="text-xl font-extrabold text-slate-900 font-mono mt-0.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="glass-card rounded-2xl p-4 bg-white border border-slate-200/90 shadow-soft-xs text-center">
+              <p className="text-[10px] font-bold uppercase text-slate-400">Total Records</p>
+              <p className="text-2xl font-extrabold text-slate-900 font-mono mt-0.5">
                 {historyStats?.totalDays || 0}
               </p>
             </div>
-            <div className="glass-card rounded-2xl p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
-              <p className="text-[10px] font-bold uppercase text-emerald-600">On-Time Days</p>
-              <p className="text-xl font-extrabold text-emerald-600 font-mono mt-0.5">
+            <div className="glass-card rounded-2xl p-4 bg-white border border-slate-200/90 shadow-soft-xs text-center">
+              <p className="text-[10px] font-bold uppercase text-emerald-600">Present Days Marked</p>
+              <p className="text-2xl font-extrabold text-emerald-600 font-mono mt-0.5">
                 {historyStats?.totalPresent || 0}
-              </p>
-            </div>
-            <div className="glass-card rounded-2xl p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
-              <p className="text-[10px] font-bold uppercase text-amber-600">Late Days</p>
-              <p className="text-xl font-extrabold text-amber-600 font-mono mt-0.5">
-                {historyStats?.totalLate || 0}
               </p>
             </div>
           </div>
@@ -540,8 +530,7 @@ const DeveloperAttendancePage = () => {
                   <thead className="bg-slate-50/90 border-b border-slate-200/80 text-[10px] uppercase font-bold text-slate-500">
                     <tr>
                       <th className="py-3 px-4">Date</th>
-                      <th className="py-3 px-4">Status</th>
-                      <th className="py-3 px-4">Check-in Time</th>
+                      <th className="py-3 px-4">Attendance Time</th>
                       <th className="py-3 px-4">Geofence Distance</th>
                     </tr>
                   </thead>
@@ -551,20 +540,7 @@ const DeveloperAttendancePage = () => {
                         <td className="py-3 px-4 font-mono font-bold text-slate-800">
                           {rec.date}
                         </td>
-                        <td className="py-3 px-4">
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                              rec.status === 'Present'
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                : rec.status === 'Late'
-                                ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                                : 'bg-slate-100 text-slate-700 border border-slate-200'
-                            }`}
-                          >
-                            {rec.status}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 font-mono text-slate-700">
+                        <td className="py-3 px-4 font-mono text-emerald-800 font-bold">
                           {rec.punchIn?.time
                             ? new Date(rec.punchIn.time).toLocaleTimeString([], {
                                 hour: '2-digit',
@@ -574,7 +550,7 @@ const DeveloperAttendancePage = () => {
                         </td>
                         <td className="py-3 px-4 text-slate-500 font-mono text-[11px]">
                           {rec.punchIn?.distanceMeters !== undefined
-                            ? formatDistance(rec.punchIn.distanceMeters)
+                            ? `${formatDistance(rec.punchIn.distanceMeters)} from office`
                             : '-'}
                         </td>
                       </tr>

@@ -55,8 +55,6 @@ const AdminAttendancePage = () => {
     longitude: 77.2090,
     radiusMeters: 100,
     geofenceEnabled: true,
-    workStartTime: '09:30',
-    gracePeriodMinutes: 15,
   });
 
   // Manual Override Modal
@@ -99,8 +97,6 @@ const AdminAttendancePage = () => {
           longitude: c.location?.longitude ?? 77.2090,
           radiusMeters: c.radiusMeters || 100,
           geofenceEnabled: c.geofenceEnabled !== false,
-          workStartTime: c.workStartTime || '09:30',
-          gracePeriodMinutes: c.gracePeriodMinutes || 15,
         });
       }
     } catch (err) {
@@ -145,7 +141,7 @@ const AdminAttendancePage = () => {
 
   const openOverrideModal = (item) => {
     setOverrideItem(item);
-    setOverrideStatus(item.status || 'Present');
+    setOverrideStatus(item.status === 'Present' ? 'Present' : 'Absent');
     setOverridePunchInTime(
       item.punchIn?.time
         ? new Date(item.punchIn.time).toTimeString().slice(0, 5)
@@ -164,8 +160,10 @@ const AdminAttendancePage = () => {
       const dateStr = overrideItem.date || selectedDate;
       let inDateTime = null;
 
-      if (overridePunchInTime) {
-        inDateTime = new Date(`${dateStr}T${overridePunchInTime}:00`);
+      if (overrideStatus === 'Present') {
+        inDateTime = overridePunchInTime
+          ? new Date(`${dateStr}T${overridePunchInTime}:00`)
+          : new Date();
       }
 
       const res = await api.post('/attendance/admin/manual', {
@@ -215,7 +213,7 @@ const AdminAttendancePage = () => {
           </div>
           <div>
             <h1 className="text-lg sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-              Attendance & Geofence Console
+              Attendance Console
             </h1>
             <p className="text-xs text-slate-500">
               Live GPS Developer Attendance & Workspace Location Settings
@@ -273,21 +271,21 @@ const AdminAttendancePage = () => {
                 </p>
               </div>
               <div className="glass-card rounded-2xl p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
-                <p className="text-[10px] font-bold uppercase text-emerald-600">Present (On Time)</p>
+                <p className="text-[10px] font-bold uppercase text-emerald-600">Present (Marked)</p>
                 <p className="text-xl sm:text-2xl font-extrabold text-emerald-600 font-mono mt-0.5">
                   {attendanceData.summary.presentCount}
                 </p>
               </div>
               <div className="glass-card rounded-2xl p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
-                <p className="text-[10px] font-bold uppercase text-amber-600">Late Arrivals</p>
-                <p className="text-xl sm:text-2xl font-extrabold text-amber-600 font-mono mt-0.5">
-                  {attendanceData.summary.lateCount}
+                <p className="text-[10px] font-bold uppercase text-rose-600">Absent (Not Marked)</p>
+                <p className="text-xl sm:text-2xl font-extrabold text-rose-600 font-mono mt-0.5">
+                  {attendanceData.summary.absentCount}
                 </p>
               </div>
               <div className="glass-card rounded-2xl p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
-                <p className="text-[10px] font-bold uppercase text-rose-600">Absent / Not Marked</p>
-                <p className="text-xl sm:text-2xl font-extrabold text-rose-600 font-mono mt-0.5">
-                  {attendanceData.summary.absentCount}
+                <p className="text-[10px] font-bold uppercase text-brand-600">Attendance Rate</p>
+                <p className="text-xl sm:text-2xl font-extrabold text-brand-700 font-mono mt-0.5">
+                  {attendanceData.summary.presentRate}%
                 </p>
               </div>
             </div>
@@ -326,9 +324,8 @@ const AdminAttendancePage = () => {
                 className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:border-brand-500"
               >
                 <option value="All">All Statuses</option>
-                <option value="Present">Present</option>
-                <option value="Late">Late</option>
-                <option value="Absent">Absent</option>
+                <option value="Present">Present (Marked)</option>
+                <option value="Absent">Absent (Not Marked)</option>
               </select>
 
               <button
@@ -358,8 +355,6 @@ const AdminAttendancePage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {filteredRoster.map((item) => {
                 const isPresent = item.status === 'Present';
-                const isLate = item.status === 'Late';
-                const isAbsent = item.status === 'Absent';
 
                 return (
                   <div
@@ -374,8 +369,6 @@ const AdminAttendancePage = () => {
                             className={`h-9 w-9 rounded-xl text-white flex items-center justify-center text-xs font-bold shadow-soft-xs shrink-0 ${
                               isPresent
                                 ? 'bg-gradient-to-tr from-emerald-600 to-teal-600'
-                                : isLate
-                                ? 'bg-gradient-to-tr from-amber-500 to-orange-600'
                                 : 'bg-gradient-to-tr from-slate-400 to-slate-500'
                             }`}
                           >
@@ -396,15 +389,20 @@ const AdminAttendancePage = () => {
                           className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase shrink-0 ${
                             isPresent
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : isLate
-                              ? 'bg-amber-50 text-amber-800 border border-amber-200'
                               : 'bg-rose-50 text-rose-700 border border-rose-200'
                           }`}
                         >
-                          {isPresent && <CheckCircle2 className="h-3 w-3" />}
-                          {isLate && <Clock className="h-3 w-3" />}
-                          {isAbsent && <UserX className="h-3 w-3" />}
-                          {item.status}
+                          {isPresent ? (
+                            <>
+                              <CheckCircle2 className="h-3 w-3" />
+                              <span>Present</span>
+                            </>
+                          ) : (
+                            <>
+                              <UserX className="h-3 w-3" />
+                              <span>Absent</span>
+                            </>
+                          )}
                         </span>
                       </div>
 
@@ -412,9 +410,9 @@ const AdminAttendancePage = () => {
                       <div className="space-y-2 p-2.5 rounded-xl bg-slate-50/90 border border-slate-200/80 text-xs mb-3">
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] font-bold text-slate-400 uppercase">
-                            Check-in Time:
+                            Attendance Time:
                           </span>
-                          <span className="font-mono font-bold text-slate-800">
+                          <span className={`font-mono font-bold ${isPresent ? 'text-emerald-800' : 'text-slate-500'}`}>
                             {item.punchIn?.time
                               ? new Date(item.punchIn.time).toLocaleTimeString([], {
                                   hour: '2-digit',
@@ -451,7 +449,7 @@ const AdminAttendancePage = () => {
                     {/* Card Footer */}
                     <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
                       <span className="text-[10px] text-slate-400">
-                        {item.isManualOverride ? '⚠️ Adjusted by Admin' : 'GPS Verified'}
+                        {item.isManualOverride ? '⚠️ Adjusted by Admin' : isPresent ? 'GPS Verified' : 'Pending'}
                       </span>
                       <button
                         onClick={() => openOverrideModal(item)}
@@ -656,48 +654,6 @@ const AdminAttendancePage = () => {
               />
             </div>
 
-            {/* Shift Timings */}
-            <div className="pt-2 border-t border-slate-200">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 mb-3">
-                Shift Timings & Rules
-              </h3>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
-                    Shift Start Time
-                  </label>
-                  <input
-                    type="time"
-                    value={configForm.workStartTime}
-                    onChange={(e) =>
-                      setConfigForm({ ...configForm, workStartTime: e.target.value })
-                    }
-                    className="block w-full rounded-xl border border-slate-300 bg-white p-2 text-xs font-mono font-bold text-slate-800 focus:border-brand-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
-                    Grace Period (Mins)
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="60"
-                    value={configForm.gracePeriodMinutes}
-                    onChange={(e) =>
-                      setConfigForm({
-                        ...configForm,
-                        gracePeriodMinutes: parseInt(e.target.value, 10) || 0,
-                      })
-                    }
-                    className="block w-full rounded-xl border border-slate-300 bg-white p-2 text-xs font-mono font-bold text-slate-800 focus:border-brand-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-            </div>
-
             {/* Save Button */}
             <div className="pt-4 border-t border-slate-200 flex justify-end">
               <button
@@ -737,23 +693,24 @@ const AdminAttendancePage = () => {
               onChange={(e) => setOverrideStatus(e.target.value)}
               className="block w-full rounded-xl border border-slate-300 bg-white p-2.5 text-xs font-bold text-slate-800 focus:border-brand-500 focus:outline-none"
             >
-              <option value="Present">Present (On Time)</option>
-              <option value="Late">Late</option>
-              <option value="Absent">Absent</option>
+              <option value="Present">Present (Marked)</option>
+              <option value="Absent">Absent (Not Marked)</option>
             </select>
           </div>
 
-          <div>
-            <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
-              Check-in Time
-            </label>
-            <input
-              type="time"
-              value={overridePunchInTime}
-              onChange={(e) => setOverridePunchInTime(e.target.value)}
-              className="block w-full rounded-xl border border-slate-300 bg-white p-2 text-xs font-mono font-bold text-slate-800 focus:border-brand-500 focus:outline-none"
-            />
-          </div>
+          {overrideStatus === 'Present' && (
+            <div>
+              <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+                Attendance Time
+              </label>
+              <input
+                type="time"
+                value={overridePunchInTime}
+                onChange={(e) => setOverridePunchInTime(e.target.value)}
+                className="block w-full rounded-xl border border-slate-300 bg-white p-2 text-xs font-mono font-bold text-slate-800 focus:border-brand-500 focus:outline-none"
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
@@ -763,7 +720,7 @@ const AdminAttendancePage = () => {
               rows={2}
               value={overrideNotes}
               onChange={(e) => setOverrideNotes(e.target.value)}
-              placeholder="e.g. Approved work from home / GPS signal issue on mobile..."
+              placeholder="e.g. Approved attendance manual override..."
               className="block w-full rounded-xl border border-slate-300 bg-white p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none"
             />
           </div>
