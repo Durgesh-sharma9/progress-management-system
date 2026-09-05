@@ -618,8 +618,8 @@ const AdminAttendancePage = () => {
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <BarChart3 className="h-3.5 w-3.5 text-purple-600" />
-            <span>Monthly Report</span>
+            <CalendarIcon className="h-3.5 w-3.5 text-purple-600" />
+            <span>Month Wise Calendar</span>
           </button>
           <button
             onClick={() => setActiveTab('holidays')}
@@ -951,11 +951,10 @@ const AdminAttendancePage = () => {
               <button
                 type="button"
                 onClick={() => openAddHolidayModal()}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold shadow-soft-xs hover:from-purple-500 hover:to-pink-500 transition-all active:scale-95 shrink-0"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold shadow-soft-xs hover:from-purple-500 hover:to-pink-500 transition-all active:scale-95 shrink-0"
               >
                 <PartyPopper className="h-3.5 w-3.5" />
-                <span className="hidden xs:inline">+ Declare Holiday</span>
-                <span className="xs:hidden">+ Holiday</span>
+                <span>Declare a Holiday</span>
               </button>
               <button
                 type="button"
@@ -1732,7 +1731,7 @@ const AdminAttendancePage = () => {
       <Modal
         isOpen={isHolidayModalOpen}
         onClose={() => setIsHolidayModalOpen(false)}
-        title="Declare Holiday"
+        title="Declare a Holiday"
         subtitle="Mark a calendar date as a company holiday or festive leave."
         maxWidth="md"
       >
