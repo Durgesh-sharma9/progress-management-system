@@ -1000,27 +1000,27 @@ const AdminAttendancePage = () => {
                 </button>
               </div>
 
-              {/* 4 Analytics Metric Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3.5">
-                <div className="glass-card rounded-2xl p-3 sm:p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
-                  <p className="text-[10px] font-bold uppercase text-emerald-600">Present Days</p>
-                  <p className="text-lg sm:text-2xl font-extrabold text-emerald-600 font-mono mt-0.5">
-                    {monthlyAnalytics.presentCount} <span className="text-xs text-slate-400 font-sans font-normal">/ {monthlyAnalytics.totalWorkingDays}</span>
+              {/* 3 Analytics Metric Cards */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-3.5">
+                <div className="glass-card rounded-2xl p-2.5 sm:p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
+                  <p className="text-[10px] sm:text-xs font-bold uppercase text-emerald-600 truncate">Present Days</p>
+                  <p className="text-base sm:text-2xl font-extrabold text-emerald-600 font-mono mt-0.5">
+                    {monthlyAnalytics.presentCount} <span className="text-[10px] sm:text-xs text-slate-400 font-sans font-normal">/ {monthlyAnalytics.totalWorkingDays}</span>
                   </p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">Working Days</p>
+                  <p className="text-[9px] sm:text-[10px] text-slate-400 mt-0.5 truncate">Working Days</p>
                 </div>
 
-                <div className="glass-card rounded-2xl p-3 sm:p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
-                  <p className="text-[10px] font-bold uppercase text-rose-600">Absent Days</p>
-                  <p className="text-lg sm:text-2xl font-extrabold text-rose-600 font-mono mt-0.5">
+                <div className="glass-card rounded-2xl p-2.5 sm:p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
+                  <p className="text-[10px] sm:text-xs font-bold uppercase text-rose-600 truncate">Absent Days</p>
+                  <p className="text-base sm:text-2xl font-extrabold text-rose-600 font-mono mt-0.5">
                     {monthlyAnalytics.absentCount}
                   </p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">Unmarked days</p>
+                  <p className="text-[9px] sm:text-[10px] text-slate-400 mt-0.5 truncate">Unmarked days</p>
                 </div>
 
-                <div className="glass-card rounded-2xl p-3 sm:p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
-                  <p className="text-[10px] font-bold uppercase text-purple-600">Attendance Rate</p>
-                  <p className="text-lg sm:text-2xl font-extrabold text-purple-700 font-mono mt-0.5">
+                <div className="glass-card rounded-2xl p-2.5 sm:p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
+                  <p className="text-[10px] sm:text-xs font-bold uppercase text-purple-600 truncate">Attendance Rate</p>
+                  <p className="text-base sm:text-2xl font-extrabold text-purple-700 font-mono mt-0.5">
                     {monthlyAnalytics.rate}%
                   </p>
                   <div className="w-full bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
@@ -1031,14 +1031,6 @@ const AdminAttendancePage = () => {
                       style={{ width: `${Math.min(100, monthlyAnalytics.rate)}%` }}
                     />
                   </div>
-                </div>
-
-                <div className="glass-card rounded-2xl p-3 sm:p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
-                  <p className="text-[10px] font-bold uppercase text-indigo-600">Avg In-Time</p>
-                  <p className="text-base sm:text-xl font-extrabold text-indigo-700 font-mono mt-0.5 truncate">
-                    {monthlyAnalytics.avgPunchIn}
-                  </p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">Morning punch-in</p>
                 </div>
               </div>
             </div>
