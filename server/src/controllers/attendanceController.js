@@ -802,6 +802,7 @@ exports.getAttendanceReport = async (req, res, next) => {
         const dayOfWeek = dt.getDay();
         const isSunday = dayOfWeek === 0;
         const holiday = holidayMap.get(dStr) || null;
+        const isHoliday = Boolean(holiday);
         const isFuture = dStr > todayStr;
         const record = recordMap.get(`${dId}_${dStr}`) || null;
         const isPresent = Boolean(record && record.punchIn?.time && record.status !== 'Absent');
