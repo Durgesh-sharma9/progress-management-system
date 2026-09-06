@@ -653,7 +653,7 @@ const ProjectsPage = () => {
               Projects
             </h2>
             <span className="text-[10px] sm:text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200 shrink-0">
-              {projects.length} Total
+              Total: {projects.length}
             </span>
             <span className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 shrink-0 hidden sm:inline-block">
               ⚡ {inProgressCount} In Progress
@@ -1024,36 +1024,39 @@ const ProjectsPage = () => {
                     <div className="flex items-center justify-between text-[10px] text-slate-600 mt-1.5 font-medium">
                       <span className="flex items-center gap-1 font-semibold text-emerald-700">
                         <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                        {project.completedPhases || project.completedTasks || 0} completed
+                        {project.completedPhases || project.completedTasks || 0} Phases Completed
                       </span>
                       <span className="font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-1.5 py-0.2 rounded font-mono">
-                        {Math.max(0, (project.totalPhases || project.totalTasks || 0) - (project.completedPhases || project.completedTasks || 0))} pending
+                        {Math.max(0, (project.totalPhases || project.totalTasks || 0) - (project.completedPhases || project.completedTasks || 0))} Phases Pending
                       </span>
                     </div>
                   </div>
 
                   {/* Assigned Team Row with Colorful Gradient Avatar Stack */}
                   <div className="flex items-center justify-between text-xs text-slate-600 pt-2 border-t border-slate-100">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <div className="flex items-center -space-x-1.5 overflow-hidden py-0.5">
-                        {project.developers && project.developers.length > 0 ? (
-                          project.developers.slice(0, 4).map((d, i) => (
-                            <div
-                              key={d._id || i}
-                              title={d.name || d.email}
-                              className={`inline-flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-gradient-to-tr ${getDevAvatarGradient(d.name || d._id)} text-white text-[8px] sm:text-[9px] font-bold ring-1.5 sm:ring-2 ring-white shadow-xs`}
-                            >
-                              {(d.name || 'D').charAt(0).toUpperCase()}
-                            </div>
-                          ))
-                        ) : (
-                          <span className="text-[10px] text-slate-400 italic">No dev assigned</span>
-                        )}
-                      </div>
-                      {project.developers && project.developers.length > 4 && (
-                        <span className="text-[10px] font-bold text-slate-500 font-mono">
-                          +{project.developers.length - 4}
-                        </span>
+                    <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+                      {project.developers && project.developers.length > 0 ? (
+                        <>
+                          <div className="flex items-center -space-x-1.5 overflow-hidden py-0.5 shrink-0">
+                            {project.developers.slice(0, 3).map((d, i) => (
+                              <div
+                                key={d._id || i}
+                                title={d.name || d.email}
+                                className={`inline-flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-gradient-to-tr ${getDevAvatarGradient(d.name || d._id)} text-white text-[8px] sm:text-[9px] font-bold ring-1.5 sm:ring-2 ring-white shadow-xs`}
+                              >
+                                {(d.name || 'D').charAt(0).toUpperCase()}
+                              </div>
+                            ))}
+                          </div>
+                          <span
+                            className="text-xs font-bold text-slate-800 truncate"
+                            title={project.developers.map((d) => d.name || d.email).join(', ')}
+                          >
+                            {project.developers.map((d) => d.name || d.email).join(', ')}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 italic">No dev assigned</span>
                       )}
                     </div>
 

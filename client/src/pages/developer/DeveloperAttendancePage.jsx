@@ -387,10 +387,17 @@ const DeveloperAttendancePage = () => {
                     })}
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
-                    <Clock className="h-3.5 w-3.5 text-amber-600" />
-                    Punch-In Pending
-                  </span>
+                  <div className="flex flex-col items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
+                      <Clock className="h-3.5 w-3.5 text-amber-600" />
+                      Punch-In Pending
+                    </span>
+                    {currentTime.getDay() === 0 && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-purple-700 bg-purple-50 border border-purple-200/80 px-2.5 py-0.5 rounded-full">
+                        ✨ Weekend / Weekly Off — You can still punch in for shift duties
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -748,15 +755,8 @@ const DeveloperAttendancePage = () => {
 
                           {/* Middle: Day Status */}
                           <div className="my-auto">
-                            {day.isHoliday ? (
-                              <span className="text-[9px] font-bold text-purple-700">
-                                Official Holiday
-                              </span>
-                            ) : isFuture ? (
-                              <span className="text-[9px] text-slate-400 italic">
-                                {day.isSunday ? 'Weekly Off' : 'Upcoming'}
-                              </span>
-                            ) : day.isMarked ? (
+                            {day.isMarked ? (
+                              /* If marked, always display Present even on Sunday or Holiday */
                               <div className="space-y-0.5">
                                 <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
                                   <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600" />
@@ -770,9 +770,20 @@ const DeveloperAttendancePage = () => {
                                   </span>
                                 </span>
                               </div>
+                            ) : day.isHoliday ? (
+                              <span className="text-[9px] font-bold text-purple-700">
+                                Official Holiday
+                              </span>
+                            ) : day.isSunday ? (
+                              <span className="text-[9px] text-slate-400 italic">
+                                Weekly Off
+                              </span>
+                            ) : isFuture ? (
+                              /* Do NOT show "Upcoming" */
+                              null
                             ) : (
                               <span className="text-[9px] text-slate-400 italic">
-                                {day.isSunday ? 'Weekly Off' : isToday ? 'Pending Today' : 'Absent'}
+                                {isToday ? 'Pending Today' : 'Absent'}
                               </span>
                             )}
                           </div>

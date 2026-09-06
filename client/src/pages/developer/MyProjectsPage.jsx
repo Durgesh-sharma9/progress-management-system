@@ -460,26 +460,29 @@ const MyProjectsPage = () => {
 
                   {/* Team Members Avatar Stack */}
                   <div className="flex items-center justify-between text-xs text-slate-600 pt-2 border-t border-slate-100">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <div className="flex items-center -space-x-1.5 overflow-hidden py-0.5">
-                        {project.developers && project.developers.length > 0 ? (
-                          project.developers.slice(0, 4).map((d, i) => (
-                            <div
-                              key={d._id || i}
-                              title={d.name || d.email}
-                              className={`inline-flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-gradient-to-tr ${getDevAvatarGradient(d.name || d._id)} text-white text-[8px] sm:text-[9px] font-bold ring-1.5 sm:ring-2 ring-white shadow-xs`}
-                            >
-                              {(d.name || 'D').charAt(0).toUpperCase()}
-                            </div>
-                          ))
-                        ) : (
-                          <span className="text-[10px] text-slate-400 italic">Solo project</span>
-                        )}
-                      </div>
-                      {project.developers && project.developers.length > 4 && (
-                        <span className="text-[10px] font-bold text-slate-500 font-mono">
-                          +{project.developers.length - 4}
-                        </span>
+                    <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+                      {project.developers && project.developers.length > 0 ? (
+                        <>
+                          <div className="flex items-center -space-x-1.5 overflow-hidden py-0.5 shrink-0">
+                            {project.developers.slice(0, 3).map((d, i) => (
+                              <div
+                                key={d._id || i}
+                                title={d.name || d.email}
+                                className={`inline-flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-gradient-to-tr ${getDevAvatarGradient(d.name || d._id)} text-white text-[8px] sm:text-[9px] font-bold ring-1.5 sm:ring-2 ring-white shadow-xs`}
+                              >
+                                {(d.name || 'D').charAt(0).toUpperCase()}
+                              </div>
+                            ))}
+                          </div>
+                          <span
+                            className="text-xs font-bold text-slate-800 truncate"
+                            title={project.developers.map((d) => d.name || d.email).join(', ')}
+                          >
+                            {project.developers.map((d) => d.name || d.email).join(', ')}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-[10px] text-slate-400 italic">Solo project</span>
                       )}
                     </div>
 

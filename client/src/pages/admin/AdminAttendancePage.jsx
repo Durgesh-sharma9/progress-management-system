@@ -412,11 +412,11 @@ const AdminAttendancePage = () => {
     const days = calendarData?.calendarDays || [];
     const todayStr = getLocalDateString();
 
-    // Past or current working days (not future, not Sunday, not Holiday)
-    const activeWorkingDays = days.filter(
+    // Active working days for standard baseline (excluding future, sundays and official holidays)
+    const standardWorkingDays = days.filter(
       (d) => d.date <= todayStr && !d.isSunday && !d.isHoliday
     );
-    const totalWorkingDays = activeWorkingDays.length;
+    const totalWorkingDays = standardWorkingDays.length;
     const holidaysCount = days.filter((d) => d.isHoliday).length;
     const sundaysCount = days.filter((d) => d.isSunday).length;
 
@@ -425,11 +425,17 @@ const AdminAttendancePage = () => {
 
       const staffBreakdown = developersList.map((dev) => {
         const devIdStr = dev._id ? dev._id.toString() : '';
-        const devDays = activeWorkingDays.filter((d) =>
-          d.attendees?.some((a) => String(a.developerId) === devIdStr)
+        // Include any day marked present (including Sunday/Holiday shifts)
+        const devDays = days.filter(
+          (d) =>
+            d.date <= todayStr &&
+            d.attendees?.some((a) => String(a.developerId) === devIdStr)
         );
         const presentCount = devDays.length;
-        const absentCount = Math.max(0, totalWorkingDays - presentCount);
+        const regularPresentCount = standardWorkingDays.filter((d) =>
+          d.attendees?.some((a) => String(a.developerId) === devIdStr)
+        ).length;
+        const absentCount = Math.max(0, totalWorkingDays - regularPresentCount);
         const rate =
           totalWorkingDays > 0 ? Math.round((presentCount / totalWorkingDays) * 100) : 0;
         return {
@@ -459,11 +465,17 @@ const AdminAttendancePage = () => {
       };
     } else {
       const selectedDev = developersList.find((d) => String(d._id) === String(selectedStaffId));
-      const devDays = activeWorkingDays.filter((d) =>
-        d.attendees?.some((a) => String(a.developerId) === String(selectedStaffId))
+      // Include any day marked present (including Sunday/Holiday shifts)
+      const devDays = days.filter(
+        (d) =>
+          d.date <= todayStr &&
+          d.attendees?.some((a) => String(a.developerId) === String(selectedStaffId))
       );
       const presentCount = devDays.length;
-      const absentCount = Math.max(0, totalWorkingDays - presentCount);
+      const regularPresentCount = standardWorkingDays.filter((d) =>
+        d.attendees?.some((a) => String(a.developerId) === String(selectedStaffId))
+      ).length;
+      const absentCount = Math.max(0, totalWorkingDays - regularPresentCount);
       const rate =
         totalWorkingDays > 0 ? Math.round((presentCount / totalWorkingDays) * 100) : 0;
 
@@ -907,6 +919,16 @@ const AdminAttendancePage = () => {
                 </select>
               </div>
 
+              {selectedStaffId !== 'All' && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedStaffId('All')}
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-purple-100 hover:bg-purple-200 text-purple-800 text-xs font-bold transition-all shrink-0 active:scale-95 shadow-soft-xs"
+                >
+                  ← Back to All Staff
+                </button>
+              )}
+
               {/* Month & Year Navigation + Dropdown (Previous Months & Current Month) */}
               <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl p-0.5">
                 <button
@@ -973,28 +995,28 @@ const AdminAttendancePage = () => {
             /* Case 1: Individual Staff Member Analytics */
             <div className="space-y-3">
               {/* Staff Banner */}
-              <div className="glass-card rounded-2xl p-3 sm:p-4 bg-gradient-to-r from-purple-50 via-white to-brand-50 border border-purple-200/80 shadow-soft-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
+              <div className="glass-card rounded-2xl p-3 sm:p-4 bg-gradient-to-r from-purple-50 via-white to-brand-50 border border-purple-200/80 shadow-soft-xs flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                   <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl bg-purple-600 text-white font-black text-sm flex items-center justify-center shadow-soft-xs shrink-0">
                     {monthlyAnalytics.staff?.name?.charAt(0)?.toUpperCase() || 'S'}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm sm:text-base font-extrabold text-slate-900">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                      <h3 className="text-sm sm:text-base font-extrabold text-slate-900 truncate">
                         {monthlyAnalytics.staff?.name}
                       </h3>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                      <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-purple-100 text-purple-800 border border-purple-200 shrink-0">
                         Staff Report
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500">{monthlyAnalytics.staff?.email}</p>
+                    <p className="text-xs text-slate-500 truncate">{monthlyAnalytics.staff?.email}</p>
                   </div>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => setSelectedStaffId('All')}
-                  className="text-xs font-bold text-purple-700 hover:text-purple-900 px-3 py-1.5 rounded-xl bg-white border border-purple-200 hover:bg-purple-50 transition-colors self-start sm:self-auto"
+                  className="text-xs font-bold text-purple-700 hover:text-purple-900 px-2.5 py-1.5 rounded-xl bg-white border border-purple-200 hover:bg-purple-50 transition-colors shrink-0 whitespace-nowrap shadow-soft-xs"
                 >
                   ← Back to All Staff
                 </button>
@@ -1018,9 +1040,9 @@ const AdminAttendancePage = () => {
                   <p className="text-[9px] sm:text-[10px] text-slate-400 mt-0.5 truncate">Unmarked days</p>
                 </div>
 
-                <div className="glass-card rounded-2xl p-2.5 sm:p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
-                  <p className="text-[10px] sm:text-xs font-bold uppercase text-purple-600 truncate">Attendance Rate</p>
-                  <p className="text-base sm:text-2xl font-extrabold text-purple-700 font-mono mt-0.5">
+                <div className="glass-card rounded-2xl p-2 sm:p-3.5 bg-white border border-slate-200/90 shadow-soft-xs text-center">
+                  <p className="text-[9px] sm:text-xs font-extrabold uppercase text-purple-600 tracking-tight leading-none">Attendance Ratio</p>
+                  <p className="text-base sm:text-2xl font-extrabold text-purple-700 font-mono mt-1">
                     {monthlyAnalytics.rate}%
                   </p>
                   <div className="w-full bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
@@ -1254,19 +1276,7 @@ const AdminAttendancePage = () => {
 
                       {/* Middle: Status Display (Staff specific OR Team overall) */}
                       <div className="my-auto overflow-hidden">
-                        {day.isHoliday ? (
-                          <span className="text-[8px] sm:text-[9px] font-bold text-purple-700 hidden sm:block">
-                            Holiday
-                          </span>
-                        ) : isFuture ? (
-                          <span className="text-[8px] sm:text-[9px] text-slate-400 italic">
-                            {day.isSunday ? 'Off' : 'Upcoming'}
-                          </span>
-                        ) : day.isSunday ? (
-                          <span className="text-[8px] sm:text-[9px] text-slate-400 italic">
-                            Weekly Off
-                          </span>
-                        ) : selectedStaffId !== 'All' ? (
+                        {selectedStaffId !== 'All' ? (
                           /* Individual Staff Status */
                           isStaffPresent ? (
                             <span className="inline-flex items-center gap-0.5 text-[8px] sm:text-[9px] font-bold px-1 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-200 truncate max-w-full">
@@ -1280,6 +1290,16 @@ const AdminAttendancePage = () => {
                                   : 'Present'}
                               </span>
                             </span>
+                          ) : day.isHoliday ? (
+                            <span className="text-[8px] sm:text-[9px] font-bold text-purple-700 hidden sm:block">
+                              Holiday
+                            </span>
+                          ) : day.isSunday ? (
+                            <span className="text-[8px] sm:text-[9px] text-slate-400 italic">
+                              Weekly Off
+                            </span>
+                          ) : isFuture ? (
+                            null
                           ) : (
                             <span className="inline-flex items-center text-[8px] sm:text-[9px] font-bold px-1 py-0.2 rounded bg-rose-100 text-rose-700">
                               Absent
@@ -1317,9 +1337,19 @@ const AdminAttendancePage = () => {
                                 )}
                               </div>
                             </div>
+                          ) : day.isHoliday ? (
+                            <span className="text-[8px] sm:text-[9px] font-bold text-purple-700 hidden sm:block">
+                              Holiday
+                            </span>
+                          ) : day.isSunday ? (
+                            <span className="text-[8px] sm:text-[9px] text-slate-400 italic">
+                              Weekly Off
+                            </span>
+                          ) : isFuture ? (
+                            null
                           ) : (
                             <span className="text-[8px] sm:text-[9px] text-slate-400 italic">
-                              0 Present
+                              0 Marked
                             </span>
                           )
                         )}
