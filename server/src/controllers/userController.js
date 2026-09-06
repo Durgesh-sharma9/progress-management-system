@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Project = require('../models/Project');
 const Phase = require('../models/Phase');
+const { sendDeveloperCredentialsEmail } = require('../utils/emailService');
 
 // @desc    Get all developers with aggregated statistics
 // @route   GET /api/users/developers
@@ -104,13 +105,23 @@ exports.createDeveloper = async (req, res, next) => {
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password,
+      initialPassword: password,
       role: 'developer',
       joiningDate: joiningDate ? new Date(joiningDate) : Date.now(),
     });
 
+    // Send credentials email in background
+    const loginUrl = req.headers.origin ? `${req.headers.origin}/login` : 'https://codepilot.webncode.in/login';
+    sendDeveloperCredentialsEmail({
+      name: developer.name,
+      email: developer.email,
+      password: password,
+      loginUrl,
+    }).catch((err) => console.error('[createDeveloper] Email error:', err));
+
     res.status(201).json({
       success: true,
-      message: 'Developer account created successfully',
+      message: 'Developer account created and credentials emailed successfully',
       data: {
         _id: developer._id,
         name: developer.name,
@@ -118,6 +129,59 @@ exports.createDeveloper = async (req, res, next) => {
         role: developer.role,
         joiningDate: developer.joiningDate || developer.createdAt,
         createdAt: developer.createdAt,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Resend login credentials to developer by Admin
+// @route   POST /api/users/developers/:id/send-credentials
+// @access  Private (Admin only)
+exports.resendCredentials = async (req, res, next) => {
+  try {
+    const developer = await User.findById(req.params.id);
+    if (!developer || developer.role !== 'developer') {
+      return res.status(404).json({ success: false, message: 'Developer not found' });
+    }
+
+    let passwordToSend = req.body.password?.trim() || developer.initialPassword;
+
+    // If no password available (e.g. legacy developer without initialPassword), generate one
+    if (!passwordToSend) {
+      passwordToSend = `Dev@${Math.floor(100000 + Math.random() * 900000)}`;
+      developer.password = passwordToSend;
+      developer.initialPassword = passwordToSend;
+      await developer.save();
+    } else if (req.body.password?.trim()) {
+      // If admin specified a custom password, update it
+      developer.password = passwordToSend;
+      developer.initialPassword = passwordToSend;
+      await developer.save();
+    }
+
+    const loginUrl = req.headers.origin ? `${req.headers.origin}/login` : 'https://codepilot.webncode.in/login';
+    const emailResult = await sendDeveloperCredentialsEmail({
+      name: developer.name,
+      email: developer.email,
+      password: passwordToSend,
+      loginUrl,
+    });
+
+    if (!emailResult.success) {
+      return res.status(500).json({
+        success: false,
+        message: `Failed to send email: ${emailResult.error}`,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Login credentials successfully sent to ${developer.email}`,
+      data: {
+        email: developer.email,
+        sentAt: new Date(),
       },
     });
   } catch (error) {

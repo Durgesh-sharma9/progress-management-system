@@ -5,6 +5,7 @@ const {
   createDeveloper,
   deleteDeveloper,
   getUserById,
+  resendCredentials,
 } = require('../controllers/userController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -13,6 +14,7 @@ router
   .get(protect, authorize('admin'), getDevelopers)
   .post(protect, authorize('admin'), createDeveloper);
 
+router.post('/developers/:id/send-credentials', protect, authorize('admin'), resendCredentials);
 router.delete('/developers/:id', protect, authorize('admin'), deleteDeveloper);
 router.get('/:id', protect, getUserById);
 

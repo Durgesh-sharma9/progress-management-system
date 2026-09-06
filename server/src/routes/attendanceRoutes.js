@@ -15,6 +15,7 @@ const {
   deleteHoliday,
   adminManualAttendanceUpdate,
   clearAllAttendance,
+  getAttendanceReport,
 } = require('../controllers/attendanceController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -31,6 +32,7 @@ router.get('/holidays', protect, getHolidays);
 router.put('/config', protect, authorize('admin'), updateWorkspaceConfig);
 router.get('/admin/overview', protect, authorize('admin'), getAdminAttendanceOverview);
 router.get('/admin/monthly-calendar', protect, authorize('admin'), getAdminMonthlyCalendar);
+router.get('/admin/reports', protect, authorize('admin'), getAttendanceReport);
 router.post('/holidays', protect, authorize('admin'), createOrUpdateHoliday);
 router.delete('/holidays/:id', protect, authorize('admin'), deleteHoliday);
 router.post('/admin/manual', protect, authorize('admin'), adminManualAttendanceUpdate);

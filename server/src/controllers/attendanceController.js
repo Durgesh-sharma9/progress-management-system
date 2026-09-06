@@ -190,16 +190,50 @@ exports.punchIn = async (req, res, next) => {
   }
 };
 
-// @desc    Optional Punch Out (kept for backward compat)
+// @desc    Developer Punch Out & Calculate Working Hours
 // @route   POST /api/attendance/punch-out
 // @access  Private (Developer & Admin)
 exports.punchOut = async (req, res, next) => {
   try {
     const today = getTodayDateString();
-    const attendance = await Attendance.findOne({ developer: req.user._id, date: today });
+    const developerId = req.user._id;
+    const { workSummary } = req.body;
+
+    const attendance = await Attendance.findOne({ developer: developerId, date: today });
+    if (!attendance || !attendance.punchIn || !attendance.punchIn.time) {
+      return res.status(400).json({
+        success: false,
+        message: 'No active punch-in found for today. Please punch in first.',
+      });
+    }
+
+    if (attendance.punchOut && attendance.punchOut.time) {
+      return res.status(400).json({
+        success: false,
+        message: `You have already punched out today at ${new Date(attendance.punchOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`,
+        data: attendance,
+      });
+    }
+
+    const now = new Date();
+    const punchInDate = new Date(attendance.punchIn.time);
+    const diffMinutes = Math.max(0, Math.round((now.getTime() - punchInDate.getTime()) / 60000));
+
+    attendance.punchOut = {
+      time: now,
+      workSummary: workSummary || '',
+      isWithinGeofence: true,
+    };
+    attendance.totalWorkingMinutes = diffMinutes;
+
+    await attendance.save();
+
+    const hours = Math.floor(diffMinutes / 60);
+    const mins = diffMinutes % 60;
+
     res.status(200).json({
       success: true,
-      message: 'Attendance recorded',
+      message: `Punched out successfully at ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} (${hours}h ${mins}m recorded).`,
       data: attendance,
     });
   } catch (error) {
@@ -334,6 +368,8 @@ exports.getDeveloperMonthlyCalendar = async (req, res, next) => {
         isMarked: isPresent,
         status: isPresent ? 'Present' : (record ? record.status : 'Absent'),
         punchIn: record ? record.punchIn : null,
+        punchOut: record ? record.punchOut : null,
+        totalWorkingMinutes: record ? record.totalWorkingMinutes : 0,
       });
     }
 
@@ -678,19 +714,179 @@ exports.adminManualAttendanceUpdate = async (req, res, next) => {
   }
 };
 
-// @desc    Clear All Attendance Records from Database
-// @route   DELETE /api/attendance/admin/clear-all
+// @desc    Get Detailed Attendance Reports (Date Range or Month-wise with Working Hours)
+// @route   GET /api/attendance/admin/reports
 // @access  Private (Admin only)
-exports.clearAllAttendance = async (req, res, next) => {
+exports.getAttendanceReport = async (req, res, next) => {
   try {
-    const result = await Attendance.deleteMany({});
+    const { mode = 'month', startDate: reqStart, endDate: reqEnd, year: reqYear, month: reqMonth, developerId } = req.query;
+    const now = new Date();
+    const todayStr = getTodayDateString();
+
+    let startDate = '';
+    let endDate = '';
+    let resolvedYear = Number(reqYear) || now.getFullYear();
+    let resolvedMonth = Number(reqMonth) || now.getMonth() + 1;
+
+    if (mode === 'range' && reqStart && reqEnd) {
+      startDate = reqStart;
+      endDate = reqEnd;
+    } else {
+      const monthPadded = String(resolvedMonth).padStart(2, '0');
+      startDate = `${resolvedYear}-${monthPadded}-01`;
+      const daysInMonth = new Date(resolvedYear, resolvedMonth, 0).getDate();
+      endDate = `${resolvedYear}-${monthPadded}-${String(daysInMonth).padStart(2, '0')}`;
+    }
+
+    // Generate list of all calendar dates in range
+    const startObj = new Date(startDate);
+    const endObj = new Date(endDate);
+    const dateList = [];
+    const cur = new Date(startObj);
+    while (cur <= endObj) {
+      const y = cur.getFullYear();
+      const m = String(cur.getMonth() + 1).padStart(2, '0');
+      const d = String(cur.getDate()).padStart(2, '0');
+      dateList.push(`${y}-${m}-${d}`);
+      cur.setDate(cur.getDate() + 1);
+    }
+
+    // Fetch holidays in range
+    const holidays = await Holiday.find({
+      date: { $gte: startDate, $lte: endDate },
+    }).sort({ date: 1 });
+    const holidayMap = new Map(holidays.map((h) => [h.date, h]));
+
+    // Fetch developers
+    let devQuery = { role: 'developer' };
+    if (developerId && developerId !== 'All') {
+      devQuery._id = developerId;
+    }
+    const developers = await User.find(devQuery).select('_id name email createdAt').sort({ name: 1 });
+
+    // Fetch attendance records
+    let attQuery = {
+      date: { $gte: startDate, $lte: endDate },
+    };
+    if (developerId && developerId !== 'All') {
+      attQuery.developer = developerId;
+    }
+    const attendanceRecords = await Attendance.find(attQuery).populate('developer', '_id name email');
+
+    // Index attendance by `developerId_date`
+    const recordMap = new Map();
+    attendanceRecords.forEach((rec) => {
+      const dId = rec.developer?._id?.toString() || rec.developer?.toString();
+      if (dId && rec.date) {
+        recordMap.set(`${dId}_${rec.date}`, rec);
+      }
+    });
+
+    // Compute standard working days in the range (up to today, not Sunday, not Holiday)
+    const workingDaysList = dateList.filter((dStr) => {
+      const dt = new Date(dStr);
+      const isSunday = dt.getDay() === 0;
+      const isHol = holidayMap.has(dStr);
+      return !isSunday && !isHol && dStr <= todayStr;
+    });
+    const totalStandardWorkingDays = workingDaysList.length;
+
+    // Build developer summaries & daily logs
+    const staffSummaries = developers.map((dev) => {
+      const dId = dev._id.toString();
+      let totalMinutes = 0;
+      let daysPresent = 0;
+
+      const dailyLogs = dateList.map((dStr) => {
+        const dt = new Date(dStr);
+        const dayOfWeek = dt.getDay();
+        const isSunday = dayOfWeek === 0;
+        const holiday = holidayMap.get(dStr) || null;
+        const isFuture = dStr > todayStr;
+        const record = recordMap.get(`${dId}_${dStr}`) || null;
+        const isPresent = Boolean(record && record.punchIn?.time && record.status !== 'Absent');
+
+        let workingMins = 0;
+        if (isPresent) {
+          daysPresent++;
+          if (record.totalWorkingMinutes && record.totalWorkingMinutes > 0) {
+            workingMins = record.totalWorkingMinutes;
+          } else if (record.punchIn?.time && record.punchOut?.time) {
+            workingMins = Math.max(0, Math.round((new Date(record.punchOut.time) - new Date(record.punchIn.time)) / 60000));
+          } else if (dStr === todayStr && record.punchIn?.time) {
+            workingMins = Math.max(0, Math.round((Date.now() - new Date(record.punchIn.time)) / 60000));
+          }
+          totalMinutes += workingMins;
+        }
+
+        return {
+          date: dStr,
+          dayOfWeek,
+          isSunday,
+          isHoliday: Boolean(holiday),
+          holidayTitle: holiday?.title || null,
+          isFuture,
+          isPresent,
+          status: isPresent ? 'Present' : (record ? record.status : (isHoliday ? 'Holiday' : (isSunday ? 'Weekly Off' : (isFuture ? 'Upcoming' : 'Absent')))),
+          punchInTime: record?.punchIn?.time || null,
+          punchOutTime: record?.punchOut?.time || null,
+          workingMinutes: workingMins,
+          workingHoursFormatted: workingMins > 0 ? `${Math.floor(workingMins / 60)}h ${workingMins % 60}m` : (isPresent ? 'In Progress' : '-'),
+          distanceMeters: record?.punchIn?.distanceMeters,
+          isWithinGeofence: record?.punchIn?.isWithinGeofence,
+        };
+      });
+
+      const totalHours = Number((totalMinutes / 60).toFixed(1));
+      const averageDailyHours = daysPresent > 0 ? Number((totalMinutes / daysPresent / 60).toFixed(1)) : 0;
+      const attendanceRate = totalStandardWorkingDays > 0 ? Math.round((daysPresent / totalStandardWorkingDays) * 100) : 0;
+
+      return {
+        developerId: dev._id,
+        name: dev.name,
+        email: dev.email,
+        daysPresent,
+        totalWorkingDays: totalStandardWorkingDays,
+        attendanceRate,
+        totalWorkingMinutes: totalMinutes,
+        totalWorkingHours: totalHours,
+        averageDailyHours,
+        dailyLogs,
+      };
+    });
+
+    const totalTeamWorkingMinutes = staffSummaries.reduce((sum, s) => sum + s.totalWorkingMinutes, 0);
+    const totalTeamHours = Number((totalTeamWorkingMinutes / 60).toFixed(1));
+    const totalTeamPresent = staffSummaries.reduce((sum, s) => sum + s.daysPresent, 0);
+    const averageTeamDailyHours = totalTeamPresent > 0 ? Number((totalTeamWorkingMinutes / totalTeamPresent / 60).toFixed(1)) : 0;
+
     res.status(200).json({
       success: true,
-      message: `Cleared ${result.deletedCount} attendance records from database.`,
-      deletedCount: result.deletedCount,
+      data: {
+        range: {
+          startDate,
+          endDate,
+          mode,
+          year: resolvedYear,
+          month: resolvedMonth,
+        },
+        summary: {
+          totalStaff: developers.length,
+          totalCalendarDays: dateList.length,
+          totalWorkingDays: totalStandardWorkingDays,
+          totalHolidays: holidays.length,
+          totalTeamWorkingMinutes,
+          totalTeamHours,
+          totalTeamPresent,
+          averageTeamDailyHours,
+        },
+        staffSummaries,
+        holidays,
+      },
     });
   } catch (error) {
     next(error);
   }
 };
+
 

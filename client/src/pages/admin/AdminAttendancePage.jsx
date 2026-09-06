@@ -37,6 +37,9 @@ import {
   BarChart3,
   User,
   TrendingUp,
+  Download,
+  Eye,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { getLocalDateString } from '../../utils/dateUtils';
 
@@ -99,6 +102,20 @@ const AdminAttendancePage = () => {
   const [overrideNotes, setOverrideNotes] = useState('');
   const [isSubmittingOverride, setIsSubmittingOverride] = useState(false);
 
+  // Attendance Reports State
+  const [reportFilterMode, setReportFilterMode] = useState('month'); // 'month' | 'range'
+  const [reportMonth, setReportMonth] = useState(new Date().getMonth() + 1);
+  const [reportYear, setReportYear] = useState(new Date().getFullYear());
+  const [reportStartDate, setReportStartDate] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+  });
+  const [reportEndDate, setReportEndDate] = useState(getLocalDateString());
+  const [reportStaffId, setReportStaffId] = useState('all');
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportData, setReportData] = useState(null);
+  const [reportDailyModalDev, setReportDailyModalDev] = useState(null);
+
   useEffect(() => {
     fetchOverview();
     fetchConfig();
@@ -109,8 +126,10 @@ const AdminAttendancePage = () => {
       fetchMonthlyCalendar();
     } else if (activeTab === 'holidays') {
       fetchHolidaysList();
+    } else if (activeTab === 'reports') {
+      fetchAttendanceReports();
     }
-  }, [activeTab, calendarMonth, calendarYear]);
+  }, [activeTab, calendarMonth, calendarYear, reportFilterMode, reportMonth, reportYear, reportStartDate, reportEndDate, reportStaffId]);
 
   const fetchOverview = async () => {
     try {
@@ -344,6 +363,65 @@ const AdminAttendancePage = () => {
     } finally {
       setIsDeletingHoliday(false);
     }
+  };
+
+  const fetchAttendanceReports = async () => {
+    try {
+      setReportLoading(true);
+      const params = {
+        mode: reportFilterMode,
+      };
+      if (reportFilterMode === 'month') {
+        params.year = reportYear;
+        params.month = reportMonth;
+      } else {
+        params.startDate = reportStartDate;
+        params.endDate = reportEndDate;
+      }
+      if (reportStaffId !== 'all') {
+        params.developerId = reportStaffId;
+      }
+
+      const res = await api.get('/attendance/admin/reports', { params });
+      if (res.data.success) {
+        setReportData(res.data.data);
+      }
+    } catch (err) {
+      error('Failed to load attendance reports');
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (!reportData?.staffSummaries || reportData.staffSummaries.length === 0) {
+      error('No report data available to export');
+      return;
+    }
+
+    const headers = ['Developer Name', 'Email', 'Days Present', 'Working Days', 'Attendance Rate (%)', 'Total Hours', 'Avg Daily Hours'];
+    const rows = reportData.staffSummaries.map((s) => [
+      `"${s.name}"`,
+      `"${s.email}"`,
+      s.daysPresent,
+      s.totalWorkingDays,
+      `${s.attendanceRate}%`,
+      s.totalWorkingHours,
+      s.averageDailyHours,
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute(
+      'download',
+      `attendance_report_${reportFilterMode === 'month' ? `${reportYear}_${reportMonth}` : `${reportStartDate}_to_${reportEndDate}`}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    success('Attendance report downloaded as CSV');
   };
 
   // Month navigation helpers & constraints
@@ -633,6 +711,17 @@ const AdminAttendancePage = () => {
           >
             <CalendarIcon className="h-3.5 w-3.5 text-purple-600" />
             <span>Month Wise Calendar</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('reports')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+              activeTab === 'reports'
+                ? 'bg-white text-slate-900 shadow-soft-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <BarChart3 className="h-3.5 w-3.5 text-blue-600" />
+            <span>Attendance Reports</span>
           </button>
           <button
             onClick={() => setActiveTab('holidays')}
@@ -1296,7 +1385,8 @@ const AdminAttendancePage = () => {
                             </span>
                           ) : day.isSunday ? (
                             <span className="text-[8px] sm:text-[9px] text-slate-400 italic">
-                              Weekly Off
+                              <span className="sm:hidden">Off</span>
+                              <span className="hidden sm:inline">Weekly Off</span>
                             </span>
                           ) : isFuture ? (
                             null
@@ -1343,7 +1433,8 @@ const AdminAttendancePage = () => {
                             </span>
                           ) : day.isSunday ? (
                             <span className="text-[8px] sm:text-[9px] text-slate-400 italic">
-                              Weekly Off
+                              <span className="sm:hidden">Off</span>
+                              <span className="hidden sm:inline">Weekly Off</span>
                             </span>
                           ) : isFuture ? (
                             null
@@ -1364,6 +1455,277 @@ const AdminAttendancePage = () => {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* VIEW: ATTENDANCE REPORTS */}
+      {activeTab === 'reports' && (
+        <div className="space-y-4">
+          {/* Top Filter Card */}
+          <div className="glass-card rounded-2xl p-4 bg-white border border-slate-200/90 shadow-soft-xs space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-base sm:text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-blue-600" />
+                  <span>Attendance Analytics & Staff Reports</span>
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Comprehensive attendance metrics, working hours, and daily breakdown logs.
+                </p>
+              </div>
+
+              {/* Mode Switcher & Export */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center bg-slate-100 p-1 rounded-xl">
+                  <button
+                    onClick={() => setReportFilterMode('month')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                      reportFilterMode === 'month'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    Month Wise
+                  </button>
+                  <button
+                    onClick={() => setReportFilterMode('range')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                      reportFilterMode === 'range'
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    Date Range
+                  </button>
+                </div>
+
+                <button
+                  onClick={handleExportCSV}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold shadow-2xs transition-all active:scale-95"
+                >
+                  <Download className="h-3.5 w-3.5 text-slate-500" />
+                  <span className="hidden sm:inline">Export CSV</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Filter Inputs Toolbar */}
+            <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-slate-100">
+              {reportFilterMode === 'month' ? (
+                <>
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-xs font-bold text-slate-500">Month:</label>
+                    <select
+                      value={reportMonth}
+                      onChange={(e) => setReportMonth(Number(e.target.value))}
+                      className="rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+                    >
+                      {MONTH_NAMES.map((name, i) => (
+                        <option key={i} value={i + 1}>
+                          {name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-xs font-bold text-slate-500">Year:</label>
+                    <select
+                      value={reportYear}
+                      onChange={(e) => setReportYear(Number(e.target.value))}
+                      className="rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+                    >
+                      {[2024, 2025, 2026, 2027].map((y) => (
+                        <option key={y} value={y}>
+                          {y}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-xs font-bold text-slate-500">From:</label>
+                    <input
+                      type="date"
+                      value={reportStartDate}
+                      onChange={(e) => setReportStartDate(e.target.value)}
+                      className="rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-mono font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-xs font-bold text-slate-500">To:</label>
+                    <input
+                      type="date"
+                      value={reportEndDate}
+                      onChange={(e) => setReportEndDate(e.target.value)}
+                      className="rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-mono font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="flex items-center gap-1.5 ml-auto">
+                <label className="text-xs font-bold text-slate-500">Staff:</label>
+                <select
+                  value={reportStaffId}
+                  onChange={(e) => setReportStaffId(e.target.value)}
+                  className="rounded-xl border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:border-blue-500 focus:outline-none"
+                >
+                  <option value="all">All Engineers</option>
+                  {developersList.map((dev) => (
+                    <option key={dev._id} value={dev._id}>
+                      {dev.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                onClick={fetchAttendanceReports}
+                className="p-1.5 rounded-xl border border-slate-200 text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                title="Refresh Report"
+              >
+                <RefreshCw className={`h-4 w-4 ${reportLoading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+          </div>
+
+          {/* Report KPI Summary */}
+          {reportLoading ? (
+            <div className="py-20 flex flex-col items-center justify-center">
+              <RocketLoader title="Analyzing Attendance Data" subtitle="Computing working hours & presence rates..." />
+            </div>
+          ) : !reportData ? (
+            <div className="py-16 text-center bg-white rounded-2xl border border-slate-200 p-6">
+              <p className="text-sm font-bold text-slate-600">No report data loaded.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Summary Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="glass-card rounded-2xl p-3.5 sm:p-4 bg-white border border-slate-200/90 shadow-soft-xs">
+                  <p className="text-[10px] sm:text-xs uppercase font-bold text-slate-400">Total Working Days</p>
+                  <p className="text-xl sm:text-2xl font-black text-slate-900 mt-1 font-mono">
+                    {reportData.summary?.totalWorkingDays || 0}
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Excludes holidays & Sundays</p>
+                </div>
+
+                <div className="glass-card rounded-2xl p-3.5 sm:p-4 bg-white border border-emerald-200/90 shadow-soft-xs bg-emerald-50/20">
+                  <p className="text-[10px] sm:text-xs uppercase font-bold text-emerald-700">Days Present (Team)</p>
+                  <p className="text-xl sm:text-2xl font-black text-emerald-800 mt-1 font-mono">
+                    {reportData.summary?.totalTeamPresent || 0}
+                  </p>
+                  <p className="text-[10px] text-emerald-600 mt-0.5">Cumulative presence logs</p>
+                </div>
+
+                <div className="glass-card rounded-2xl p-3.5 sm:p-4 bg-white border border-blue-200/90 shadow-soft-xs bg-blue-50/20">
+                  <p className="text-[10px] sm:text-xs uppercase font-bold text-blue-700">Total Working Hours</p>
+                  <p className="text-xl sm:text-2xl font-black text-blue-800 mt-1 font-mono">
+                    {reportData.summary?.totalTeamHours || 0}h
+                  </p>
+                  <p className="text-[10px] text-blue-600 mt-0.5">Total staff productivity</p>
+                </div>
+
+                <div className="glass-card rounded-2xl p-3.5 sm:p-4 bg-white border border-purple-200/90 shadow-soft-xs bg-purple-50/20">
+                  <p className="text-[10px] sm:text-xs uppercase font-bold text-purple-700">Average Daily Shift</p>
+                  <p className="text-xl sm:text-2xl font-black text-purple-800 mt-1 font-mono">
+                    {reportData.summary?.averageTeamDailyHours || 0}h / day
+                  </p>
+                  <p className="text-[10px] text-purple-600 mt-0.5">Per present developer</p>
+                </div>
+              </div>
+
+              {/* Staff Summaries Table */}
+              <div className="glass-card rounded-2xl bg-white border border-slate-200/90 shadow-soft-xs overflow-hidden">
+                <div className="p-3.5 sm:p-4 border-b border-slate-200 flex items-center justify-between">
+                  <h3 className="text-xs sm:text-sm font-extrabold text-slate-900">
+                    Engineer Breakdown ({reportData.staffSummaries?.length || 0})
+                  </h3>
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    {reportFilterMode === 'month' ? `${MONTH_NAMES[reportMonth - 1]} ${reportYear}` : `${reportStartDate} to ${reportEndDate}`}
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50/80 border-b border-slate-200 text-slate-500 uppercase text-[10px] font-bold">
+                      <tr>
+                        <th className="py-3 px-3 sm:px-4">Developer</th>
+                        <th className="py-3 px-3 text-center">Days Present</th>
+                        <th className="py-3 px-3 text-center">Attendance Rate</th>
+                        <th className="py-3 px-3 text-center">Total Working Hours</th>
+                        <th className="py-3 px-3 text-center">Avg Hours/Day</th>
+                        <th className="py-3 px-3 sm:px-4 text-right">Daily Log</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {reportData.staffSummaries?.map((staff) => (
+                        <tr key={staff.developerId} className="hover:bg-slate-50/60 transition-colors">
+                          <td className="py-3 px-3 sm:px-4">
+                            <div className="flex items-center gap-2.5">
+                              <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center text-xs font-bold text-white shadow-soft-xs shrink-0">
+                                {staff.name?.charAt(0)}
+                              </div>
+                              <div>
+                                <p className="font-bold text-slate-900">{staff.name}</p>
+                                <p className="text-[10px] text-slate-400">{staff.email}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 text-center">
+                            <span className="font-mono font-bold text-slate-800 text-xs sm:text-sm">
+                              {staff.daysPresent}
+                            </span>
+                            <span className="text-slate-400 text-[11px]"> / {staff.totalWorkingDays}</span>
+                          </td>
+                          <td className="py-3 px-3 text-center">
+                            <div className="inline-flex items-center gap-1.5">
+                              <div className="w-16 h-1.5 rounded-full bg-slate-100 overflow-hidden hidden sm:block">
+                                <div
+                                  className={`h-full rounded-full ${
+                                    staff.attendanceRate >= 80 ? 'bg-emerald-500' : 'bg-amber-500'
+                                  }`}
+                                  style={{ width: `${Math.min(100, staff.attendanceRate)}%` }}
+                                />
+                              </div>
+                              <span
+                                className={`font-mono font-bold text-[11px] px-2 py-0.5 rounded-full border ${
+                                  staff.attendanceRate >= 80
+                                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                    : 'bg-amber-50 text-amber-800 border-amber-200'
+                                }`}
+                              >
+                                {staff.attendanceRate}%
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 text-center font-mono font-bold text-blue-700">
+                            {staff.totalWorkingHours} hrs
+                          </td>
+                          <td className="py-3 px-3 text-center font-mono text-slate-700">
+                            {staff.averageDailyHours} hrs
+                          </td>
+                          <td className="py-3 px-3 sm:px-4 text-right">
+                            <button
+                              onClick={() => setReportDailyModalDev(staff)}
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg border border-blue-200 transition-colors"
+                            >
+                              <Eye className="h-3 w-3" />
+                              <span>View Logs</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
@@ -1706,37 +2068,68 @@ const AdminAttendancePage = () => {
             </div>
           )}
 
-          <div className="space-y-2 max-h-72 overflow-y-auto">
+          <div className="space-y-2 max-h-80 overflow-y-auto">
             {(!selectedDayDetails?.attendees || selectedDayDetails.attendees.length === 0) ? (
               <p className="text-xs text-slate-400 italic text-center py-4">
                 No attendance records for this date.
               </p>
             ) : (
-              selectedDayDetails.attendees.map((att, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="h-7 w-7 rounded-lg bg-emerald-600 text-white font-bold flex items-center justify-center text-[10px]">
-                      {att.developerName?.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-bold text-slate-900">{att.developerName}</p>
-                      <p className="text-[10px] text-slate-400">
-                        {att.distanceMeters !== undefined ? `${formatDistance(att.distanceMeters)} from office` : 'Verified'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <span className="font-mono text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px]">
-                    {new Date(att.punchInTime).toLocaleTimeString([], {
+              selectedDayDetails.attendees.map((att, i) => {
+                const inTimeFormatted = att.punchInTime
+                  ? new Date(att.punchInTime).toLocaleTimeString([], {
                       hour: '2-digit',
                       minute: '2-digit',
-                    })}
-                  </span>
-                </div>
-              ))
+                    })
+                  : '--';
+                const outTimeFormatted = att.punchOutTime
+                  ? new Date(att.punchOutTime).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : null;
+                const hoursMins = att.totalWorkingMinutes && att.totalWorkingMinutes > 0
+                  ? `${Math.floor(att.totalWorkingMinutes / 60)}h ${att.totalWorkingMinutes % 60}m`
+                  : (att.punchInTime && !att.punchOutTime ? 'In Progress' : '--');
+
+                return (
+                  <div
+                    key={i}
+                    className="p-2.5 sm:p-3 rounded-xl bg-slate-50 border border-slate-200/90 text-xs space-y-2 hover:bg-slate-100/50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="h-8 w-8 rounded-lg bg-emerald-600 text-white font-bold flex items-center justify-center text-xs shrink-0">
+                          {att.developerName?.charAt(0) || 'D'}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-slate-900 truncate">{att.developerName}</p>
+                          <p className="text-[10px] text-slate-400 truncate">
+                            {att.distanceMeters !== undefined ? `${formatDistance(att.distanceMeters)} from office` : 'Verified'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span className="inline-flex items-center gap-1 font-mono font-bold text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 shrink-0">
+                        <Clock className="h-3 w-3 text-emerald-600" />
+                        <span>{hoursMins}</span>
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200/70 text-[11px]">
+                      <div className="flex items-center gap-1.5 text-slate-600">
+                        <span className="text-[10px] font-bold uppercase text-slate-400">Punch In:</span>
+                        <span className="font-mono font-bold text-slate-800">{inTimeFormatted}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-slate-600 justify-end">
+                        <span className="text-[10px] font-bold uppercase text-slate-400">Punch Out:</span>
+                        <span className={`font-mono font-bold ${outTimeFormatted ? 'text-slate-800' : 'text-amber-600'}`}>
+                          {outTimeFormatted || 'Active / On Shift'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
             )}
           </div>
 
@@ -1745,6 +2138,81 @@ const AdminAttendancePage = () => {
               type="button"
               onClick={() => setIsDayDetailsModalOpen(false)}
               className="rounded-xl border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Staff Daily Logs Modal */}
+      <Modal
+        isOpen={Boolean(reportDailyModalDev)}
+        onClose={() => setReportDailyModalDev(null)}
+        title={`Daily Attendance Logs: ${reportDailyModalDev?.name || ''}`}
+        subtitle={`Summary: ${reportDailyModalDev?.daysPresent || 0} days present • ${reportDailyModalDev?.totalWorkingHours || 0} total hours logged`}
+        maxWidth="lg"
+      >
+        <div className="space-y-3">
+          <div className="max-h-96 overflow-y-auto divide-y divide-slate-100 border border-slate-200 rounded-xl">
+            {reportDailyModalDev?.dailyLogs?.map((log, i) => (
+              <div
+                key={i}
+                className={`p-3 flex items-center justify-between text-xs ${
+                  log.isPresent ? 'bg-white' : log.isHoliday ? 'bg-purple-50/40' : log.isSunday ? 'bg-slate-50/60' : 'bg-rose-50/30'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-slate-900">{log.date}</span>
+                    {log.isSunday && (
+                      <span className="text-[10px] text-slate-400 italic">Sunday</span>
+                    )}
+                    {log.isHoliday && (
+                      <span className="text-[10px] font-bold text-purple-700 bg-purple-100 px-1.5 py-0.2 rounded">
+                        {log.holidayTitle || 'Holiday'}
+                      </span>
+                    )}
+                  </div>
+                  {log.isPresent && (
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      In: {log.punchInTime ? new Date(log.punchInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}
+                      {log.punchOutTime ? ` • Out: ${new Date(log.punchOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ' • Shift Active'}
+                      {log.distanceMeters !== undefined && ` • ${formatDistance(log.distanceMeters)} away`}
+                    </p>
+                  )}
+                </div>
+
+                <div className="text-right">
+                  <span
+                    className={`inline-flex items-center font-bold px-2 py-0.5 rounded text-[11px] ${
+                      log.isPresent
+                        ? 'bg-emerald-100 text-emerald-800'
+                        : log.isHoliday
+                        ? 'bg-purple-100 text-purple-800'
+                        : log.isSunday
+                        ? 'text-slate-400'
+                        : log.isFuture
+                        ? 'text-slate-300'
+                        : 'bg-rose-100 text-rose-700'
+                    }`}
+                  >
+                    {log.isPresent ? 'Present' : log.isHoliday ? 'Holiday' : log.isSunday ? 'Weekly Off' : log.isFuture ? '-' : 'Absent'}
+                  </span>
+                  {log.isPresent && (
+                    <p className="font-mono font-bold text-blue-700 text-[11px] mt-0.5">
+                      {log.workingHoursFormatted}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-end pt-3 border-t border-slate-200">
+            <button
+              onClick={() => setReportDailyModalDev(null)}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
             >
               Close
             </button>

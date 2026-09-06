@@ -21,6 +21,7 @@ import {
   Compass,
   History,
   LogIn,
+  LogOut,
   RefreshCw,
   Info,
   ChevronLeft,
@@ -46,6 +47,7 @@ const DeveloperAttendancePage = () => {
 
   // Mark Attendance State
   const [isMarking, setIsMarking] = useState(false);
+  const [isPunchingOut, setIsPunchingOut] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [currentCoords, setCurrentCoords] = useState(null);
   const [distanceInfo, setDistanceInfo] = useState(null);
@@ -247,7 +249,25 @@ const DeveloperAttendancePage = () => {
     }
   };
 
+  const handlePunchOut = async () => {
+    setIsPunchingOut(true);
+    try {
+      const res = await api.post('/attendance/punch-out', {});
+      if (res.data.success) {
+        success('Punched out successfully! Shift completed.');
+        setAttendance(res.data.data);
+        if (activeTab === 'calendar') fetchMyCalendar();
+        if (activeTab === 'history') fetchHistory();
+      }
+    } catch (err) {
+      error(err.response?.data?.message || 'Failed to punch out');
+    } finally {
+      setIsPunchingOut(false);
+    }
+  };
+
   const isMarkedToday = Boolean(attendance?.punchIn?.time);
+  const isPunchedOutToday = Boolean(attendance?.punchOut?.time);
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -509,16 +529,63 @@ const DeveloperAttendancePage = () => {
                       </>
                     )}
                   </button>
+                ) : isPunchedOutToday ? (
+                  <div className="space-y-2">
+                    <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold text-center flex items-center justify-center gap-2 shadow-2xs">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      <span>Shift Completed for Today</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-center text-xs">
+                      <div>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase">Punch In</p>
+                        <p className="font-mono font-bold text-slate-800 mt-0.5">
+                          {new Date(attendance.punchIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase">Punch Out</p>
+                        <p className="font-mono font-bold text-slate-800 mt-0.5">
+                          {new Date(attendance.punchOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-emerald-600 font-bold uppercase">Duration</p>
+                        <p className="font-mono font-extrabold text-emerald-700 mt-0.5">
+                          {attendance.totalWorkingMinutes ? `${Math.floor(attendance.totalWorkingMinutes / 60)}h ${attendance.totalWorkingMinutes % 60}m` : '--'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
-                  <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold text-center flex items-center justify-center gap-2 shadow-2xs">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    <span>
-                      Attendance Marked at{' '}
-                      {new Date(attendance.punchIn.time).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
+                  <div className="space-y-2.5">
+                    <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold text-center flex items-center justify-center gap-2 shadow-2xs">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      <span>
+                        Punched In at{' '}
+                        {new Date(attendance.punchIn.time).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={handlePunchOut}
+                      disabled={isPunchingOut}
+                      className="w-full py-3 px-6 rounded-2xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-extrabold text-xs sm:text-sm shadow-soft-md shadow-rose-500/20 transition-all active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {isPunchingOut ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Punching Out...</span>
+                        </>
+                      ) : (
+                        <>
+                          <LogOut className="h-4 w-4" />
+                          <span>Punch Out / End Day</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 )}
 
@@ -772,11 +839,13 @@ const DeveloperAttendancePage = () => {
                               </div>
                             ) : day.isHoliday ? (
                               <span className="text-[9px] font-bold text-purple-700">
-                                Official Holiday
+                                <span className="sm:hidden">Holiday</span>
+                                <span className="hidden sm:inline">Official Holiday</span>
                               </span>
                             ) : day.isSunday ? (
                               <span className="text-[9px] text-slate-400 italic">
-                                Weekly Off
+                                <span className="sm:hidden">Off</span>
+                                <span className="hidden sm:inline">Weekly Off</span>
                               </span>
                             ) : isFuture ? (
                               /* Do NOT show "Upcoming" */
@@ -945,17 +1014,35 @@ const DeveloperAttendancePage = () => {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-slate-600 font-medium">Check-in Time:</span>
+                <span className="text-slate-600 font-medium">Punch In Time:</span>
                 <span className="font-mono font-bold text-emerald-900">
                   {selectedDayDetails.punchIn?.time
                     ? new Date(selectedDayDetails.punchIn.time).toLocaleTimeString([], {
                         hour: '2-digit',
                         minute: '2-digit',
-                        second: '2-digit',
                       })
                     : '-'}
                 </span>
               </div>
+              {selectedDayDetails.punchOut?.time && (
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-600 font-medium">Punch Out Time:</span>
+                  <span className="font-mono font-bold text-slate-800">
+                    {new Date(selectedDayDetails.punchOut.time).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </div>
+              )}
+              {selectedDayDetails.totalWorkingMinutes > 0 && (
+                <div className="flex items-center justify-between pt-1 border-t border-emerald-200/70">
+                  <span className="text-slate-600 font-medium">Working Hours:</span>
+                  <span className="font-mono font-bold text-emerald-800">
+                    {Math.floor(selectedDayDetails.totalWorkingMinutes / 60)}h {selectedDayDetails.totalWorkingMinutes % 60}m
+                  </span>
+                </div>
+              )}
               {selectedDayDetails.punchIn?.distanceMeters !== undefined && (
                 <div className="flex items-center justify-between pt-1 border-t border-emerald-200/70 text-[11px] text-emerald-800">
                   <span>GPS Office Distance:</span>

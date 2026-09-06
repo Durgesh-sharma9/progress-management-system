@@ -24,6 +24,8 @@ import {
   CheckCircle2,
   ArrowUpRight,
   Calendar,
+  Send,
+  KeyRound,
 } from 'lucide-react';
 import { getLocalDateString } from '../../utils/dateUtils';
 
@@ -46,6 +48,12 @@ const DevelopersPage = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [devToDelete, setDevToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Send Credentials Modal state
+  const [isCredsOpen, setIsCredsOpen] = useState(false);
+  const [devToEmail, setDevToEmail] = useState(null);
+  const [customPassword, setCustomPassword] = useState('');
+  const [isSendingCreds, setIsSendingCreds] = useState(false);
 
   const { success, error } = useToast();
 
@@ -116,6 +124,37 @@ const DevelopersPage = () => {
       error(err.response?.data?.message || 'Failed to delete developer');
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleOpenSendCreds = (dev) => {
+    setDevToEmail(dev);
+    setCustomPassword('');
+    setIsCredsOpen(true);
+  };
+
+  const handleSendCredentials = async (e) => {
+    e.preventDefault();
+    if (!devToEmail) return;
+
+    setIsSendingCreds(true);
+    try {
+      const payload = {};
+      if (customPassword.trim()) {
+        payload.password = customPassword.trim();
+      }
+
+      const res = await api.post(`/users/developers/${devToEmail._id}/send-credentials`, payload);
+      if (res.data.success) {
+        success(`Login credentials successfully emailed to ${devToEmail.email}!`);
+        setIsCredsOpen(false);
+        setDevToEmail(null);
+        setCustomPassword('');
+      }
+    } catch (err) {
+      error(err.response?.data?.message || 'Failed to send credentials email. Check SMTP configuration.');
+    } finally {
+      setIsSendingCreds(false);
     }
   };
 
@@ -208,13 +247,22 @@ const DevelopersPage = () => {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => confirmDelete(dev)}
-                    title="Delete Developer"
-                    className="rounded-lg p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600 border border-transparent transition-all shrink-0"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => handleOpenSendCreds(dev)}
+                      title="Send / Resend Login Credentials via Email"
+                      className="rounded-lg p-1.5 text-slate-400 hover:bg-brand-50 hover:text-brand-600 border border-transparent hover:border-brand-200 transition-all shrink-0"
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => confirmDelete(dev)}
+                      title="Delete Developer"
+                      className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 border border-transparent hover:border-rose-200 transition-all shrink-0"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Statistics Box */}
@@ -411,6 +459,73 @@ const DevelopersPage = () => {
                 </>
               ) : (
                 'Create Engineer'
+              )}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Send Credentials Modal */}
+      <Modal
+        isOpen={isCredsOpen}
+        onClose={() => setIsCredsOpen(false)}
+        title="Send Login Credentials"
+        subtitle={`Email portal access credentials directly to ${devToEmail?.name || 'developer'}`}
+        maxWidth="md"
+      >
+        <form onSubmit={handleSendCredentials} className="space-y-4">
+          <div className="p-3.5 rounded-xl bg-indigo-50/80 border border-indigo-200/80 text-indigo-950 text-xs space-y-1">
+            <p className="font-bold flex items-center gap-1.5 text-indigo-900">
+              <Mail className="h-4 w-4 text-indigo-600 shrink-0" />
+              <span>Recipient: {devToEmail?.name} ({devToEmail?.email})</span>
+            </p>
+            <p className="text-[11px] text-indigo-700 leading-relaxed">
+              Login details including Developer ID, Portal URL, and Password will be sent to the developer's email address using company mail server.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 flex items-center gap-1.5">
+              <KeyRound className="h-3.5 w-3.5 text-brand-600" />
+              <span>Password (Optional Override)</span>
+            </label>
+            <div className="relative rounded-xl shadow-soft-xs">
+              <input
+                type="text"
+                value={customPassword}
+                onChange={(e) => setCustomPassword(e.target.value)}
+                placeholder="Leave blank to use existing or auto-generate"
+                className="block w-full rounded-xl border border-slate-300/80 bg-white py-2.5 px-3 text-xs sm:text-sm font-mono text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              />
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Leave blank to automatically email their saved password. If you provide a new password, their login password will be updated and emailed.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={() => setIsCredsOpen(false)}
+              className="rounded-xl border border-slate-300/80 bg-white px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-soft-xs"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSendingCreds}
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-soft-md shadow-brand-500/25 hover:from-brand-500 hover:to-indigo-500 transition-all disabled:opacity-50"
+            >
+              {isSendingCreds ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Sending Email...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" />
+                  Send Credentials Email
+                </>
               )}
             </button>
           </div>
