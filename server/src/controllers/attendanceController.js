@@ -889,4 +889,19 @@ exports.getAttendanceReport = async (req, res, next) => {
   }
 };
 
+// @desc    Admin clear all attendance records (emergency / reset)
+// @route   DELETE /api/attendance/admin/clear-all
+// @access  Private (Admin only)
+exports.clearAllAttendance = async (req, res, next) => {
+  try {
+    await Attendance.deleteMany({});
+    res.status(200).json({
+      success: true,
+      message: 'All attendance records cleared successfully.',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 
