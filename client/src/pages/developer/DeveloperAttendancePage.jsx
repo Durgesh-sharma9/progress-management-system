@@ -50,7 +50,9 @@ const DeveloperAttendancePage = () => {
   const [isPunchingOut, setIsPunchingOut] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [currentCoords, setCurrentCoords] = useState(null);
-  const [distanceInfo, setDistanceInfo] = useState(null);
+  const [distanceToOffice, setDistanceToOffice] = useState(null);
+  const [isInsideGeofence, setIsInsideGeofence] = useState(false);
+  const [gpsError, setGpsError] = useState(null);
 
   // Calendar View State
   const [calendarLoading, setCalendarLoading] = useState(false);
