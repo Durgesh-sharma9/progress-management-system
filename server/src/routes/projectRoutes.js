@@ -11,6 +11,9 @@ const {
   getAdminDashboardStats,
   getDeveloperDashboardStats,
   updateAdminRemarks,
+  addProjectCredential,
+  updateProjectCredential,
+  deleteProjectCredential,
 } = require('../controllers/projectController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -32,6 +35,11 @@ router
 
 // Admin remarks route
 router.patch('/:id/remarks', protect, authorize('admin'), updateAdminRemarks);
+
+// Project Credentials & Resources
+router.post('/:id/credentials', protect, addProjectCredential);
+router.put('/:id/credentials/:credentialId', protect, updateProjectCredential);
+router.delete('/:id/credentials/:credentialId', protect, deleteProjectCredential);
 
 // Developer assignment to project
 router.post('/:id/developers', protect, authorize('admin'), assignDeveloper);

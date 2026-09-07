@@ -14,6 +14,7 @@ import EmptyState from '../../components/common/EmptyState';
 import ProjectTreeGraph from '../../components/common/ProjectTreeGraph';
 import ProjectAnalytics from '../../components/common/ProjectAnalytics';
 import RocketLoader from '../../components/common/RocketLoader';
+import ProjectCredentialsVault from '../../components/common/ProjectCredentialsVault';
 import {
   ArrowLeft,
   Plus,
@@ -34,6 +35,7 @@ import {
   ClipboardPaste,
   FileText,
   MessageSquare,
+  KeyRound,
 } from 'lucide-react';
 
 const ProjectWorkspacePage = () => {
@@ -461,6 +463,18 @@ const ProjectWorkspacePage = () => {
             <BarChart3 className="h-4 w-4" />
             Progress Analytics
           </button>
+
+          <button
+            onClick={() => setViewMode('vault')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+              viewMode === 'vault'
+                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+            }`}
+          >
+            <KeyRound className="h-4 w-4" />
+            Vault / Credentials ({project?.credentials?.length || 0})
+          </button>
         </div>
 
         <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-500">
@@ -491,6 +505,15 @@ const ProjectWorkspacePage = () => {
       {/* VIEW MODE 2: Progress Analytics */}
       {viewMode === 'analytics' && (
         <ProjectAnalytics project={project} phases={phases} />
+      )}
+
+      {/* VIEW MODE: Project Credentials Vault */}
+      {viewMode === 'vault' && (
+        <ProjectCredentialsVault
+          project={project}
+          onUpdate={fetchWorkspaceData}
+          isDeveloper={true}
+        />
       )}
 
       {/* VIEW MODE 3: Checklist & Task Manager */}

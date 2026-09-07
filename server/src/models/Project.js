@@ -59,6 +59,51 @@ const projectSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
+  credentials: [
+    {
+      title: {
+        type: String,
+        required: [true, 'Please provide a credential or resource title'],
+        trim: true,
+      },
+      type: {
+        type: String,
+        enum: ['url', 'login', 'api_key', 'database', 'server', 'note', 'other'],
+        default: 'url',
+      },
+      url: {
+        type: String,
+        trim: true,
+        default: '',
+      },
+      username: {
+        type: String,
+        trim: true,
+        default: '',
+      },
+      password: {
+        type: String,
+        default: '',
+      },
+      description: {
+        type: String,
+        trim: true,
+        default: '',
+      },
+      createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+      createdAt: {
+        type: Date,
+        default: Date.now,
+      },
+      updatedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
   startDate: {
     type: Date,
     default: Date.now,

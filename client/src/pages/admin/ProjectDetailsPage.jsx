@@ -14,6 +14,7 @@ import ProjectCategoryBadge from '../../components/common/ProjectCategoryBadge';
 import TechStackPills from '../../components/common/TechStackPills';
 import BulkPhaseModal from '../../components/common/BulkPhaseModal';
 import RocketLoader from '../../components/common/RocketLoader';
+import ProjectCredentialsVault from '../../components/common/ProjectCredentialsVault';
 import {
   ArrowLeft,
   Users,
@@ -40,6 +41,7 @@ import {
   ArrowUp,
   ArrowDown,
   Calendar,
+  KeyRound,
 } from 'lucide-react';
 
 const ProjectDetailsPage = () => {
@@ -486,6 +488,18 @@ const ProjectDetailsPage = () => {
           <BarChart3 className="h-3.5 w-3.5" />
           Analytics
         </button>
+
+        <button
+          onClick={() => setViewMode('vault')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all duration-200 ${
+            viewMode === 'vault'
+              ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+          }`}
+        >
+          <KeyRound className="h-3.5 w-3.5" />
+          Vault / Credentials ({project.credentials?.length || 0})
+        </button>
       </div>
 
       {/* VIEW 1: TREE GRAPH FLOW */}
@@ -687,6 +701,15 @@ const ProjectDetailsPage = () => {
       {/* VIEW 2: VISUAL ANALYTICS */}
       {viewMode === 'analytics' && (
         <ProjectAnalytics project={project} phases={phases} />
+      )}
+
+      {/* VIEW: VAULT / CREDENTIALS */}
+      {viewMode === 'vault' && (
+        <ProjectCredentialsVault
+          project={project}
+          onUpdate={fetchProjectData}
+          isDeveloper={false}
+        />
       )}
 
       {/* VIEW 3: TEAM MEMBERS ROSTER */}

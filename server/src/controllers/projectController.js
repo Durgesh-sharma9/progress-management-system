@@ -95,7 +95,8 @@ exports.getProjectById = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.id)
       .populate('developers', 'name email role createdAt')
-      .populate('createdBy', 'name email');
+      .populate('createdBy', 'name email')
+      .populate('credentials.createdBy', 'name email');
 
     if (!project) {
       return res.status(404).json({ success: false, message: 'Project not found' });
@@ -558,6 +559,160 @@ exports.getDeveloperDashboardStats = async (req, res, next) => {
         pendingTasks: pendingMyPhases,
         myProjects: enrichedProjects,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Helper to check if user has access to project (Admin or assigned Developer)
+const checkProjectAccess = (project, user) => {
+  if (user.role === 'admin') return true;
+  if (user.role === 'developer') {
+    return project.developers.some(
+      (dev) => (dev._id ? dev._id.toString() : dev.toString()) === user._id.toString()
+    );
+  }
+  return false;
+};
+
+// @desc    Add credential / resource to project
+// @route   POST /api/projects/:id/credentials
+// @access  Private (Admin or assigned Developer)
+exports.addProjectCredential = async (req, res, next) => {
+  try {
+    const { title, type, url, username, password, description } = req.body;
+
+    if (!title || !title.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a credential or resource title',
+      });
+    }
+
+    const project = await Project.findById(req.params.id);
+    if (!project) {
+      return res.status(404).json({ success: false, message: 'Project not found' });
+    }
+
+    if (!checkProjectAccess(project, req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You are not assigned to this project',
+      });
+    }
+
+    if (!project.credentials) {
+      project.credentials = [];
+    }
+
+    const newCred = {
+      title: title.trim(),
+      type: type || 'url',
+      url: url ? url.trim() : '',
+      username: username ? username.trim() : '',
+      password: password || '',
+      description: description ? description.trim() : '',
+      createdBy: req.user._id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    project.credentials.push(newCred);
+    await project.save();
+
+    await project.populate('credentials.createdBy', 'name email');
+
+    res.status(201).json({
+      success: true,
+      message: 'Credential added successfully',
+      data: project.credentials,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update project credential / resource
+// @route   PUT /api/projects/:id/credentials/:credentialId
+// @access  Private (Admin or assigned Developer)
+exports.updateProjectCredential = async (req, res, next) => {
+  try {
+    const { title, type, url, username, password, description } = req.body;
+
+    const project = await Project.findById(req.params.id);
+    if (!project) {
+      return res.status(404).json({ success: false, message: 'Project not found' });
+    }
+
+    if (!checkProjectAccess(project, req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You are not assigned to this project',
+      });
+    }
+
+    const cred = project.credentials.id(req.params.credentialId);
+    if (!cred) {
+      return res.status(404).json({
+        success: false,
+        message: 'Credential record not found',
+      });
+    }
+
+    if (title !== undefined) cred.title = title.trim();
+    if (type !== undefined) cred.type = type;
+    if (url !== undefined) cred.url = url.trim();
+    if (username !== undefined) cred.username = username.trim();
+    if (password !== undefined) cred.password = password;
+    if (description !== undefined) cred.description = description.trim();
+    cred.updatedAt = new Date();
+
+    await project.save();
+    await project.populate('credentials.createdBy', 'name email');
+
+    res.status(200).json({
+      success: true,
+      message: 'Credential updated successfully',
+      data: project.credentials,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete project credential / resource
+// @route   DELETE /api/projects/:id/credentials/:credentialId
+// @access  Private (Admin or assigned Developer)
+exports.deleteProjectCredential = async (req, res, next) => {
+  try {
+    const project = await Project.findById(req.params.id);
+    if (!project) {
+      return res.status(404).json({ success: false, message: 'Project not found' });
+    }
+
+    if (!checkProjectAccess(project, req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You are not assigned to this project',
+      });
+    }
+
+    const cred = project.credentials.id(req.params.credentialId);
+    if (!cred) {
+      return res.status(404).json({
+        success: false,
+        message: 'Credential record not found',
+      });
+    }
+
+    project.credentials.pull({ _id: req.params.credentialId });
+    await project.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Credential removed successfully',
+      data: project.credentials,
     });
   } catch (error) {
     next(error);
