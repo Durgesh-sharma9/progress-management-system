@@ -284,8 +284,8 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
       {/* Filter Tabs & Search Bar (Mobile Optimized) */}
       <div className="glass-card rounded-2xl p-2.5 sm:p-4 bg-white border border-slate-200/90 shadow-soft-xs space-y-2.5 sm:space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
-          {/* Category Tabs with smooth touch scrolling */}
-          <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar pb-1 md:pb-0 touch-pan-x">
+          {/* Category Tabs (Wrapped cleanly for mobile so no scrolling needed) */}
+          <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
             {CATEGORY_TABS.map((tab) => {
               const Icon = tab.icon;
               const count =
@@ -297,7 +297,7 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
+                  className={`inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all ${
                     activeTab === tab.id
                       ? 'bg-brand-50 text-brand-700 border border-brand-200/80 shadow-soft-2xs'
                       : 'text-slate-600 hover:bg-slate-100/70 border border-transparent'
