@@ -498,7 +498,9 @@ const ProjectDetailsPage = () => {
           }`}
         >
           <KeyRound className="h-3.5 w-3.5" />
-          Vault / Credentials ({project.credentials?.length || 0})
+          <span className="sm:hidden">Vault</span>
+          <span className="hidden sm:inline">Vault / Credentials</span>
+          <span>({project.credentials?.length || 0})</span>
         </button>
       </div>
 

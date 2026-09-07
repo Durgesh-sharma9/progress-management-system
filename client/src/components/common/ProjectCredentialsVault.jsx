@@ -29,6 +29,7 @@ import {
   User,
   Clock,
   Loader2,
+  X,
 } from 'lucide-react';
 
 const CATEGORY_TABS = [
@@ -248,31 +249,31 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Vault Header Banner */}
-      <div className="glass-card rounded-2xl p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white border border-slate-800 shadow-soft-md">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-3 sm:space-y-5">
+      {/* Vault Header Banner (Mobile Optimized) */}
+      <div className="glass-card rounded-2xl p-3.5 sm:p-5 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white border border-slate-800 shadow-soft-md">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300 shrink-0">
-                <KeyRound className="h-4 w-4" />
+              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300 shrink-0">
+                <KeyRound className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
-              <h2 className="text-base sm:text-xl font-black tracking-tight text-white flex items-center gap-2">
-                <span>Project Credentials & Vault</span>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+              <h2 className="text-sm sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
+                <span>Project Vault</span>
+                <span className="text-[9px] sm:text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
                   {credentialsList.length} Items
                 </span>
               </h2>
             </div>
-            <p className="text-xs text-slate-300/80 max-w-2xl leading-relaxed">
-              Store and access staging/production URLs, database logins, repository links, API keys, and deployment configuration notes for{' '}
-              <span className="font-semibold text-white">{project?.name}</span>.
+            <p className="text-[11px] sm:text-xs text-slate-300/80 leading-relaxed max-w-2xl">
+              Store repository links, server accounts, database credentials, API keys, and deployment notes for{' '}
+              <span className="font-bold text-white">{project?.name}</span>.
             </p>
           </div>
 
           <button
             onClick={openCreateModal}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm shadow-soft-sm shadow-indigo-500/25 transition-all active:scale-95 shrink-0 self-start sm:self-center"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-extrabold text-xs sm:text-sm shadow-soft-sm shadow-indigo-500/25 transition-all active:scale-95 shrink-0"
           >
             <Plus className="h-4 w-4" />
             <span>Add Credential / Resource</span>
@@ -280,11 +281,11 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
         </div>
       </div>
 
-      {/* Filter Tabs & Search Bar */}
-      <div className="glass-card rounded-2xl p-3 sm:p-4 bg-white border border-slate-200/90 shadow-soft-xs space-y-3">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          {/* Category Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 md:pb-0">
+      {/* Filter Tabs & Search Bar (Mobile Optimized) */}
+      <div className="glass-card rounded-2xl p-2.5 sm:p-4 bg-white border border-slate-200/90 shadow-soft-xs space-y-2.5 sm:space-y-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
+          {/* Category Tabs with smooth touch scrolling */}
+          <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar pb-1 md:pb-0 touch-pan-x">
             {CATEGORY_TABS.map((tab) => {
               const Icon = tab.icon;
               const count =
@@ -296,17 +297,17 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                  className={`inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                     activeTab === tab.id
                       ? 'bg-brand-50 text-brand-700 border border-brand-200/80 shadow-soft-2xs'
                       : 'text-slate-600 hover:bg-slate-100/70 border border-transparent'
                   }`}
                 >
-                  <Icon className="h-3.5 w-3.5" />
+                  <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                   <span>{tab.label}</span>
                   {count > 0 && (
                     <span
-                      className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
+                      className={`text-[9px] sm:text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
                         activeTab === tab.id
                           ? 'bg-brand-600 text-white'
                           : 'bg-slate-200/80 text-slate-700'
@@ -320,21 +321,29 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
             })}
           </div>
 
-          {/* Search Input */}
-          <div className="relative w-full md:w-72 shrink-0">
+          {/* Search Input with quick clear */}
+          <div className="relative w-full md:w-64 shrink-0">
             <Search className="h-3.5 w-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search title, URL, username, notes..."
-              className="w-full rounded-xl border border-slate-300/80 bg-white/70 py-1.5 pl-8 pr-3 text-xs text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              placeholder="Search title, URL, username..."
+              className="w-full rounded-xl border border-slate-300/80 bg-white/70 py-1.5 pl-8 pr-8 text-xs text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Credentials Grid */}
+      {/* Credentials Grid (Responsive Mobile Card Layout) */}
       {filteredCredentials.length === 0 ? (
         <EmptyState
           icon={KeyRound}
@@ -345,14 +354,14 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
           }
           description={
             searchQuery || activeTab !== 'all'
-              ? 'Try adjusting your search filter or category selection.'
-              : 'Add login accounts, server URLs, database details, or API keys for this project.'
+              ? 'Try adjusting your search query or category filter.'
+              : 'Store URLs, database logins, API keys, and deployment credentials for this project.'
           }
           actionText="Add Credential"
           onAction={openCreateModal}
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           {filteredCredentials.map((cred) => {
             const config = TYPE_CONFIG[cred.type] || TYPE_CONFIG.other;
             const TypeIcon = config.icon;
@@ -361,29 +370,29 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
             return (
               <div
                 key={cred._id}
-                className="glass-card rounded-2xl p-4 sm:p-5 bg-white border border-slate-200/90 shadow-soft-xs hover:shadow-soft-md transition-all flex flex-col justify-between space-y-3.5"
+                className="glass-card rounded-2xl p-3.5 sm:p-4 bg-white border border-slate-200/90 shadow-soft-xs hover:shadow-soft-md transition-all flex flex-col justify-between space-y-3"
               >
                 <div>
-                  {/* Card Header: Type Badge, Title, Actions */}
-                  <div className="flex items-start justify-between gap-2.5 pb-2.5 border-b border-slate-100">
+                  {/* Card Header: Type Icon, Title & Edit/Delete */}
+                  <div className="flex items-start justify-between gap-2 pb-2.5 border-b border-slate-100">
                     <div className="flex items-start gap-2.5 min-w-0">
                       <div
-                        className={`h-8 w-8 rounded-xl ${config.iconBg} text-white flex items-center justify-center shrink-0 shadow-soft-2xs`}
+                        className={`h-7 w-7 sm:h-8 sm:w-8 rounded-xl ${config.iconBg} text-white flex items-center justify-center shrink-0 shadow-soft-2xs`}
                       >
-                        <TypeIcon className="h-4 w-4" />
+                        <TypeIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </div>
                       <div className="min-w-0">
-                        <h3 className="font-extrabold text-slate-900 text-sm sm:text-base truncate">
+                        <h3 className="font-extrabold text-slate-900 text-xs sm:text-sm truncate">
                           {cred.title}
                         </h3>
                         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                           <span
-                            className={`text-[9px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-md border ${config.badgeBg}`}
+                            className={`text-[8px] sm:text-[9px] uppercase tracking-wider font-bold px-2 py-0.2 rounded-md border ${config.badgeBg}`}
                           >
                             {config.label}
                           </span>
                           {cred.createdBy?.name && (
-                            <span className="text-[10px] text-slate-400 font-medium">
+                            <span className="text-[9px] sm:text-[10px] text-slate-400 font-medium truncate max-w-[120px]">
                               by {cred.createdBy.name}
                             </span>
                           )}
@@ -391,7 +400,7 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center gap-0.5 shrink-0">
                       <button
                         onClick={() => openEditModal(cred)}
                         title="Edit Credential"
@@ -409,28 +418,37 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
                     </div>
                   </div>
 
-                  {/* Card Body: URL Redirection, Username, Password, Description */}
-                  <div className="space-y-2.5 pt-2.5">
-                    {/* URL Redirection */}
+                  {/* Card Body: URL, Username, Password, Description */}
+                  <div className="space-y-2 pt-2 text-xs">
+                    {/* URL Redirection Row (Responsive Stacking for Mobile) */}
                     {cred.url && (
-                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-2">
-                        <div className="min-w-0 flex items-center gap-2">
+                      <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5 sm:space-y-0 sm:flex sm:items-center sm:justify-between gap-2">
+                        <div className="min-w-0 flex items-center gap-1.5">
                           <Globe className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                          <span className="text-xs font-mono text-slate-700 truncate">
+                          <span
+                            className="text-xs font-mono text-slate-700 truncate"
+                            title={cred.url}
+                          >
                             {cred.url}
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-1 shrink-0">
+                        <div className="flex items-center gap-1.5 justify-end shrink-0 pt-1 sm:pt-0 border-t border-slate-200/50 sm:border-t-0">
                           <button
                             onClick={() => handleCopyText(cred.url, `${cred._id}_url`, 'URL')}
                             title="Copy URL Link"
-                            className="p-1.5 rounded-lg hover:bg-white text-slate-500 hover:text-slate-800 border border-transparent hover:border-slate-200 transition-all"
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-white text-slate-600 hover:text-slate-900 border border-transparent hover:border-slate-200 text-[11px] font-semibold transition-all"
                           >
                             {copiedFieldId === `${cred._id}_url` ? (
-                              <Check className="h-3.5 w-3.5 text-emerald-600" />
+                              <>
+                                <Check className="h-3 w-3 text-emerald-600" />
+                                <span className="text-emerald-700">Copied</span>
+                              </>
                             ) : (
-                              <Copy className="h-3.5 w-3.5" />
+                              <>
+                                <Copy className="h-3 w-3" />
+                                <span>Copy</span>
+                              </>
                             )}
                           </button>
 
@@ -450,20 +468,21 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
 
                     {/* Username / Identifier */}
                     {cred.username && (
-                      <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50/80 border border-slate-200/60 text-xs">
+                      <div className="flex items-center justify-between p-2 sm:p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/60">
                         <div className="min-w-0 pr-2">
-                          <p className="text-[10px] font-bold uppercase text-slate-400">
+                          <p className="text-[9px] sm:text-[10px] font-bold uppercase text-slate-400">
                             Username / Account
                           </p>
-                          <p className="font-mono font-bold text-slate-900 truncate mt-0.5">
+                          <p className="font-mono font-bold text-slate-900 truncate mt-0.5 text-xs sm:text-sm">
                             {cred.username}
                           </p>
                         </div>
+
                         <button
                           onClick={() =>
                             handleCopyText(cred.username, `${cred._id}_user`, 'Username')
                           }
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-brand-600 bg-white hover:bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200 transition-all shrink-0"
+                          className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-slate-600 hover:text-brand-600 bg-white hover:bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200 transition-all shrink-0"
                           title="Copy Username"
                         >
                           {copiedFieldId === `${cred._id}_user` ? (
@@ -483,12 +502,12 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
 
                     {/* Password / Secret Value */}
                     {cred.password && (
-                      <div className="flex items-center justify-between p-2 rounded-xl bg-slate-50/80 border border-slate-200/60 text-xs">
+                      <div className="flex items-center justify-between p-2 sm:p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/60">
                         <div className="min-w-0 pr-2">
-                          <p className="text-[10px] font-bold uppercase text-slate-400">
+                          <p className="text-[9px] sm:text-[10px] font-bold uppercase text-slate-400">
                             Password / Secret
                           </p>
-                          <p className="font-mono font-bold text-slate-900 truncate mt-0.5 tracking-wider">
+                          <p className="font-mono font-bold text-slate-900 truncate mt-0.5 text-xs sm:text-sm tracking-wider">
                             {isPasswordVisible ? cred.password : '••••••••••••'}
                           </p>
                         </div>
@@ -511,7 +530,7 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
                             onClick={() =>
                               handleCopyText(cred.password, `${cred._id}_pass`, 'Password')
                             }
-                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-brand-600 bg-white hover:bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200 transition-all"
+                            className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-slate-600 hover:text-brand-600 bg-white hover:bg-slate-100/80 px-2 py-1 rounded-lg border border-slate-200 transition-all"
                             title="Copy Password"
                           >
                             {copiedFieldId === `${cred._id}_pass` ? (
@@ -532,10 +551,10 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
 
                     {/* Description / Instructions */}
                     {cred.description && (
-                      <div className="p-2.5 rounded-xl bg-amber-50/40 border border-amber-200/60 text-xs space-y-1">
+                      <div className="p-2 sm:p-2.5 rounded-xl bg-amber-50/40 border border-amber-200/60 space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold uppercase text-amber-800">
-                            Usage Instructions / Notes
+                          <span className="text-[9px] sm:text-[10px] font-bold uppercase text-amber-800">
+                            Usage Notes / Instructions
                           </span>
                           <button
                             onClick={() =>
@@ -545,7 +564,7 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
                                 'Description Notes'
                               )
                             }
-                            className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-900 hover:text-amber-950 bg-amber-100/60 hover:bg-amber-100 px-1.5 py-0.5 rounded transition-colors"
+                            className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold text-amber-900 hover:text-amber-950 bg-amber-100/60 hover:bg-amber-100 px-1.5 py-0.5 rounded transition-colors"
                             title="Copy Notes Text"
                           >
                             {copiedFieldId === `${cred._id}_desc` ? (
@@ -561,7 +580,7 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
                             )}
                           </button>
                         </div>
-                        <p className="text-slate-700 whitespace-pre-wrap font-sans text-xs leading-relaxed">
+                        <p className="text-slate-700 whitespace-pre-wrap font-sans text-[11px] sm:text-xs leading-relaxed break-words">
                           {cred.description}
                         </p>
                       </div>
@@ -570,12 +589,14 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
                 </div>
 
                 {/* Footer info */}
-                <div className="pt-2 border-t border-slate-100 text-[10px] text-slate-400 flex items-center justify-between">
+                <div className="pt-2 border-t border-slate-100 text-[9px] sm:text-[10px] text-slate-400 flex items-center justify-between">
                   <span className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     Updated {new Date(cred.updatedAt || cred.createdAt).toLocaleDateString()}
                   </span>
-                  <span className="font-mono uppercase">{cred.type}</span>
+                  <span className="font-mono uppercase text-[9px] font-bold text-slate-400">
+                    {cred.type}
+                  </span>
                 </div>
               </div>
             );
@@ -583,7 +604,7 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
         </div>
       )}
 
-      {/* Add / Edit Credential Modal */}
+      {/* Add / Edit Credential Modal (Mobile Optimized) */}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -591,7 +612,7 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
         subtitle={`Store safe access details and resources for ${project?.name || 'this project'}`}
         maxWidth="md"
       >
-        <form onSubmit={handleSubmitModal} className="space-y-3.5">
+        <form onSubmit={handleSubmitModal} className="space-y-3">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
               Title / Resource Name *
@@ -601,12 +622,12 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
               required
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="e.g. GitHub Repo / Staging Database / AWS Console / Admin API"
+              placeholder="e.g. GitHub Repo / Staging Database / AWS Console"
               className="block w-full rounded-xl border border-slate-300/80 bg-white py-2 px-3 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 font-semibold"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                 Resource Type
@@ -640,7 +661,7 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                 Username / Identifier (Optional)
@@ -662,7 +683,7 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
                 type="text"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="Password or token"
+                placeholder="Password or secret token"
                 className="block w-full rounded-xl border border-slate-300/80 bg-white py-2 px-3 text-xs font-mono text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none"
               />
             </div>
@@ -676,7 +697,7 @@ const ProjectCredentialsVault = ({ project, onUpdate, isDeveloper = false }) => 
               rows={3}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="e.g. Branch name, port details, how to use this token in environment variables..."
+              placeholder="e.g. Branch name, port details, how to use this token..."
               className="block w-full rounded-xl border border-slate-300/80 bg-white py-2 px-3 text-xs text-slate-900 placeholder-slate-400 focus:border-brand-500 focus:outline-none"
             />
           </div>
