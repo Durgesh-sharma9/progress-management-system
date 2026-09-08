@@ -841,7 +841,7 @@ const ProjectsPage = () => {
       </div>
 
       {/* Quick Progress Sort Buttons */}
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-[11px]">
+      <div className="flex flex-wrap items-center gap-1.5 py-0.5 text-[11px]">
         <span className="text-slate-400 font-bold text-[10px] uppercase tracking-wider shrink-0">
           Progress Sort:
         </span>
@@ -852,7 +852,7 @@ const ProjectsPage = () => {
               : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
             }`}
         >
-          <span>📈 Lowest to Highest (0% → 100%)</span>
+          <span>📈 Lowest to Highest</span>
           {sortBy === 'progress-asc' && <span className="text-amber-600 font-extrabold">✓</span>}
         </button>
         <button
@@ -862,7 +862,7 @@ const ProjectsPage = () => {
               : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
             }`}
         >
-          <span>📉 Highest to Lowest (100% → 0%)</span>
+          <span>📉 Highest to Lowest</span>
           {sortBy === 'progress-desc' && <span className="text-indigo-600 font-extrabold">✓</span>}
         </button>
         {sortBy !== 'default' && (
