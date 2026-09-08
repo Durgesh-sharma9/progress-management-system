@@ -301,7 +301,11 @@ const AdminAttendancePage = () => {
     e.preventDefault();
     setIsSavingConfig(true);
     try {
-      const res = await api.put('/attendance/config', configForm);
+      const payload = {
+        ...configForm,
+        radiusMeters: Math.max(10, Number(configForm.radiusMeters) || 100),
+      };
+      const res = await api.put('/attendance/config', payload);
       if (res.data.success) {
         success('Workspace Geofence settings saved successfully');
         fetchOverview();
@@ -1989,18 +1993,23 @@ const AdminAttendancePage = () => {
                       type="number"
                       min="10"
                       max="500000"
-                      step="50"
+                      step="1"
                       value={configForm.radiusMeters}
                       onChange={(e) =>
                         setConfigForm({
                           ...configForm,
-                          radiusMeters: Math.max(10, parseInt(e.target.value, 10) || 100),
+                          radiusMeters: e.target.value === '' ? '' : parseInt(e.target.value, 10),
                         })
                       }
+                      onBlur={() => {
+                        if (!configForm.radiusMeters || configForm.radiusMeters < 10) {
+                          setConfigForm((prev) => ({ ...prev, radiusMeters: 100 }));
+                        }
+                      }}
                       className="w-28 px-2.5 py-1 rounded-lg border border-slate-300 bg-white font-mono font-bold text-xs text-slate-900 focus:outline-none focus:border-brand-500"
                     />
                     <span className="text-xs font-mono font-bold text-brand-600">
-                      = {formatDistance(configForm.radiusMeters)}
+                      = {formatDistance(Number(configForm.radiusMeters) || 0)}
                     </span>
                   </div>
                 </div>
@@ -2010,7 +2019,7 @@ const AdminAttendancePage = () => {
                   min="50"
                   max="100000"
                   step="50"
-                  value={Math.min(configForm.radiusMeters, 100000)}
+                  value={Math.min(Number(configForm.radiusMeters) || 100, 100000)}
                   onChange={(e) =>
                     setConfigForm({
                       ...configForm,
