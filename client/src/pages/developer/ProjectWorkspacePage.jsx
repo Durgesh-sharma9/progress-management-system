@@ -425,6 +425,21 @@ const ProjectWorkspacePage = () => {
         </div>
       </div>
 
+      {/* Admin Remarks Banner if present */}
+      {project.adminRemarks && (
+        <div className="p-3 sm:p-4 rounded-2xl bg-purple-50/90 border border-purple-200/90 text-purple-950 shadow-soft-xs">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Sparkles className="h-4 w-4 text-purple-600 shrink-0" />
+            <span className="text-[11px] sm:text-xs font-extrabold uppercase tracking-wider text-purple-700">
+              Admin Remark & Instructions
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-purple-900 leading-relaxed font-mono whitespace-pre-wrap">
+            {project.adminRemarks}
+          </p>
+        </div>
+      )}
+
       {/* Workspace View Mode Switcher (Tree Graph vs Checklist vs Analytics vs Vault) */}
       <div className="flex flex-wrap items-center justify-between border-b border-slate-200/80 pb-3 gap-2">
         <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-white rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-soft-xs w-full sm:w-auto">

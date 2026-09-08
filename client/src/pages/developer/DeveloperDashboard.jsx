@@ -284,6 +284,21 @@ const DeveloperDashboard = () => {
                       </p>
                     )}
 
+                    {/* Admin Remarks Pill if present */}
+                    {project.adminRemarks && (
+                      <div className="my-1.5 p-2 rounded-xl bg-purple-50/80 border border-purple-200/90 text-purple-950 shadow-2xs">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-[9px] font-extrabold uppercase tracking-wider text-purple-700 flex items-center gap-1">
+                            <Sparkles className="h-2.5 w-2.5 text-purple-600" />
+                            Admin Remark
+                          </span>
+                        </div>
+                        <p className="line-clamp-2 text-purple-900 leading-relaxed font-mono text-[10px]">
+                          {project.adminRemarks}
+                        </p>
+                      </div>
+                    )}
+
                     {/* Tech Stack Pills */}
                     {project.techStack && project.techStack.length > 0 && (
                       <div className="mb-2">
