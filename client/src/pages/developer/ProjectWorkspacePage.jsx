@@ -427,13 +427,13 @@ const ProjectWorkspacePage = () => {
 
       {/* Workspace View Mode Switcher (Tree Graph vs Checklist vs Analytics vs Vault) */}
       <div className="flex flex-wrap items-center justify-between border-b border-slate-200/80 pb-3 gap-2">
-        <div className="flex flex-wrap items-center gap-1.5 p-1 sm:p-1.5 bg-white rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-soft-xs w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-white rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-soft-xs w-full sm:w-auto">
           <button
             onClick={() => setViewMode('tree')}
-            className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs font-bold transition-all duration-200 ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs font-bold transition-all duration-200 border ${
               viewMode === 'tree'
-                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                ? 'bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-500/25'
+                : 'bg-slate-50/80 text-slate-700 border-slate-200/90 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-900'
             }`}
           >
             <GitBranch className="h-4 w-4" />
@@ -442,10 +442,10 @@ const ProjectWorkspacePage = () => {
 
           <button
             onClick={() => setViewMode('checklist')}
-            className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs font-bold transition-all duration-200 ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs font-bold transition-all duration-200 border ${
               viewMode === 'checklist'
-                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                ? 'bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-500/25'
+                : 'bg-slate-50/80 text-slate-700 border-slate-200/90 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-900'
             }`}
           >
             <ListTodo className="h-4 w-4" />
@@ -454,10 +454,10 @@ const ProjectWorkspacePage = () => {
 
           <button
             onClick={() => setViewMode('analytics')}
-            className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs font-bold transition-all duration-200 ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs font-bold transition-all duration-200 border ${
               viewMode === 'analytics'
-                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                ? 'bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-500/25'
+                : 'bg-slate-50/80 text-slate-700 border-slate-200/90 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-900'
             }`}
           >
             <BarChart3 className="h-4 w-4" />
@@ -466,10 +466,10 @@ const ProjectWorkspacePage = () => {
 
           <button
             onClick={() => setViewMode('vault')}
-            className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs font-bold transition-all duration-200 ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs font-bold transition-all duration-200 border ${
               viewMode === 'vault'
-                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                ? 'bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-500/25'
+                : 'bg-slate-50/80 text-slate-700 border-slate-200/90 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-900'
             }`}
           >
             <KeyRound className="h-3.5 w-3.5 sm:h-4 sm:w-4" />

@@ -440,13 +440,13 @@ const ProjectDetailsPage = () => {
       </div>
 
       {/* View Switcher: Tree Graph vs Deliverables & Notes vs Team vs Analytics vs Vault */}
-      <div className="flex flex-wrap items-center gap-1.5 p-1 sm:p-1.5 bg-white rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-soft-xs">
+      <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-white rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-soft-xs">
         <button
           onClick={() => setViewMode('tree')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 border ${
             viewMode === 'tree'
-              ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+              ? 'bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-500/25'
+              : 'bg-slate-50/80 text-slate-700 border-slate-200/90 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-900'
           }`}
         >
           <GitBranch className="h-3.5 w-3.5" />
@@ -455,10 +455,10 @@ const ProjectDetailsPage = () => {
 
         <button
           onClick={() => setViewMode('deliverables')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 border ${
             viewMode === 'deliverables'
-              ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+              ? 'bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-500/25'
+              : 'bg-slate-50/80 text-slate-700 border-slate-200/90 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-900'
           }`}
         >
           <ListTodo className="h-3.5 w-3.5" />
@@ -467,10 +467,10 @@ const ProjectDetailsPage = () => {
 
         <button
           onClick={() => setViewMode('team')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 border ${
             viewMode === 'team'
-              ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+              ? 'bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-500/25'
+              : 'bg-slate-50/80 text-slate-700 border-slate-200/90 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-900'
           }`}
         >
           <Users className="h-3.5 w-3.5" />
@@ -479,10 +479,10 @@ const ProjectDetailsPage = () => {
 
         <button
           onClick={() => setViewMode('analytics')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 border ${
             viewMode === 'analytics'
-              ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+              ? 'bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-500/25'
+              : 'bg-slate-50/80 text-slate-700 border-slate-200/90 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-900'
           }`}
         >
           <BarChart3 className="h-3.5 w-3.5" />
@@ -491,10 +491,10 @@ const ProjectDetailsPage = () => {
 
         <button
           onClick={() => setViewMode('vault')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all duration-200 border ${
             viewMode === 'vault'
-              ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/25'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+              ? 'bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-500/25'
+              : 'bg-slate-50/80 text-slate-700 border-slate-200/90 hover:bg-slate-100 hover:border-slate-300 hover:text-slate-900'
           }`}
         >
           <KeyRound className="h-3.5 w-3.5" />
