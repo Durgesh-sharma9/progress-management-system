@@ -289,6 +289,26 @@ const ProjectsPage = () => {
     setIsRemarksModalOpen(true);
   };
 
+  const handleDeleteRemarks = async (project, e) => {
+    if (e) e.stopPropagation();
+    const proj = project || projectForRemarks;
+    if (!proj) return;
+    const confirmed = window.confirm(`Are you sure you want to remove the admin remark for "${proj.name}"?`);
+    if (!confirmed) return;
+    try {
+      const res = await api.patch(`/projects/${proj._id}/remarks`, {
+        adminRemarks: '',
+      });
+      if (res.data.success) {
+        success('Admin remarks removed successfully');
+        setIsRemarksModalOpen(false);
+        fetchProjects();
+      }
+    } catch (err) {
+      error(err.response?.data?.message || 'Failed to remove admin remarks');
+    }
+  };
+
   const handleSaveRemarks = async (e) => {
     e.preventDefault();
     if (!projectForRemarks) return;
@@ -298,7 +318,7 @@ const ProjectsPage = () => {
         adminRemarks: remarksInput,
       });
       if (res.data.success) {
-        success('Admin remarks updated successfully');
+        success(remarksInput.trim() ? 'Admin remarks updated successfully' : 'Admin remarks removed successfully');
         setIsRemarksModalOpen(false);
         fetchProjects();
       }
@@ -984,9 +1004,19 @@ const ProjectsPage = () => {
                           <Sparkles className="h-2.5 w-2.5 text-purple-600" />
                           Admin Remark
                         </span>
-                        <span className="text-[9px] font-bold text-purple-600 underline opacity-0 group-hover/rmk:opacity-100 transition-opacity">
-                          Edit
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[9px] font-bold text-purple-600 underline opacity-0 group-hover/rmk:opacity-100 transition-opacity">
+                            Edit
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteRemarks(project, e)}
+                            title="Delete Admin Remark"
+                            className="p-0.5 -mr-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-100/80 transition-colors"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
                       </div>
                       <p className="line-clamp-2 text-purple-900 leading-relaxed font-mono text-[10px]">
                         {project.adminRemarks}
@@ -1672,28 +1702,42 @@ const ProjectsPage = () => {
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200">
-            <button
-              type="button"
-              onClick={() => setIsRemarksModalOpen(false)}
-              className="rounded-xl border border-slate-300/80 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-soft-xs"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSavingRemarks}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-soft-md shadow-purple-500/25 hover:from-purple-500 hover:to-indigo-500 transition-all disabled:opacity-50"
-            >
-              {isSavingRemarks ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Saving Remarks...
-                </>
-              ) : (
-                'Save Admin Remarks'
+          <div className="flex items-center justify-between gap-2.5 pt-3 border-t border-slate-200">
+            <div>
+              {projectForRemarks?.adminRemarks && (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteRemarks(projectForRemarks)}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200/80 transition-all shadow-2xs"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>Remove Remark</span>
+                </button>
               )}
-            </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsRemarksModalOpen(false)}
+                className="rounded-xl border border-slate-300/80 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-soft-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSavingRemarks}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-soft-md shadow-purple-500/25 hover:from-purple-500 hover:to-indigo-500 transition-all disabled:opacity-50"
+              >
+                {isSavingRemarks ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Saving Remarks...
+                  </>
+                ) : (
+                  'Save Admin Remarks'
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </Modal>
