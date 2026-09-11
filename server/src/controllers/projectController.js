@@ -131,6 +131,7 @@ exports.getProjectById = async (req, res, next) => {
     projObj.totalTasks = totalPhases;
     projObj.completedTasks = completedPhases;
     projObj.overallProgress = overallProgress;
+    projObj.startDate = project.startDate || project.createdAt;
     projObj.projectType =
       project.projectType ||
       (project.developers && project.developers.length > 1 ? 'Group' : 'Standalone');
