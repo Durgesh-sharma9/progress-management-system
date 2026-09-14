@@ -701,7 +701,7 @@ const DeveloperAttendancePage = () => {
                   <div className="grid grid-cols-7 divide-x divide-y divide-slate-100">
                     {/* Blank Leading Cells */}
                     {Array.from({ length: firstDayOfMonthWeekday }).map((_, idx) => (
-                      <div key={`blank-${idx}`} className="h-14 sm:h-18 md:h-20 bg-slate-50/30 p-1" />
+                      <div key={`blank-${idx}`} className="min-h-[86px] sm:min-h-[105px] bg-slate-50/40 p-2" />
                     ))}
 
                     {/* Month Days */}
@@ -721,30 +721,30 @@ const DeveloperAttendancePage = () => {
                                   setIsDayDetailsModalOpen(true);
                                 }
                           }
-                          className={`h-14 sm:h-18 md:h-20 p-1 sm:p-1.5 transition-all flex flex-col justify-between relative group ${
+                          className={`min-h-[86px] sm:min-h-[105px] p-2 sm:p-2.5 transition-all flex flex-col justify-between relative group ${
                             isFuture && !day.isHoliday
                               ? 'bg-slate-50/40 opacity-40 cursor-not-allowed select-none'
-                              : 'cursor-pointer hover:bg-brand-50/30'
+                              : 'cursor-pointer hover:bg-brand-50/40 hover:shadow-2xs'
                           } ${
                             day.isHoliday
-                              ? 'bg-purple-50/50'
+                              ? 'bg-purple-50/40'
                               : day.isMarked
                               ? 'bg-emerald-50/30'
                               : day.isSunday
-                              ? 'bg-rose-50/20'
+                              ? 'bg-slate-50/40'
                               : 'bg-white'
-                          } ${isToday ? 'ring-2 ring-brand-500 ring-inset shadow-soft-xs' : ''}`}
+                          } ${isToday ? 'ring-2 ring-brand-500 ring-inset shadow-soft-xs bg-brand-50/10' : ''}`}
                         >
-                          {/* Top Bar: Date Number + Holiday / Status Badge */}
-                          <div className="flex items-start justify-between gap-0.5">
+                          {/* Top Bar: Date Number + Holiday Badge */}
+                          <div className="flex items-start justify-between gap-1">
                             <span
-                              className={`font-mono text-[10px] sm:text-xs font-extrabold h-4 w-4 sm:h-5 sm:w-5 rounded flex items-center justify-center ${
+                              className={`font-mono text-xs font-extrabold h-5 w-5 sm:h-6 sm:w-6 rounded-lg flex items-center justify-center transition-colors ${
                                 isToday
-                                  ? 'bg-brand-600 text-white shadow-2xs'
+                                  ? 'bg-brand-600 text-white shadow-soft-xs'
                                   : day.isSunday
-                                  ? 'text-rose-600'
+                                  ? 'text-rose-500'
                                   : isFuture
-                                  ? 'text-slate-400'
+                                  ? 'text-slate-300'
                                   : 'text-slate-800'
                               }`}
                             >
@@ -753,21 +753,20 @@ const DeveloperAttendancePage = () => {
 
                             {day.isHoliday && (
                               <span
-                                className="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-purple-100 text-purple-800 border border-purple-200 truncate max-w-[70px] sm:max-w-[90px]"
+                                className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-purple-100 text-purple-800 border border-purple-200 truncate max-w-[70px] sm:max-w-[100px]"
                                 title={day.holiday?.title}
                               >
-                                🎉 {day.holiday?.title}
+                                🎉 {day.holiday?.title || 'Holiday'}
                               </span>
                             )}
                           </div>
 
                           {/* Middle: Day Status */}
-                          <div className="my-auto">
+                          <div className="my-auto py-1">
                             {day.isMarked ? (
-                              /* If marked, always display Present even on Sunday or Holiday */
                               <div className="space-y-0.5">
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
-                                  <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600" />
+                                <span className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs">
+                                  <CheckCircle2 className="h-3 w-3 text-emerald-600 shrink-0" />
                                   <span>
                                     {day.punchIn?.time
                                       ? new Date(day.punchIn.time).toLocaleTimeString([], {
@@ -779,30 +778,25 @@ const DeveloperAttendancePage = () => {
                                 </span>
                               </div>
                             ) : day.isHoliday ? (
-                              <span className="text-[9px] font-bold text-purple-700">
-                                <span className="sm:hidden">Holiday</span>
-                                <span className="hidden sm:inline">Official Holiday</span>
+                              <span className="text-[10px] font-bold text-purple-700">
+                                Official Holiday
                               </span>
                             ) : day.isSunday ? (
-                              <span className="text-[9px] text-slate-400 italic">
-                                <span className="sm:hidden">Off</span>
-                                <span className="hidden sm:inline">Weekly Off</span>
+                              <span className="text-[10px] sm:text-[11px] font-medium text-slate-400">
+                                Weekly Off
                               </span>
-                            ) : isFuture ? (
-                              /* Do NOT show "Upcoming" */
-                              null
-                            ) : (
-                              <span className="text-[9px] text-slate-400 italic">
+                            ) : isFuture ? null : (
+                              <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
                                 {isToday ? 'Pending Today' : 'Absent'}
                               </span>
                             )}
                           </div>
 
-                          {/* Bottom Hint */}
-                          <div className="text-right">
+                          {/* Bottom Hint on hover */}
+                          <div className="flex items-center justify-end h-3">
                             {(!isFuture || day.isHoliday) && (
-                              <span className="text-[9px] text-slate-400 group-hover:text-brand-600 transition-colors">
-                                Details →
+                              <span className="opacity-0 group-hover:opacity-100 text-[10px] font-bold text-brand-600 transition-opacity">
+                                View →
                               </span>
                             )}
                           </div>
