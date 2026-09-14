@@ -2090,15 +2090,6 @@ const AdminAttendancePage = () => {
                       minute: '2-digit',
                     })
                   : '--';
-                const outTimeFormatted = att.punchOutTime
-                  ? new Date(att.punchOutTime).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })
-                  : null;
-                const hoursMins = att.totalWorkingMinutes && att.totalWorkingMinutes > 0
-                  ? `${Math.floor(att.totalWorkingMinutes / 60)}h ${att.totalWorkingMinutes % 60}m`
-                  : (att.punchInTime && !att.punchOutTime ? 'In Progress' : '--');
 
                 return (
                   <div
@@ -2118,23 +2109,15 @@ const AdminAttendancePage = () => {
                         </div>
                       </div>
 
-                      <span className="inline-flex items-center gap-1 font-mono font-bold text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 shrink-0">
-                        <Clock className="h-3 w-3 text-emerald-600" />
-                        <span>{hoursMins}</span>
+                      <span className="inline-flex items-center gap-1 font-mono font-bold text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 shrink-0">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                        <span>Present</span>
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200/70 text-[11px]">
-                      <div className="flex items-center gap-1.5 text-slate-600">
-                        <span className="text-[10px] font-bold uppercase text-slate-400">Punch In:</span>
-                        <span className="font-mono font-bold text-slate-800">{inTimeFormatted}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-slate-600 justify-end">
-                        <span className="text-[10px] font-bold uppercase text-slate-400">Punch Out:</span>
-                        <span className={`font-mono font-bold ${outTimeFormatted ? 'text-slate-800' : 'text-amber-600'}`}>
-                          {outTimeFormatted || 'Active / On Shift'}
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-1.5 pt-2 border-t border-slate-200/70 text-[11px] text-slate-600">
+                      <span className="text-[10px] font-bold uppercase text-slate-400">Attendance Time:</span>
+                      <span className="font-mono font-bold text-emerald-800">{inTimeFormatted}</span>
                     </div>
                   </div>
                 );
@@ -2185,8 +2168,7 @@ const AdminAttendancePage = () => {
                   </div>
                   {log.isPresent && (
                     <p className="text-[11px] text-slate-400 mt-0.5">
-                      In: {log.punchInTime ? new Date(log.punchInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}
-                      {log.punchOutTime ? ` • Out: ${new Date(log.punchOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ' • Shift Active'}
+                      Time: {log.punchInTime ? new Date(log.punchInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}
                       {log.distanceMeters !== undefined && ` • ${formatDistance(log.distanceMeters)} away`}
                     </p>
                   )}
