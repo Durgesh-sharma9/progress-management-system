@@ -440,22 +440,48 @@ const AdminAttendancePage = () => {
     return Math.round((totalPresent / totalPossible) * 100);
   }, [reportData]);
 
+  const getStaffRecentWork = (staff) => {
+    if (staff?.recentDayWorkingHours !== undefined && staff.recentDayWorkingHours > 0) {
+      return {
+        hours: staff.recentDayWorkingHours,
+        formatted: staff.recentDayWorkingHoursFormatted,
+        date: staff.recentDayDate,
+      };
+    }
+    const workedLogs = (staff?.dailyLogs || [])
+      .filter((l) => l.isPresent && (l.workingMinutes > 0 || (l.punchInTime && l.punchOutTime)))
+      .sort((a, b) => b.date.localeCompare(a.date));
+
+    const recent = workedLogs[0];
+    if (!recent) return { hours: 0, formatted: '--', date: null };
+
+    const hours = Number((recent.workingMinutes / 60).toFixed(1));
+    return {
+      hours,
+      formatted: recent.workingHoursFormatted || `${hours} hrs`,
+      date: recent.date,
+    };
+  };
+
   const handleExportCSV = () => {
     if (!reportData?.staffSummaries || reportData.staffSummaries.length === 0) {
       error('No report data available to export');
       return;
     }
 
-    const headers = ['Developer Name', 'Email', 'Days Present', 'Working Days', 'Attendance Rate (%)', 'Total Hours', 'Avg Daily Hours'];
-    const rows = reportData.staffSummaries.map((s) => [
-      `"${s.name}"`,
-      `"${s.email}"`,
-      s.daysPresent,
-      s.totalWorkingDays,
-      `${s.attendanceRate}%`,
-      s.totalWorkingHours,
-      s.averageDailyHours,
-    ]);
+    const headers = ['Developer Name', 'Email', 'Days Present', 'Working Days', 'Attendance Rate (%)', 'Total Hours', 'Recent Day Hours'];
+    const rows = reportData.staffSummaries.map((s) => {
+      const recent = getStaffRecentWork(s);
+      return [
+        `"${s.name}"`,
+        `"${s.email}"`,
+        s.daysPresent,
+        s.totalWorkingDays,
+        `${s.attendanceRate}%`,
+        s.totalWorkingHours,
+        recent.hours > 0 ? `${recent.hours} hrs (${recent.formatted})` : '--',
+      ];
+    });
 
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
@@ -1690,7 +1716,7 @@ const AdminAttendancePage = () => {
                         <th className="py-3 px-3 text-center">Days Present</th>
                         <th className="py-3 px-3 text-center">Attendance Rate</th>
                         <th className="py-3 px-3 text-center">Total Working Hours</th>
-                        <th className="py-3 px-3 text-center">Avg Hours/Day</th>
+                        <th className="py-3 px-3 text-center">Recent Day Hours</th>
                         <th className="py-3 px-3 sm:px-4 text-right">Daily Log</th>
                       </tr>
                     </thead>
@@ -1738,8 +1764,24 @@ const AdminAttendancePage = () => {
                           <td className="py-3 px-3 text-center font-mono font-bold text-blue-700">
                             {staff.totalWorkingHours} hrs
                           </td>
-                          <td className="py-3 px-3 text-center font-mono text-slate-700">
-                            {staff.averageDailyHours} hrs
+                          <td className="py-3 px-3 text-center">
+                            {(() => {
+                              const recent = getStaffRecentWork(staff);
+                              return recent.hours > 0 ? (
+                                <div>
+                                  <span className="font-mono font-bold text-slate-800 text-xs sm:text-sm">
+                                    {recent.hours} hrs
+                                  </span>
+                                  {recent.formatted && recent.formatted !== '-' && (
+                                    <span className="block text-[10px] text-slate-400 font-sans font-medium">
+                                      {recent.formatted}
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="font-mono text-slate-400">--</span>
+                              );
+                            })()}
                           </td>
                           <td className="py-3 px-3 sm:px-4 text-right">
                             <button

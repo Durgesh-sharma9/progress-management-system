@@ -859,6 +859,17 @@ exports.getAttendanceReport = async (req, res, next) => {
         averageAttendanceTime = `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
       }
 
+      // Calculate Recent / Last Day Work Time
+      const workedLogs = (dailyLogs || [])
+        .filter((l) => l.isPresent && (l.workingMinutes > 0 || (l.punchInTime && l.punchOutTime)))
+        .sort((a, b) => b.date.localeCompare(a.date));
+
+      const recentLog = workedLogs[0] || null;
+      const recentDayWorkingMinutes = recentLog ? recentLog.workingMinutes : 0;
+      const recentDayWorkingHours = recentLog ? Number((recentLog.workingMinutes / 60).toFixed(1)) : 0;
+      const recentDayWorkingHoursFormatted = recentLog ? recentLog.workingHoursFormatted : '--';
+      const recentDayDate = recentLog ? recentLog.date : null;
+
       return {
         developerId: dev._id,
         name: dev.name,
@@ -869,6 +880,10 @@ exports.getAttendanceReport = async (req, res, next) => {
         totalWorkingMinutes: totalMinutes,
         totalWorkingHours: totalHours,
         averageDailyHours,
+        recentDayWorkingMinutes,
+        recentDayWorkingHours,
+        recentDayWorkingHoursFormatted,
+        recentDayDate,
         averageAttendanceTime,
         dailyLogs,
       };
