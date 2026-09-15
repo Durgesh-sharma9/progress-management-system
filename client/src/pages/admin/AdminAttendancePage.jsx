@@ -397,21 +397,63 @@ const AdminAttendancePage = () => {
     }
   };
 
+  const getAverageAttendanceTime = (logs) => {
+    if (!logs || logs.length === 0) return '--';
+    const punchIns = logs
+      .filter((l) => l.isPresent && l.punchInTime)
+      .map((l) => new Date(l.punchInTime));
+
+    if (punchIns.length === 0) return '--';
+
+    const totalMinutes = punchIns.reduce((acc, dt) => {
+      return acc + (dt.getHours() * 60 + dt.getMinutes());
+    }, 0);
+
+    const avgMins = Math.round(totalMinutes / punchIns.length);
+    const hrs = Math.floor(avgMins / 60) % 24;
+    const mins = avgMins % 60;
+    const ampm = hrs >= 12 ? 'PM' : 'AM';
+    const h12 = hrs % 12 || 12;
+    return `${String(h12).padStart(2, '0')}:${String(mins).padStart(2, '0')} ${ampm}`;
+  };
+
+  const teamAverageAttendanceTime = useMemo(() => {
+    if (reportData?.summary?.averageAttendanceTime && reportData.summary.averageAttendanceTime !== '--') {
+      return reportData.summary.averageAttendanceTime;
+    }
+    if (!reportData?.staffSummaries || reportData.staffSummaries.length === 0) {
+      return '--';
+    }
+    const allLogs = reportData.staffSummaries.flatMap((s) => s.dailyLogs || []);
+    return getAverageAttendanceTime(allLogs);
+  }, [reportData]);
+
+  const teamOverallAttendanceRate = useMemo(() => {
+    if (!reportData?.staffSummaries || reportData.staffSummaries.length === 0) {
+      return 0;
+    }
+    const totalWorkingDays = reportData.summary?.totalWorkingDays || 0;
+    const totalStaff = reportData.staffSummaries.length;
+    const totalPossible = totalWorkingDays * totalStaff;
+    const totalPresent = reportData.summary?.totalTeamPresent || 0;
+    if (totalPossible === 0) return 0;
+    return Math.round((totalPresent / totalPossible) * 100);
+  }, [reportData]);
+
   const handleExportCSV = () => {
     if (!reportData?.staffSummaries || reportData.staffSummaries.length === 0) {
       error('No report data available to export');
       return;
     }
 
-    const headers = ['Developer Name', 'Email', 'Days Present', 'Working Days', 'Attendance Rate (%)', 'Total Hours', 'Avg Daily Hours'];
+    const headers = ['Developer Name', 'Email', 'Days Present', 'Working Days', 'Attendance Rate (%)', 'Avg Attendance Time'];
     const rows = reportData.staffSummaries.map((s) => [
       `"${s.name}"`,
       `"${s.email}"`,
       s.daysPresent,
       s.totalWorkingDays,
       `${s.attendanceRate}%`,
-      s.totalWorkingHours,
-      s.averageDailyHours,
+      s.averageAttendanceTime || getAverageAttendanceTime(s.dailyLogs),
     ]);
 
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
@@ -1611,20 +1653,20 @@ const AdminAttendancePage = () => {
                   <p className="text-[10px] text-emerald-600 mt-0.5">Cumulative presence logs</p>
                 </div>
 
-                <div className="glass-card rounded-2xl p-3.5 sm:p-4 bg-white border border-blue-200/90 shadow-soft-xs bg-blue-50/20">
-                  <p className="text-[10px] sm:text-xs uppercase font-bold text-blue-700">Total Working Hours</p>
-                  <p className="text-xl sm:text-2xl font-black text-blue-800 mt-1 font-mono">
-                    {reportData.summary?.totalTeamHours || 0}h
+                <div className="glass-card rounded-2xl p-3.5 sm:p-4 bg-white border border-purple-200/90 shadow-soft-xs bg-purple-50/20">
+                  <p className="text-[10px] sm:text-xs uppercase font-bold text-purple-700">Average Attendance Time</p>
+                  <p className="text-xl sm:text-2xl font-black text-purple-800 mt-1 font-mono">
+                    {teamAverageAttendanceTime}
                   </p>
-                  <p className="text-[10px] text-blue-600 mt-0.5">Total staff productivity</p>
+                  <p className="text-[10px] text-purple-600 mt-0.5">Team average check-in</p>
                 </div>
 
-                <div className="glass-card rounded-2xl p-3.5 sm:p-4 bg-white border border-purple-200/90 shadow-soft-xs bg-purple-50/20">
-                  <p className="text-[10px] sm:text-xs uppercase font-bold text-purple-700">Average Daily Shift</p>
-                  <p className="text-xl sm:text-2xl font-black text-purple-800 mt-1 font-mono">
-                    {reportData.summary?.averageTeamDailyHours || 0}h / day
+                <div className="glass-card rounded-2xl p-3.5 sm:p-4 bg-white border border-blue-200/90 shadow-soft-xs bg-blue-50/20">
+                  <p className="text-[10px] sm:text-xs uppercase font-bold text-blue-700">Overall Attendance Rate</p>
+                  <p className="text-xl sm:text-2xl font-black text-blue-800 mt-1 font-mono">
+                    {teamOverallAttendanceRate}%
                   </p>
-                  <p className="text-[10px] text-purple-600 mt-0.5">Per present developer</p>
+                  <p className="text-[10px] text-blue-600 mt-0.5">Team presence percentage</p>
                 </div>
               </div>
 
@@ -1646,8 +1688,7 @@ const AdminAttendancePage = () => {
                         <th className="py-3 px-3 sm:px-4">Developer</th>
                         <th className="py-3 px-3 text-center">Days Present</th>
                         <th className="py-3 px-3 text-center">Attendance Rate</th>
-                        <th className="py-3 px-3 text-center">Total Working Hours</th>
-                        <th className="py-3 px-3 text-center">Avg Hours/Day</th>
+                        <th className="py-3 px-3 text-center">Avg Attendance Time</th>
                         <th className="py-3 px-3 sm:px-4 text-right">Daily Log</th>
                       </tr>
                     </thead>
@@ -1692,11 +1733,8 @@ const AdminAttendancePage = () => {
                               </span>
                             </div>
                           </td>
-                          <td className="py-3 px-3 text-center font-mono font-bold text-blue-700">
-                            {staff.totalWorkingHours} hrs
-                          </td>
-                          <td className="py-3 px-3 text-center font-mono text-slate-700">
-                            {staff.averageDailyHours} hrs
+                          <td className="py-3 px-3 text-center font-mono font-bold text-purple-700">
+                            {staff.averageAttendanceTime || getAverageAttendanceTime(staff.dailyLogs)}
                           </td>
                           <td className="py-3 px-3 sm:px-4 text-right">
                             <button
@@ -2124,7 +2162,7 @@ const AdminAttendancePage = () => {
         isOpen={Boolean(reportDailyModalDev)}
         onClose={() => setReportDailyModalDev(null)}
         title={`Daily Attendance Logs: ${reportDailyModalDev?.name || ''}`}
-        subtitle={`Summary: ${reportDailyModalDev?.daysPresent || 0} days present • ${reportDailyModalDev?.totalWorkingHours || 0} total hours logged`}
+        subtitle={`Summary: ${reportDailyModalDev?.daysPresent || 0} days present • Avg Attendance Time: ${reportDailyModalDev?.averageAttendanceTime || getAverageAttendanceTime(reportDailyModalDev?.dailyLogs)}`}
         maxWidth="lg"
       >
         <div className="space-y-3">

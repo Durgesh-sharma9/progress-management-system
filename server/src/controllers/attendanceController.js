@@ -842,6 +842,23 @@ exports.getAttendanceReport = async (req, res, next) => {
       const averageDailyHours = daysPresent > 0 ? Number((totalMinutes / daysPresent / 60).toFixed(1)) : 0;
       const attendanceRate = totalStandardWorkingDays > 0 ? Math.round((daysPresent / totalStandardWorkingDays) * 100) : 0;
 
+      // Calculate Average Attendance (check-in) Time in IST (UTC+5:30)
+      const validPunchIns = dailyLogs.filter((l) => l.isPresent && l.punchInTime);
+      let averageAttendanceTime = '--';
+      if (validPunchIns.length > 0) {
+        const totalPunchMins = validPunchIns.reduce((sum, l) => {
+          const dt = new Date(l.punchInTime);
+          const istDate = new Date(dt.getTime() + 5.5 * 60 * 60 * 1000);
+          return sum + (istDate.getUTCHours() * 60 + istDate.getUTCMinutes());
+        }, 0);
+        const avgM = Math.round(totalPunchMins / validPunchIns.length);
+        const h24 = Math.floor(avgM / 60) % 24;
+        const m = avgM % 60;
+        const ampm = h24 >= 12 ? 'PM' : 'AM';
+        const h12 = h24 % 12 || 12;
+        averageAttendanceTime = `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
+      }
+
       return {
         developerId: dev._id,
         name: dev.name,
@@ -852,6 +869,7 @@ exports.getAttendanceReport = async (req, res, next) => {
         totalWorkingMinutes: totalMinutes,
         totalWorkingHours: totalHours,
         averageDailyHours,
+        averageAttendanceTime,
         dailyLogs,
       };
     });
@@ -860,6 +878,24 @@ exports.getAttendanceReport = async (req, res, next) => {
     const totalTeamHours = Number((totalTeamWorkingMinutes / 60).toFixed(1));
     const totalTeamPresent = staffSummaries.reduce((sum, s) => sum + s.daysPresent, 0);
     const averageTeamDailyHours = totalTeamPresent > 0 ? Number((totalTeamWorkingMinutes / totalTeamPresent / 60).toFixed(1)) : 0;
+
+    const allValidTeamPunchIns = staffSummaries.flatMap((s) =>
+      s.dailyLogs.filter((l) => l.isPresent && l.punchInTime)
+    );
+    let averageTeamAttendanceTime = '--';
+    if (allValidTeamPunchIns.length > 0) {
+      const totalTeamPunchMins = allValidTeamPunchIns.reduce((sum, l) => {
+        const dt = new Date(l.punchInTime);
+        const istDate = new Date(dt.getTime() + 5.5 * 60 * 60 * 1000);
+        return sum + (istDate.getUTCHours() * 60 + istDate.getUTCMinutes());
+      }, 0);
+      const avgM = Math.round(totalTeamPunchMins / allValidTeamPunchIns.length);
+      const h24 = Math.floor(avgM / 60) % 24;
+      const m = avgM % 60;
+      const ampm = h24 >= 12 ? 'PM' : 'AM';
+      const h12 = h24 % 12 || 12;
+      averageTeamAttendanceTime = `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
+    }
 
     res.status(200).json({
       success: true,
@@ -880,6 +916,7 @@ exports.getAttendanceReport = async (req, res, next) => {
           totalTeamHours,
           totalTeamPresent,
           averageTeamDailyHours,
+          averageAttendanceTime: averageTeamAttendanceTime,
         },
         staffSummaries,
         holidays,
