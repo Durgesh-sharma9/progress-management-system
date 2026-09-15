@@ -860,9 +860,6 @@ exports.getAttendanceReport = async (req, res, next) => {
       }
 
       // Calculate Last Completed Day Work Time (excluding in-progress today)
-      const nowIST = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
-      const todayStr = nowIST.toISOString().slice(0, 10);
-
       const completedDays = (dailyLogs || [])
         .filter((l) => l.isPresent && l.date < todayStr && (l.workingMinutes > 0 || l.punchOutTime))
         .sort((a, b) => b.date.localeCompare(a.date));
