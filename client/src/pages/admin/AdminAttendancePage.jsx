@@ -446,14 +446,15 @@ const AdminAttendancePage = () => {
       return;
     }
 
-    const headers = ['Developer Name', 'Email', 'Days Present', 'Working Days', 'Attendance Rate (%)', 'Avg Attendance Time'];
+    const headers = ['Developer Name', 'Email', 'Days Present', 'Working Days', 'Attendance Rate (%)', 'Total Hours', 'Avg Daily Hours'];
     const rows = reportData.staffSummaries.map((s) => [
       `"${s.name}"`,
       `"${s.email}"`,
       s.daysPresent,
       s.totalWorkingDays,
       `${s.attendanceRate}%`,
-      s.averageAttendanceTime || getAverageAttendanceTime(s.dailyLogs),
+      s.totalWorkingHours,
+      s.averageDailyHours,
     ]);
 
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
@@ -1653,20 +1654,20 @@ const AdminAttendancePage = () => {
                   <p className="text-[10px] text-emerald-600 mt-0.5">Cumulative presence logs</p>
                 </div>
 
-                <div className="glass-card rounded-2xl p-3.5 sm:p-4 bg-white border border-purple-200/90 shadow-soft-xs bg-purple-50/20">
-                  <p className="text-[10px] sm:text-xs uppercase font-bold text-purple-700">Average Attendance Time</p>
-                  <p className="text-xl sm:text-2xl font-black text-purple-800 mt-1 font-mono">
-                    {teamAverageAttendanceTime}
+                <div className="glass-card rounded-2xl p-3.5 sm:p-4 bg-white border border-blue-200/90 shadow-soft-xs bg-blue-50/20">
+                  <p className="text-[10px] sm:text-xs uppercase font-bold text-blue-700">Total Working Hours</p>
+                  <p className="text-xl sm:text-2xl font-black text-blue-800 mt-1 font-mono">
+                    {reportData.summary?.totalTeamHours || 0}h
                   </p>
-                  <p className="text-[10px] text-purple-600 mt-0.5">Team average check-in</p>
+                  <p className="text-[10px] text-blue-600 mt-0.5">Total staff productivity</p>
                 </div>
 
-                <div className="glass-card rounded-2xl p-3.5 sm:p-4 bg-white border border-blue-200/90 shadow-soft-xs bg-blue-50/20">
-                  <p className="text-[10px] sm:text-xs uppercase font-bold text-blue-700">Overall Attendance Rate</p>
-                  <p className="text-xl sm:text-2xl font-black text-blue-800 mt-1 font-mono">
-                    {teamOverallAttendanceRate}%
+                <div className="glass-card rounded-2xl p-3.5 sm:p-4 bg-white border border-purple-200/90 shadow-soft-xs bg-purple-50/20">
+                  <p className="text-[10px] sm:text-xs uppercase font-bold text-purple-700">Average Daily Shift</p>
+                  <p className="text-xl sm:text-2xl font-black text-purple-800 mt-1 font-mono">
+                    {reportData.summary?.averageTeamDailyHours || 0}h / day
                   </p>
-                  <p className="text-[10px] text-blue-600 mt-0.5">Team presence percentage</p>
+                  <p className="text-[10px] text-purple-600 mt-0.5">Per present developer</p>
                 </div>
               </div>
 
@@ -1688,7 +1689,8 @@ const AdminAttendancePage = () => {
                         <th className="py-3 px-3 sm:px-4">Developer</th>
                         <th className="py-3 px-3 text-center">Days Present</th>
                         <th className="py-3 px-3 text-center">Attendance Rate</th>
-                        <th className="py-3 px-3 text-center">Avg Attendance Time</th>
+                        <th className="py-3 px-3 text-center">Total Working Hours</th>
+                        <th className="py-3 px-3 text-center">Avg Hours/Day</th>
                         <th className="py-3 px-3 sm:px-4 text-right">Daily Log</th>
                       </tr>
                     </thead>
@@ -1733,8 +1735,11 @@ const AdminAttendancePage = () => {
                               </span>
                             </div>
                           </td>
-                          <td className="py-3 px-3 text-center font-mono font-bold text-purple-700">
-                            {staff.averageAttendanceTime || getAverageAttendanceTime(staff.dailyLogs)}
+                          <td className="py-3 px-3 text-center font-mono font-bold text-blue-700">
+                            {staff.totalWorkingHours} hrs
+                          </td>
+                          <td className="py-3 px-3 text-center font-mono text-slate-700">
+                            {staff.averageDailyHours} hrs
                           </td>
                           <td className="py-3 px-3 sm:px-4 text-right">
                             <button
@@ -2110,6 +2115,15 @@ const AdminAttendancePage = () => {
                       minute: '2-digit',
                     })
                   : '--';
+                const outTimeFormatted = att.punchOutTime
+                  ? new Date(att.punchOutTime).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : null;
+                const hoursMins = att.totalWorkingMinutes && att.totalWorkingMinutes > 0
+                  ? `${Math.floor(att.totalWorkingMinutes / 60)}h ${att.totalWorkingMinutes % 60}m`
+                  : (att.punchInTime && !att.punchOutTime ? 'In Progress' : '--');
 
                 return (
                   <div
@@ -2129,15 +2143,23 @@ const AdminAttendancePage = () => {
                         </div>
                       </div>
 
-                      <span className="inline-flex items-center gap-1 font-mono font-bold text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 shrink-0">
-                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                        <span>Present</span>
+                      <span className="inline-flex items-center gap-1 font-mono font-bold text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 shrink-0">
+                        <Clock className="h-3 w-3 text-emerald-600" />
+                        <span>{hoursMins}</span>
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 pt-2 border-t border-slate-200/70 text-[11px] text-slate-600">
-                      <span className="text-[10px] font-bold uppercase text-slate-400">Attendance Time:</span>
-                      <span className="font-mono font-bold text-emerald-800">{inTimeFormatted}</span>
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200/70 text-[11px]">
+                      <div className="flex items-center gap-1.5 text-slate-600">
+                        <span className="text-[10px] font-bold uppercase text-slate-400">Punch In:</span>
+                        <span className="font-mono font-bold text-slate-800">{inTimeFormatted}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-slate-600 justify-end">
+                        <span className="text-[10px] font-bold uppercase text-slate-400">Punch Out:</span>
+                        <span className={`font-mono font-bold ${outTimeFormatted ? 'text-slate-800' : 'text-amber-600'}`}>
+                          {outTimeFormatted || 'Active / On Shift'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -2162,7 +2184,7 @@ const AdminAttendancePage = () => {
         isOpen={Boolean(reportDailyModalDev)}
         onClose={() => setReportDailyModalDev(null)}
         title={`Daily Attendance Logs: ${reportDailyModalDev?.name || ''}`}
-        subtitle={`Summary: ${reportDailyModalDev?.daysPresent || 0} days present • Avg Attendance Time: ${reportDailyModalDev?.averageAttendanceTime || getAverageAttendanceTime(reportDailyModalDev?.dailyLogs)}`}
+        subtitle={`Summary: ${reportDailyModalDev?.daysPresent || 0} days present • ${reportDailyModalDev?.totalWorkingHours || 0} total hours logged`}
         maxWidth="lg"
       >
         <div className="space-y-3">
@@ -2188,7 +2210,8 @@ const AdminAttendancePage = () => {
                   </div>
                   {log.isPresent && (
                     <p className="text-[11px] text-slate-400 mt-0.5">
-                      Time: {log.punchInTime ? new Date(log.punchInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}
+                      In: {log.punchInTime ? new Date(log.punchInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}
+                      {log.punchOutTime ? ` • Out: ${new Date(log.punchOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ' • Shift Active'}
                       {log.distanceMeters !== undefined && ` • ${formatDistance(log.distanceMeters)} away`}
                     </p>
                   )}
