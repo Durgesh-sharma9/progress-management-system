@@ -859,16 +859,22 @@ exports.getAttendanceReport = async (req, res, next) => {
         averageAttendanceTime = `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
       }
 
-      // Calculate Recent / Last Day Work Time
-      const workedLogs = (dailyLogs || [])
-        .filter((l) => l.isPresent && (l.workingMinutes > 0 || (l.punchInTime && l.punchOutTime)))
+      // Calculate Last Completed Day Work Time (excluding in-progress today)
+      const nowIST = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
+      const todayStr = nowIST.toISOString().slice(0, 10);
+
+      const completedDays = (dailyLogs || [])
+        .filter((l) => l.isPresent && l.date < todayStr && (l.workingMinutes > 0 || l.punchOutTime))
         .sort((a, b) => b.date.localeCompare(a.date));
 
-      const recentLog = workedLogs[0] || null;
-      const recentDayWorkingMinutes = recentLog ? recentLog.workingMinutes : 0;
-      const recentDayWorkingHours = recentLog ? Number((recentLog.workingMinutes / 60).toFixed(1)) : 0;
-      const recentDayWorkingHoursFormatted = recentLog ? recentLog.workingHoursFormatted : '--';
-      const recentDayDate = recentLog ? recentLog.date : null;
+      const lastDayLog = completedDays[0] || (dailyLogs || [])
+        .filter((l) => l.isPresent && l.punchOutTime && l.workingMinutes > 0)
+        .sort((a, b) => b.date.localeCompare(a.date))[0] || null;
+
+      const lastDayWorkingMinutes = lastDayLog ? lastDayLog.workingMinutes : 0;
+      const lastDayWorkingHours = lastDayLog ? Number((lastDayLog.workingMinutes / 60).toFixed(1)) : 0;
+      const lastDayWorkingHoursFormatted = lastDayLog ? lastDayLog.workingHoursFormatted : '--';
+      const lastDayDate = lastDayLog ? lastDayLog.date : null;
 
       return {
         developerId: dev._id,
@@ -880,10 +886,14 @@ exports.getAttendanceReport = async (req, res, next) => {
         totalWorkingMinutes: totalMinutes,
         totalWorkingHours: totalHours,
         averageDailyHours,
-        recentDayWorkingMinutes,
-        recentDayWorkingHours,
-        recentDayWorkingHoursFormatted,
-        recentDayDate,
+        lastDayWorkingMinutes,
+        lastDayWorkingHours,
+        lastDayWorkingHoursFormatted,
+        lastDayDate,
+        recentDayWorkingMinutes: lastDayWorkingMinutes,
+        recentDayWorkingHours: lastDayWorkingHours,
+        recentDayWorkingHoursFormatted: lastDayWorkingHoursFormatted,
+        recentDayDate: lastDayDate,
         averageAttendanceTime,
         dailyLogs,
       };

@@ -440,27 +440,38 @@ const AdminAttendancePage = () => {
     return Math.round((totalPresent / totalPossible) * 100);
   }, [reportData]);
 
-  const getStaffRecentWork = (staff) => {
-    if (staff?.recentDayWorkingHours !== undefined && staff.recentDayWorkingHours > 0) {
-      return {
-        hours: staff.recentDayWorkingHours,
-        formatted: staff.recentDayWorkingHoursFormatted,
-        date: staff.recentDayDate,
-      };
-    }
-    const workedLogs = (staff?.dailyLogs || [])
-      .filter((l) => l.isPresent && (l.workingMinutes > 0 || (l.punchInTime && l.punchOutTime)))
+  const getStaffLastDayWork = (staff) => {
+    // Determine today in IST (UTC+5:30)
+    const nowIST = new Date(Date.now() + 5.5 * 60 * 60 * 1000);
+    const todayStr = nowIST.toISOString().slice(0, 10);
+
+    // Filter strictly for completed past days before today (so today's in-progress shift is ignored)
+    const pastCompletedDays = (staff?.dailyLogs || [])
+      .filter((l) => l.isPresent && l.date < todayStr && (l.workingMinutes > 0 || l.punchOutTime))
       .sort((a, b) => b.date.localeCompare(a.date));
 
-    const recent = workedLogs[0];
-    if (!recent) return { hours: 0, formatted: '--', date: null };
+    const targetLog = pastCompletedDays[0] || (staff?.dailyLogs || [])
+      .filter((l) => l.isPresent && l.punchOutTime && l.workingMinutes > 0)
+      .sort((a, b) => b.date.localeCompare(a.date))[0] || null;
 
-    const hours = Number((recent.workingMinutes / 60).toFixed(1));
-    return {
-      hours,
-      formatted: recent.workingHoursFormatted || `${hours} hrs`,
-      date: recent.date,
-    };
+    if (targetLog) {
+      const hours = Number((targetLog.workingMinutes / 60).toFixed(1));
+      return {
+        hours,
+        formatted: targetLog.workingHoursFormatted || `${hours} hrs`,
+        date: targetLog.date,
+      };
+    }
+
+    if (staff?.lastDayWorkingHours !== undefined && staff.lastDayWorkingHours > 0) {
+      return {
+        hours: staff.lastDayWorkingHours,
+        formatted: staff.lastDayWorkingHoursFormatted,
+        date: staff.lastDayDate,
+      };
+    }
+
+    return { hours: 0, formatted: '--', date: null };
   };
 
   const handleExportCSV = () => {
@@ -469,9 +480,9 @@ const AdminAttendancePage = () => {
       return;
     }
 
-    const headers = ['Developer Name', 'Email', 'Days Present', 'Working Days', 'Attendance Rate (%)', 'Total Hours', 'Recent Day Hours'];
+    const headers = ['Developer Name', 'Email', 'Days Present', 'Working Days', 'Attendance Rate (%)', 'Total Hours', 'Last Day Hours'];
     const rows = reportData.staffSummaries.map((s) => {
-      const recent = getStaffRecentWork(s);
+      const lastDay = getStaffLastDayWork(s);
       return [
         `"${s.name}"`,
         `"${s.email}"`,
@@ -479,7 +490,7 @@ const AdminAttendancePage = () => {
         s.totalWorkingDays,
         `${s.attendanceRate}%`,
         s.totalWorkingHours,
-        recent.hours > 0 ? `${recent.hours} hrs (${recent.formatted})` : '--',
+        lastDay.hours > 0 ? `${lastDay.formatted} (${lastDay.hours} hrs)` : '--',
       ];
     });
 
@@ -1689,11 +1700,11 @@ const AdminAttendancePage = () => {
                 </div>
 
                 <div className="glass-card rounded-2xl p-3.5 sm:p-4 bg-white border border-purple-200/90 shadow-soft-xs bg-purple-50/20">
-                  <p className="text-[10px] sm:text-xs uppercase font-bold text-purple-700">Average Daily Shift</p>
+                  <p className="text-[10px] sm:text-xs uppercase font-bold text-purple-700">Avg Attendance Time</p>
                   <p className="text-xl sm:text-2xl font-black text-purple-800 mt-1 font-mono">
-                    {reportData.summary?.averageTeamDailyHours || 0}h / day
+                    {reportData.summary?.averageAttendanceTime || '--'}
                   </p>
-                  <p className="text-[10px] text-purple-600 mt-0.5">Per present developer</p>
+                  <p className="text-[10px] text-purple-600 mt-0.5">Average check-in time</p>
                 </div>
               </div>
 
@@ -1716,7 +1727,7 @@ const AdminAttendancePage = () => {
                         <th className="py-3 px-3 text-center">Days Present</th>
                         <th className="py-3 px-3 text-center">Attendance Rate</th>
                         <th className="py-3 px-3 text-center">Total Working Hours</th>
-                        <th className="py-3 px-3 text-center">Recent Day Hours</th>
+                        <th className="py-3 px-3 text-center">Last Day Hours</th>
                         <th className="py-3 px-3 sm:px-4 text-right">Daily Log</th>
                       </tr>
                     </thead>
@@ -1766,17 +1777,15 @@ const AdminAttendancePage = () => {
                           </td>
                           <td className="py-3 px-3 text-center">
                             {(() => {
-                              const recent = getStaffRecentWork(staff);
-                              return recent.hours > 0 ? (
+                              const lastDay = getStaffLastDayWork(staff);
+                              return lastDay.hours > 0 || (lastDay.formatted && lastDay.formatted !== '-' && lastDay.formatted !== '--') ? (
                                 <div>
                                   <span className="font-mono font-bold text-slate-800 text-xs sm:text-sm">
-                                    {recent.hours} hrs
+                                    {lastDay.formatted}
                                   </span>
-                                  {recent.formatted && recent.formatted !== '-' && (
-                                    <span className="block text-[10px] text-slate-400 font-sans font-medium">
-                                      {recent.formatted}
-                                    </span>
-                                  )}
+                                  <span className="block text-[10px] text-slate-400 font-mono">
+                                    {lastDay.hours} hrs {lastDay.date ? `(${lastDay.date.slice(5)})` : ''}
+                                  </span>
                                 </div>
                               ) : (
                                 <span className="font-mono text-slate-400">--</span>
